@@ -14,7 +14,133 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      commission_orders: {
+        Row: {
+          cliente: string | null
+          comissao: number
+          comissao_total: number
+          comissao_vendedor: number
+          created_at: string
+          data: string | null
+          fornecedor: string | null
+          id: string
+          pedido: string | null
+          porcentagem_vendedor: number
+          produto: string | null
+          salesperson_id: string
+          venda: number
+        }
+        Insert: {
+          cliente?: string | null
+          comissao?: number
+          comissao_total?: number
+          comissao_vendedor?: number
+          created_at?: string
+          data?: string | null
+          fornecedor?: string | null
+          id?: string
+          pedido?: string | null
+          porcentagem_vendedor?: number
+          produto?: string | null
+          salesperson_id: string
+          venda?: number
+        }
+        Update: {
+          cliente?: string | null
+          comissao?: number
+          comissao_total?: number
+          comissao_vendedor?: number
+          created_at?: string
+          data?: string | null
+          fornecedor?: string | null
+          id?: string
+          pedido?: string | null
+          porcentagem_vendedor?: number
+          produto?: string | null
+          salesperson_id?: string
+          venda?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_orders_salesperson_id_fkey"
+            columns: ["salesperson_id"]
+            isOneToOne: false
+            referencedRelation: "commission_salespeople"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commission_reports: {
+        Row: {
+          created_at: string
+          id: string
+          period_month: number
+          period_year: number
+          total_comissao: number
+          total_negocios: number
+          total_vendas: number
+          vendedores_ativos: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          period_month: number
+          period_year: number
+          total_comissao?: number
+          total_negocios?: number
+          total_vendas?: number
+          vendedores_ativos?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          period_month?: number
+          period_year?: number
+          total_comissao?: number
+          total_negocios?: number
+          total_vendas?: number
+          vendedores_ativos?: number
+        }
+        Relationships: []
+      }
+      commission_salespeople: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          report_id: string
+          total_comissao: number
+          total_negocios: number
+          total_vendas: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          report_id: string
+          total_comissao?: number
+          total_negocios?: number
+          total_vendas?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          report_id?: string
+          total_comissao?: number
+          total_negocios?: number
+          total_vendas?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_salespeople_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "commission_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
