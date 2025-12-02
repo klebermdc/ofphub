@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { DollarSign, TrendingUp, Users, Target, Package, Building2, FileSpreadsheet, Calendar, Wallet } from "lucide-react";
+import { DollarSign, TrendingUp, Users, Target, Package, Building2, FileSpreadsheet, Calendar, Wallet, CircleDollarSign } from "lucide-react";
 import { getSalary } from "@/config/salaries";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { SheetInput } from "@/components/SheetInput";
@@ -305,6 +305,9 @@ const Index = () => {
   const totalSalaries = dashboardFilteredSalesReps.reduce((sum, rep) => sum + getSalary(rep.name), 0);
   const totalCost = (dashboardTotals?.totalComissao || 0) + totalSalaries;
 
+  // Calculate profit (Comissão Total - Custo Total)
+  const resultado = totalComissaoTotal - totalCost;
+
   // Get current selected month/year for goals
   const currentGoalMonth = dashboardMonth !== 'all' 
     ? parseInt(dashboardMonth.split('/')[0]) 
@@ -404,7 +407,7 @@ const Index = () => {
                 </div>
 
                 {/* KPIs Principais - Financeiros */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                   <MetricCard
                     title="Faturamento"
                     value={dashboardTotals ? formatCurrency(dashboardTotals.totalVendas) : "R$ 0"}
@@ -433,10 +436,17 @@ const Index = () => {
                     variant="danger"
                   />
                   <MetricCard
+                    title="Resultado"
+                    value={formatCurrency(resultado)}
+                    icon={CircleDollarSign}
+                    delay={125}
+                    variant={resultado >= 0 ? "success" : "danger"}
+                  />
+                  <MetricCard
                     title="Ticket Médio"
                     value={formatCurrency(ticketMedio)}
                     icon={Target}
-                    delay={125}
+                    delay={150}
                     variant="info"
                   />
                 </div>
