@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { DollarSign, TrendingUp, Users, Target, Package, Building2, FileSpreadsheet } from "lucide-react";
+import { DollarSign, TrendingUp, Users, Target, Package, Building2, FileSpreadsheet, Calendar } from "lucide-react";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { SheetInput } from "@/components/SheetInput";
 import { MetricCard } from "@/components/MetricCard";
@@ -16,6 +16,7 @@ import { useCommissionHistory, getMonthName } from "@/hooks/useCommissionHistory
 import { useAuth } from "@/hooks/useAuth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -28,8 +29,64 @@ const Index = () => {
   const [currentReportId, setCurrentReportId] = useState<string | undefined>();
   const [currentPeriod, setCurrentPeriod] = useState<string | undefined>();
   const [dataSource, setDataSource] = useState<'sheet' | 'history'>('sheet');
+  const [selectedMonth, setSelectedMonth] = useState<string>('all');
 
   const { reports, isLoading: historyLoading, saveReport, loadReport, deleteReport } = useCommissionHistory(user?.id);
+
+  // Extract available months from orders data
+  const availableMonths = useMemo(() => {
+    const months = new Set<string>();
+    salesReps.forEach(rep => {
+      rep.orders?.forEach(order => {
+        if (order.data) {
+          // Parse date in format DD/MM/YYYY or similar
+          const parts = order.data.split('/');
+          if (parts.length >= 2) {
+            const month = parts[1];
+            const year = parts[2] || new Date().getFullYear().toString();
+            months.add(`${month}/${year}`);
+          }
+        }
+      });
+    });
+    return Array.from(months).sort((a, b) => {
+      const [mA, yA] = a.split('/').map(Number);
+      const [mB, yB] = b.split('/').map(Number);
+      return yB - yA || mB - mA;
+    });
+  }, [salesReps]);
+
+  // Filter sales reps by selected month
+  const filteredSalesReps = useMemo(() => {
+    if (selectedMonth === 'all') return salesReps;
+    
+    return salesReps.map(rep => {
+      const filteredOrders = rep.orders?.filter(order => {
+        if (!order.data) return false;
+        const parts = order.data.split('/');
+        if (parts.length >= 2) {
+          const month = parts[1];
+          const year = parts[2] || new Date().getFullYear().toString();
+          return `${month}/${year}` === selectedMonth;
+        }
+        return false;
+      }) || [];
+      
+      const sales = filteredOrders.reduce((sum, o) => sum + o.venda, 0);
+      const commission = filteredOrders.reduce((sum, o) => sum + o.comissaoVendedor, 0);
+      
+      return {
+        ...rep,
+        orders: filteredOrders,
+        sales,
+        commission,
+        deals: filteredOrders.length,
+        rate: filteredOrders.length > 0 
+          ? filteredOrders.reduce((sum, o) => sum + o.porcentagemVendedor, 0) / filteredOrders.length 
+          : 0
+      };
+    }).filter(rep => rep.orders.length > 0);
+  }, [salesReps, selectedMonth]);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -303,7 +360,34 @@ const Index = () => {
 
           <TabsContent value="vendedores" className="space-y-6">
             {hasData ? (
-              <SalesRepTable salesReps={salesReps} onGeneratePDF={handleGeneratePDF} />
+              <>
+                <div className="flex items-center gap-3">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Filtrar por mês:</span>
+                  <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Todos os meses" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os meses</SelectItem>
+                      {availableMonths.map(month => {
+                        const [m, y] = month.split('/');
+                        return (
+                          <SelectItem key={month} value={month}>
+                            {getMonthName(parseInt(m))} {y}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                  {selectedMonth !== 'all' && (
+                    <Badge variant="secondary">
+                      {filteredSalesReps.length} vendedor(es)
+                    </Badge>
+                  )}
+                </div>
+                <SalesRepTable salesReps={filteredSalesReps} onGeneratePDF={handleGeneratePDF} />
+              </>
             ) : (
               <div className="glass rounded-xl p-8 text-center">
                 <p className="text-muted-foreground">
