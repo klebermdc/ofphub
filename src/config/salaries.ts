@@ -5,6 +5,7 @@ export const SALESPERSON_SALARIES: Record<string, number> = {
   "Rafael": 5000,
   "Pedro": 1500,
   "Marcela": 1500,
+  "Marcella": 1500,
 };
 
 export const getSalary = (name: string): number => {
