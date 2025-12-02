@@ -19,6 +19,7 @@ import { SalesRep, SalesTotals } from "@/types/sales";
 import { generateSalesRepPDF } from "@/utils/pdfGenerator";
 import { useCommissionHistory, getMonthName } from "@/hooks/useCommissionHistory";
 import { useAuth } from "@/hooks/useAuth";
+import { useSheetSettings } from "@/hooks/useSheetSettings";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -38,6 +39,14 @@ const Index = () => {
   const [dashboardMonth, setDashboardMonth] = useState<string>('all');
 
   const { reports, isLoading: historyLoading, saveReport, loadReport, deleteReport } = useCommissionHistory(user?.id);
+  const { savedUrl, isLoading: settingsLoading, saveUrl } = useSheetSettings(user?.id);
+
+  // Auto-load saved sheet URL on mount
+  useEffect(() => {
+    if (!settingsLoading && savedUrl && !hasData && !isLoading) {
+      handleAnalyze(savedUrl);
+    }
+  }, [settingsLoading, savedUrl]);
 
   // Extract available months from orders data
   const availableMonths = useMemo(() => {
@@ -204,6 +213,9 @@ const Index = () => {
       setTotals(data.totals);
       setHasData(true);
       setDataSource('sheet');
+      
+      // Save URL for auto-load next time
+      await saveUrl(url);
       
       toast({
         title: "Planilha importada!",
