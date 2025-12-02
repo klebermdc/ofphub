@@ -144,6 +144,45 @@ export type Database = {
           },
         ]
       }
+      marketing_costs: {
+        Row: {
+          created_at: string
+          description: string | null
+          google_ads: number
+          id: string
+          meta_ads: number
+          other_marketing: number
+          period_month: number
+          period_year: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          google_ads?: number
+          id?: string
+          meta_ads?: number
+          other_marketing?: number
+          period_month: number
+          period_year: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          google_ads?: number
+          id?: string
+          meta_ads?: number
+          other_marketing?: number
+          period_month?: number
+          period_year?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

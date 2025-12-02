@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { DollarSign, TrendingUp, Users, Target, Package, Building2, FileSpreadsheet, Calendar, Wallet, CircleDollarSign, FileText } from "lucide-react";
+import { DollarSign, TrendingUp, Users, Target, Package, Building2, FileSpreadsheet, Calendar, Wallet, CircleDollarSign, FileText, Megaphone } from "lucide-react";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { SheetInput } from "@/components/SheetInput";
 import { MetricCard } from "@/components/MetricCard";
@@ -27,6 +27,8 @@ import { useCommissionHistory, getMonthName } from "@/hooks/useCommissionHistory
 import { useAuth } from "@/hooks/useAuth";
 import { useSheetSettings } from "@/hooks/useSheetSettings";
 import { useSalespersonSalaries } from "@/hooks/useSalespersonSalaries";
+import { useMarketingCosts } from "@/hooks/useMarketingCosts";
+import { MarketingCostsDialog } from "@/components/MarketingCostsDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -49,6 +51,7 @@ const Index = () => {
   const { reports, isLoading: historyLoading, saveReport, loadReport, deleteReport } = useCommissionHistory(user?.id);
   const { savedUrl, isLoading: settingsLoading, saveUrl } = useSheetSettings(user?.id);
   const { salaries, saveSalaries, getSalary } = useSalespersonSalaries(user?.id);
+  const { saveCost: saveMarketingCost, getCostForMonth, getTotalForMonth } = useMarketingCosts(user?.id);
 
   // Auto-load saved sheet URL on mount
   useEffect(() => {
@@ -322,13 +325,6 @@ const Index = () => {
     0
   );
 
-  // Calculate total cost (commissions + fixed salaries)
-  const totalSalaries = dashboardFilteredSalesReps.reduce((sum, rep) => sum + getSalary(rep.name), 0);
-  const totalCost = (dashboardTotals?.totalComissao || 0) + totalSalaries;
-
-  // Calculate profit (Comissão Total - Custo Total)
-  const resultado = totalComissaoTotal - totalCost;
-
   // Get current selected month/year for goals
   const currentGoalMonth = dashboardMonth !== 'all' 
     ? parseInt(dashboardMonth.split('/')[0]) 
@@ -336,6 +332,14 @@ const Index = () => {
   const currentGoalYear = dashboardMonth !== 'all' 
     ? parseInt(dashboardMonth.split('/')[1]) 
     : new Date().getFullYear();
+
+  // Calculate total cost (commissions + fixed salaries + marketing)
+  const totalSalaries = dashboardFilteredSalesReps.reduce((sum, rep) => sum + getSalary(rep.name), 0);
+  const marketingCost = getTotalForMonth(currentGoalMonth, currentGoalYear);
+  const totalCost = (dashboardTotals?.totalComissao || 0) + totalSalaries + marketingCost;
+
+  // Calculate profit (Comissão Total - Custo Total)
+  const resultado = totalComissaoTotal - totalCost;
 
   if (loading) {
     return (
@@ -424,6 +428,7 @@ const Index = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <SalaryManagementDialog salaries={salaries} onSave={saveSalaries} />
+                    <MarketingCostsDialog onSave={saveMarketingCost} getCostForMonth={getCostForMonth} />
                     <SheetInput onAnalyze={handleAnalyze} isLoading={isLoading} compact />
                     <SaveReportDialog onSave={handleSaveReport} disabled={!hasData} />
                     <Button
@@ -474,7 +479,14 @@ const Index = () => {
                 </div>
 
                 {/* KPIs Secundários - Custos e Resultado */}
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <MetricCard
+                    title="Marketing"
+                    value={formatCurrency(marketingCost)}
+                    icon={Megaphone}
+                    delay={75}
+                    variant="warning"
+                  />
                   <MetricCard
                     title="Custo Total"
                     value={formatCurrency(totalCost)}
