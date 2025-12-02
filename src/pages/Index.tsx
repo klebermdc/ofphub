@@ -406,8 +406,8 @@ const Index = () => {
                   </div>
                 </div>
 
-                {/* KPIs Principais - Financeiros */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                {/* KPIs Principais - Receitas */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <MetricCard
                     title="Faturamento"
                     value={dashboardTotals ? formatCurrency(dashboardTotals.totalVendas) : "R$ 0"}
@@ -428,6 +428,10 @@ const Index = () => {
                     icon={TrendingUp}
                     delay={75}
                   />
+                </div>
+
+                {/* KPIs Secundários - Custos e Resultado */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <MetricCard
                     title="Custo Total"
                     value={formatCurrency(totalCost)}
@@ -451,7 +455,7 @@ const Index = () => {
                   />
                 </div>
 
-                {/* KPIs Secundários - Operacionais */}
+                {/* KPIs Terciários - Operacionais */}
                 <div className="grid grid-cols-3 gap-4">
                   <MetricCard
                     title="Vendedores"
