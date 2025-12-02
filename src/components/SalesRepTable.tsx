@@ -1,7 +1,7 @@
 import { FileDown, User } from "lucide-react";
 import { Button } from "./ui/button";
 
-interface SalesRep {
+export interface SalesRep {
   id: string;
   name: string;
   sales: number;
@@ -76,7 +76,7 @@ export function SalesRepTable({ onGeneratePDF }: SalesRepTableProps) {
                     className="gap-2"
                   >
                     <FileDown className="h-4 w-4" />
-                    PDF
+                    Baixar PDF
                   </Button>
                 </td>
               </tr>
