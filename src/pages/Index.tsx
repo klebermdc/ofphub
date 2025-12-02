@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { DollarSign, TrendingUp, Users, Target, Package, Building2, RefreshCw, Database } from "lucide-react";
+import { DollarSign, TrendingUp, Users, Target, Package, Building2, FileSpreadsheet } from "lucide-react";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { SheetInput } from "@/components/SheetInput";
 import { MetricCard } from "@/components/MetricCard";
@@ -15,56 +15,21 @@ import { generateSalesRepPDF } from "@/utils/pdfGenerator";
 import { useCommissionHistory, getMonthName } from "@/hooks/useCommissionHistory";
 import { useAuth } from "@/hooks/useAuth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { processNotionData as loadNotionSalesData, getSalesBySupplier, getSalesByProduct } from "@/data/notionSalesData";
 
 const Index = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   
   const [isLoading, setIsLoading] = useState(false);
-  const [isNotionLoading, setIsNotionLoading] = useState(false);
   const [hasData, setHasData] = useState(false);
   const [salesReps, setSalesReps] = useState<SalesRep[]>([]);
   const [totals, setTotals] = useState<SalesTotals | null>(null);
   const [currentReportId, setCurrentReportId] = useState<string | undefined>();
   const [currentPeriod, setCurrentPeriod] = useState<string | undefined>();
-  const [dataSource, setDataSource] = useState<'notion' | 'sheet' | 'history'>('sheet');
-  const [lastSync, setLastSync] = useState<Date | null>(null);
+  const [dataSource, setDataSource] = useState<'sheet' | 'history'>('sheet');
 
   const { reports, isLoading: historyLoading, saveReport, loadReport, deleteReport } = useCommissionHistory(user?.id);
-
-  // Load Notion data
-  const loadNotionData = useCallback(() => {
-    setIsNotionLoading(true);
-    
-    try {
-      const { salesReps: newSalesReps, totals: newTotals } = loadNotionSalesData();
-      
-      setSalesReps(newSalesReps);
-      setTotals(newTotals);
-      setHasData(true);
-      setDataSource('notion');
-      setCurrentReportId(undefined);
-      setCurrentPeriod('Notion - Tempo Real');
-      setLastSync(new Date());
-      
-      toast({
-        title: "Dados carregados!",
-        description: `${newSalesReps.length} vendedores e ${newTotals.totalNegocios} pedidos do Notion.`,
-      });
-    } catch (error) {
-      console.error('Error loading Notion data:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar os dados do Notion.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsNotionLoading(false);
-    }
-  }, []);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -116,6 +81,7 @@ const Index = () => {
       setSalesReps(transformedData);
       setTotals(data.totals);
       setHasData(true);
+      setDataSource('sheet');
       
       toast({
         title: "Planilha importada!",
@@ -145,6 +111,7 @@ const Index = () => {
       setTotals(result.totals);
       setHasData(true);
       setCurrentReportId(reportId);
+      setDataSource('history');
       
       const report = reports.find(r => r.id === reportId);
       if (report) {
@@ -242,29 +209,12 @@ const Index = () => {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2">
                   <div className="glass rounded-xl p-8 text-center">
-                    <Database className="h-12 w-12 mx-auto mb-4 text-primary" />
+                    <FileSpreadsheet className="h-12 w-12 mx-auto mb-4 text-primary" />
                     <h2 className="text-2xl font-bold mb-4">Bem-vindo ao Hub de Gestão</h2>
                     <p className="text-muted-foreground mb-6">
-                      Seus dados de vendas serão carregados automaticamente do Notion.
+                      Importe sua planilha do Google Sheets para começar a análise de comissões.
                     </p>
-                    <div className="flex flex-col items-center gap-4">
-                      <Button
-                        onClick={loadNotionData}
-                        disabled={isNotionLoading}
-                        size="lg"
-                        className="gap-2"
-                      >
-                        {isNotionLoading ? (
-                          <RefreshCw className="h-5 w-5 animate-spin" />
-                        ) : (
-                          <Database className="h-5 w-5" />
-                        )}
-                        {isNotionLoading ? 'Carregando...' : 'Carregar Dados do Notion'}
-                      </Button>
-                      <p className="text-xs text-muted-foreground">
-                        Conectado ao banco "Vendas Total" no Notion
-                      </p>
-                    </div>
+                    <SheetInput onAnalyze={handleAnalyze} isLoading={isLoading} />
                   </div>
                 </div>
                 <div>
@@ -283,27 +233,12 @@ const Index = () => {
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <div className="flex items-center gap-3">
                     <span className="text-sm text-muted-foreground">Fonte:</span>
-                    <Badge variant={dataSource === 'notion' ? 'default' : 'secondary'} className="gap-1">
-                      <Database className="h-3 w-3" />
-                      {dataSource === 'notion' ? 'Notion (Tempo Real)' : dataSource === 'sheet' ? 'Planilha' : 'Histórico'}
+                    <Badge variant={dataSource === 'sheet' ? 'default' : 'secondary'} className="gap-1">
+                      <FileSpreadsheet className="h-3 w-3" />
+                      {dataSource === 'sheet' ? 'Planilha' : 'Histórico'}
                     </Badge>
-                    {lastSync && dataSource === 'notion' && (
-                      <span className="text-xs text-muted-foreground">
-                        Última sync: {lastSync.toLocaleTimeString('pt-BR')}
-                      </span>
-                    )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={loadNotionData}
-                      disabled={isNotionLoading}
-                      className="gap-1"
-                    >
-                      <RefreshCw className={`h-4 w-4 ${isNotionLoading ? 'animate-spin' : ''}`} />
-                      Atualizar
-                    </Button>
                     <SaveReportDialog onSave={handleSaveReport} disabled={!hasData} />
                   </div>
                 </div>
