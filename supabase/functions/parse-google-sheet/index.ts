@@ -112,60 +112,109 @@ serve(async (req) => {
     const headers = rows[0].map(h => h.toLowerCase().trim());
     console.log('Headers found:', headers);
     
-    // Find column indices
+    // Find column indices - matching exact user's spreadsheet headers
     const vendedorIdx = headers.findIndex(h => 
-      h.includes('vendedor') || h.includes('nome') || h.includes('representante') || h.includes('sales')
+      h === 'vendedor' || h.includes('vendedor')
     );
     const vendasIdx = headers.findIndex(h => 
-      h.includes('venda') || h.includes('total') || h.includes('valor') || h.includes('sales') || h.includes('revenue')
+      h === 'venda' || (h.includes('venda') && !h.includes('vendedor'))
+    );
+    const comissaoVendedorIdx = headers.findIndex(h => 
+      h === 'comissão vendedor' || h === 'comissao vendedor'
+    );
+    const comissaoTotalIdx = headers.findIndex(h => 
+      h === 'comissão total' || h === 'comissao total'
     );
     const comissaoIdx = headers.findIndex(h => 
-      h.includes('comiss') || h.includes('commission')
+      h === 'comissão' || h === 'comissao'
     );
-    const negociosIdx = headers.findIndex(h => 
-      h.includes('negocio') || h.includes('deal') || h.includes('quantidade') || h.includes('qtd')
+    const porcentagemIdx = headers.findIndex(h => 
+      h === 'porcentagem vendedor' || h.includes('porcentagem')
     );
-    const taxaIdx = headers.findIndex(h => 
-      h.includes('taxa') || h.includes('rate') || h.includes('%') || h.includes('percentual')
+    const pedidoIdx = headers.findIndex(h => 
+      h === 'pedido' || h.includes('pedido')
+    );
+    const clienteIdx = headers.findIndex(h => 
+      h === 'cliente' || h.includes('cliente')
+    );
+    const dataIdx = headers.findIndex(h => 
+      h === 'data' || h.includes('data')
+    );
+    const produtoIdx = headers.findIndex(h => 
+      h === 'produto' || h.includes('produto')
     );
 
-    console.log('Column indices:', { vendedorIdx, vendasIdx, comissaoIdx, negociosIdx, taxaIdx });
+    console.log('Column indices:', { 
+      vendedorIdx, vendasIdx, comissaoVendedorIdx, comissaoTotalIdx, 
+      comissaoIdx, porcentagemIdx, pedidoIdx, clienteIdx 
+    });
 
-    // Parse data rows
-    const salesData: SalesData[] = [];
+    // Parse data rows and aggregate by salesperson
+    const salesByVendedor: Map<string, {
+      vendas: number;
+      comissao: number;
+      negocios: number;
+      taxa: number;
+      taxaCount: number;
+    }> = new Map();
     
     for (let i = 1; i < rows.length; i++) {
       const row = rows[i];
       
       // Skip empty rows
-      if (!row[vendedorIdx] && vendedorIdx >= 0) continue;
       if (row.every(cell => !cell)) continue;
       
-      const vendedor = vendedorIdx >= 0 ? row[vendedorIdx] || `Vendedor ${i}` : `Vendedor ${i}`;
-      const vendas = vendasIdx >= 0 ? parseNumber(row[vendasIdx]) : 0;
-      const comissao = comissaoIdx >= 0 ? parseNumber(row[comissaoIdx]) : 0;
-      const negocios = negociosIdx >= 0 ? parseInt(row[negociosIdx]) || 0 : 0;
+      const vendedor = vendedorIdx >= 0 ? row[vendedorIdx]?.trim() : null;
+      if (!vendedor) continue;
       
-      let taxa = taxaIdx >= 0 ? parseNumber(row[taxaIdx]) : 0;
+      const vendas = vendasIdx >= 0 ? parseNumber(row[vendasIdx]) : 0;
+      
+      // Prefer "Comissão Vendedor" over generic "Comissão"
+      let comissao = 0;
+      if (comissaoVendedorIdx >= 0) {
+        comissao = parseNumber(row[comissaoVendedorIdx]);
+      } else if (comissaoIdx >= 0) {
+        comissao = parseNumber(row[comissaoIdx]);
+      }
+      
+      // Get percentage
+      let taxa = porcentagemIdx >= 0 ? parseNumber(row[porcentagemIdx]) : 0;
       
       // Calculate commission rate if not provided
       if (taxa === 0 && vendas > 0 && comissao > 0) {
         taxa = (comissao / vendas) * 100;
       }
       
-      // Calculate commission if not provided but rate is
-      const finalComissao = comissao > 0 ? comissao : (vendas * taxa / 100);
-      
-      if (vendedor) {
-        salesData.push({
-          vendedor,
+      // Aggregate by salesperson
+      const existing = salesByVendedor.get(vendedor);
+      if (existing) {
+        existing.vendas += vendas;
+        existing.comissao += comissao;
+        existing.negocios += 1;
+        if (taxa > 0) {
+          existing.taxa += taxa;
+          existing.taxaCount += 1;
+        }
+      } else {
+        salesByVendedor.set(vendedor, {
           vendas,
-          comissao: finalComissao,
-          negocios,
-          taxa: Math.round(taxa * 100) / 100
+          comissao,
+          negocios: 1,
+          taxa,
+          taxaCount: taxa > 0 ? 1 : 0
         });
       }
     }
+
+    // Convert map to array
+    const salesData: SalesData[] = Array.from(salesByVendedor.entries()).map(([vendedor, data]) => ({
+      vendedor,
+      vendas: data.vendas,
+      comissao: data.comissao,
+      negocios: data.negocios,
+      taxa: data.taxaCount > 0 ? Math.round((data.taxa / data.taxaCount) * 100) / 100 : 
+            (data.vendas > 0 ? Math.round((data.comissao / data.vendas) * 10000) / 100 : 0)
+    }));
 
     console.log('Parsed sales data:', salesData);
 
