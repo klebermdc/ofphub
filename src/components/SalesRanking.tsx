@@ -1,0 +1,70 @@
+import { Trophy, Medal, Award } from "lucide-react";
+import { SalesRep } from "@/types/sales";
+
+interface SalesRankingProps {
+  salesReps: SalesRep[];
+}
+
+export function SalesRanking({ salesReps }: SalesRankingProps) {
+  const sortedReps = [...salesReps].sort((a, b) => b.sales - a.sales);
+
+  const getRankIcon = (index: number) => {
+    switch (index) {
+      case 0:
+        return <Trophy className="h-5 w-5 text-yellow-500" />;
+      case 1:
+        return <Medal className="h-5 w-5 text-gray-400" />;
+      case 2:
+        return <Award className="h-5 w-5 text-amber-600" />;
+      default:
+        return <span className="h-5 w-5 flex items-center justify-center text-sm font-bold text-muted-foreground">{index + 1}</span>;
+    }
+  };
+
+  const getRankBg = (index: number) => {
+    switch (index) {
+      case 0:
+        return "bg-yellow-500/10 border-yellow-500/30";
+      case 1:
+        return "bg-gray-400/10 border-gray-400/30";
+      case 2:
+        return "bg-amber-600/10 border-amber-600/30";
+      default:
+        return "bg-background/50 border-border/50";
+    }
+  };
+
+  return (
+    <div className="glass rounded-xl p-6 animate-slide-up">
+      <div className="flex items-center gap-2 mb-4">
+        <Trophy className="h-5 w-5 text-primary" />
+        <h3 className="text-lg font-semibold">Ranking de Vendedores</h3>
+      </div>
+
+      <div className="space-y-2 max-h-[300px] overflow-y-auto">
+        {sortedReps.map((rep, index) => (
+          <div
+            key={rep.id}
+            className={`flex items-center gap-3 p-3 rounded-lg border ${getRankBg(index)} transition-all hover:scale-[1.01]`}
+          >
+            <div className="flex items-center justify-center w-8">
+              {getRankIcon(index)}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-medium truncate">{rep.name}</p>
+              <p className="text-xs text-muted-foreground">{rep.deals} negócios</p>
+            </div>
+            <div className="text-right">
+              <p className="font-mono font-semibold">
+                R$ {rep.sales.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              </p>
+              <p className="text-xs text-success">
+                R$ {rep.commission.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

@@ -11,6 +11,7 @@ import { SalesRepTable } from "@/components/SalesRepTable";
 import { HistoryPanel } from "@/components/HistoryPanel";
 import { SaveReportDialog } from "@/components/SaveReportDialog";
 import { SalesGoalsPanel } from "@/components/SalesGoalsPanel";
+import { SalesRanking } from "@/components/SalesRanking";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SalesRep, SalesTotals } from "@/types/sales";
@@ -437,8 +438,12 @@ const Index = () => {
                   <ProductChart salesReps={dashboardFilteredSalesReps} />
                 </div>
                 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <SupplierChart salesReps={dashboardFilteredSalesReps} />
+                  <SalesRanking salesReps={dashboardFilteredSalesReps} />
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <SalesGoalsPanel
                     userId={user.id}
                     month={currentGoalMonth}
