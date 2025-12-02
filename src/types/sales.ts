@@ -1,3 +1,13 @@
+export interface OrderDetail {
+  cliente: string;
+  data: string;
+  pedido: string;
+  venda: number;
+  produto: string;
+  comissao: number;
+  porcentagem: number;
+}
+
 export interface SalesRep {
   id: string;
   name: string;
@@ -5,6 +15,7 @@ export interface SalesRep {
   commission: number;
   deals: number;
   rate: number;
+  orders: OrderDetail[];
 }
 
 export interface SalesTotals {
@@ -23,6 +34,7 @@ export interface SheetParseResponse {
     comissao: number;
     negocios: number;
     taxa: number;
+    pedidos: OrderDetail[];
   }>;
   totals: SalesTotals;
   message: string;

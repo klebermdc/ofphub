@@ -5,12 +5,23 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+interface OrderDetail {
+  cliente: string;
+  data: string;
+  pedido: string;
+  venda: number;
+  produto: string;
+  comissao: number;
+  porcentagem: number;
+}
+
 interface SalesData {
   vendedor: string;
   vendas: number;
   comissao: number;
   negocios: number;
   taxa: number;
+  pedidos: OrderDetail[];
 }
 
 function extractSheetId(url: string): string | null {
@@ -113,7 +124,6 @@ serve(async (req) => {
     console.log('Headers found:', headers);
     
     // Find column indices - matching exact user's spreadsheet headers
-    // IMPORTANT: Use exact matches first, then fallbacks - order matters!
     const vendedorIdx = headers.findIndex(h => h === 'vendedor');
     const vendasIdx = headers.findIndex(h => h === 'venda');
     const comissaoVendedorIdx = headers.findIndex(h => 
@@ -135,16 +145,17 @@ serve(async (req) => {
 
     console.log('Column indices:', { 
       vendedorIdx, vendasIdx, comissaoVendedorIdx, comissaoTotalIdx, 
-      comissaoIdx, porcentagemIdx, pedidoIdx, clienteIdx 
+      comissaoIdx, porcentagemIdx, pedidoIdx, clienteIdx, dataIdx, produtoIdx 
     });
 
-    // Parse data rows and aggregate by salesperson
+    // Parse data rows and aggregate by salesperson with order details
     const salesByVendedor: Map<string, {
       vendas: number;
       comissao: number;
       negocios: number;
       taxa: number;
       taxaCount: number;
+      pedidos: OrderDetail[];
     }> = new Map();
     
     for (let i = 1; i < rows.length; i++) {
@@ -173,6 +184,17 @@ serve(async (req) => {
       if (taxa === 0 && vendas > 0 && comissao > 0) {
         taxa = (comissao / vendas) * 100;
       }
+
+      // Create order detail
+      const orderDetail: OrderDetail = {
+        cliente: clienteIdx >= 0 ? row[clienteIdx]?.trim() || '' : '',
+        data: dataIdx >= 0 ? row[dataIdx]?.trim() || '' : '',
+        pedido: pedidoIdx >= 0 ? row[pedidoIdx]?.trim() || '' : '',
+        venda: vendas,
+        produto: produtoIdx >= 0 ? row[produtoIdx]?.trim() || '' : '',
+        comissao: comissao,
+        porcentagem: taxa
+      };
       
       // Aggregate by salesperson
       const existing = salesByVendedor.get(vendedor);
@@ -184,13 +206,15 @@ serve(async (req) => {
           existing.taxa += taxa;
           existing.taxaCount += 1;
         }
+        existing.pedidos.push(orderDetail);
       } else {
         salesByVendedor.set(vendedor, {
           vendas,
           comissao,
           negocios: 1,
           taxa,
-          taxaCount: taxa > 0 ? 1 : 0
+          taxaCount: taxa > 0 ? 1 : 0,
+          pedidos: [orderDetail]
         });
       }
     }
@@ -202,10 +226,11 @@ serve(async (req) => {
       comissao: data.comissao,
       negocios: data.negocios,
       taxa: data.taxaCount > 0 ? Math.round((data.taxa / data.taxaCount) * 100) / 100 : 
-            (data.vendas > 0 ? Math.round((data.comissao / data.vendas) * 10000) / 100 : 0)
+            (data.vendas > 0 ? Math.round((data.comissao / data.vendas) * 10000) / 100 : 0),
+      pedidos: data.pedidos
     }));
 
-    console.log('Parsed sales data:', salesData);
+    console.log('Parsed sales data:', salesData.length, 'vendedores');
 
     if (salesData.length === 0) {
       return new Response(
