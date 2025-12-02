@@ -113,12 +113,9 @@ serve(async (req) => {
     console.log('Headers found:', headers);
     
     // Find column indices - matching exact user's spreadsheet headers
-    const vendedorIdx = headers.findIndex(h => 
-      h === 'vendedor' || h.includes('vendedor')
-    );
-    const vendasIdx = headers.findIndex(h => 
-      h === 'venda' || (h.includes('venda') && !h.includes('vendedor'))
-    );
+    // IMPORTANT: Use exact matches first, then fallbacks - order matters!
+    const vendedorIdx = headers.findIndex(h => h === 'vendedor');
+    const vendasIdx = headers.findIndex(h => h === 'venda');
     const comissaoVendedorIdx = headers.findIndex(h => 
       h === 'comissão vendedor' || h === 'comissao vendedor'
     );
@@ -129,20 +126,12 @@ serve(async (req) => {
       h === 'comissão' || h === 'comissao'
     );
     const porcentagemIdx = headers.findIndex(h => 
-      h === 'porcentagem vendedor' || h.includes('porcentagem')
+      h === 'porcentagem vendedor' || h === 'porcentagem'
     );
-    const pedidoIdx = headers.findIndex(h => 
-      h === 'pedido' || h.includes('pedido')
-    );
-    const clienteIdx = headers.findIndex(h => 
-      h === 'cliente' || h.includes('cliente')
-    );
-    const dataIdx = headers.findIndex(h => 
-      h === 'data' || h.includes('data')
-    );
-    const produtoIdx = headers.findIndex(h => 
-      h === 'produto' || h.includes('produto')
-    );
+    const pedidoIdx = headers.findIndex(h => h === 'pedido');
+    const clienteIdx = headers.findIndex(h => h === 'cliente');
+    const dataIdx = headers.findIndex(h => h === 'data');
+    const produtoIdx = headers.findIndex(h => h === 'produto');
 
     console.log('Column indices:', { 
       vendedorIdx, vendasIdx, comissaoVendedorIdx, comissaoTotalIdx, 
