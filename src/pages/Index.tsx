@@ -5,9 +5,12 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 import { SheetInput } from "@/components/SheetInput";
 import { MetricCard } from "@/components/MetricCard";
 import { SalesChart } from "@/components/SalesChart";
+import { ProductChart } from "@/components/ProductChart";
+import { SupplierChart } from "@/components/SupplierChart";
 import { SalesRepTable } from "@/components/SalesRepTable";
 import { HistoryPanel } from "@/components/HistoryPanel";
 import { SaveReportDialog } from "@/components/SaveReportDialog";
+import { SalesGoalsPanel } from "@/components/SalesGoalsPanel";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SalesRep, SalesTotals } from "@/types/sales";
@@ -30,6 +33,7 @@ const Index = () => {
   const [currentPeriod, setCurrentPeriod] = useState<string | undefined>();
   const [dataSource, setDataSource] = useState<'sheet' | 'history'>('sheet');
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
+  const [dashboardMonth, setDashboardMonth] = useState<string>('all');
 
   const { reports, isLoading: historyLoading, saveReport, loadReport, deleteReport } = useCommissionHistory(user?.id);
 
@@ -94,6 +98,58 @@ const Index = () => {
       };
     }).filter(rep => rep.orders.length > 0);
   }, [salesReps, selectedMonth]);
+
+  // Filter sales reps for dashboard by selected month
+  const dashboardFilteredSalesReps = useMemo(() => {
+    if (dashboardMonth === 'all') return salesReps;
+    
+    return salesReps.map(rep => {
+      const filteredOrders = rep.orders?.filter(order => {
+        if (!order.data) return false;
+        const parts = order.data.split('/');
+        if (parts.length >= 2) {
+          const month = parts[1].padStart(2, '0');
+          let year = parts[2] || new Date().getFullYear().toString();
+          if (year.length === 2) {
+            year = `20${year}`;
+          }
+          return `${month}/${year}` === dashboardMonth;
+        }
+        return false;
+      }) || [];
+      
+      const sales = filteredOrders.reduce((sum, o) => sum + o.venda, 0);
+      const commission = filteredOrders.reduce((sum, o) => sum + o.comissaoVendedor, 0);
+      
+      return {
+        ...rep,
+        orders: filteredOrders,
+        sales,
+        commission,
+        deals: filteredOrders.length,
+        rate: filteredOrders.length > 0 
+          ? filteredOrders.reduce((sum, o) => sum + o.porcentagemVendedor, 0) / filteredOrders.length 
+          : 0
+      };
+    }).filter(rep => rep.orders.length > 0);
+  }, [salesReps, dashboardMonth]);
+
+  // Calculate filtered totals for dashboard
+  const dashboardTotals = useMemo(() => {
+    if (dashboardMonth === 'all') return totals;
+    
+    const totalVendas = dashboardFilteredSalesReps.reduce((sum, r) => sum + r.sales, 0);
+    const totalComissao = dashboardFilteredSalesReps.reduce((sum, r) => sum + r.commission, 0);
+    const totalNegocios = dashboardFilteredSalesReps.reduce((sum, r) => sum + r.deals, 0);
+    
+    return {
+      totalVendas,
+      totalComissao,
+      totalNegocios,
+      taxaMedia: totalNegocios > 0 ? dashboardFilteredSalesReps.reduce((sum, r) => sum + r.rate, 0) / dashboardFilteredSalesReps.length : 0,
+      vendedoresAtivos: dashboardFilteredSalesReps.length
+    };
+  }, [dashboardMonth, dashboardFilteredSalesReps, totals]);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -224,18 +280,26 @@ const Index = () => {
     return `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
   };
 
-  // Calculate additional KPIs
-  const ticketMedio = totals && totals.totalNegocios > 0 
-    ? totals.totalVendas / totals.totalNegocios 
+  // Calculate additional KPIs based on filtered data
+  const ticketMedio = dashboardTotals && dashboardTotals.totalNegocios > 0 
+    ? dashboardTotals.totalVendas / dashboardTotals.totalNegocios 
     : 0;
   
-  const topFornecedores = salesReps.length > 0 
-    ? [...new Set(salesReps.flatMap(r => r.orders?.map(o => o.fornecedor) || []))].filter(f => f).length
+  const topFornecedores = dashboardFilteredSalesReps.length > 0 
+    ? [...new Set(dashboardFilteredSalesReps.flatMap(r => r.orders?.map(o => o.fornecedor) || []))].filter(f => f).length
     : 0;
 
-  const topProdutos = salesReps.length > 0
-    ? [...new Set(salesReps.flatMap(r => r.orders?.map(o => o.produto) || []))].filter(p => p).length
+  const topProdutos = dashboardFilteredSalesReps.length > 0
+    ? [...new Set(dashboardFilteredSalesReps.flatMap(r => r.orders?.map(o => o.produto) || []))].filter(p => p).length
     : 0;
+
+  // Get current selected month/year for goals
+  const currentGoalMonth = dashboardMonth !== 'all' 
+    ? parseInt(dashboardMonth.split('/')[0]) 
+    : new Date().getMonth() + 1;
+  const currentGoalYear = dashboardMonth !== 'all' 
+    ? parseInt(dashboardMonth.split('/')[1]) 
+    : new Date().getFullYear();
 
   if (loading) {
     return (
@@ -300,6 +364,27 @@ const Index = () => {
                       <FileSpreadsheet className="h-3 w-3" />
                       {dataSource === 'sheet' ? 'Planilha' : 'Histórico'}
                     </Badge>
+                    
+                    {/* Filtro de Mês */}
+                    <div className="flex items-center gap-2 ml-4">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <Select value={dashboardMonth} onValueChange={setDashboardMonth}>
+                        <SelectTrigger className="w-[160px] h-8">
+                          <SelectValue placeholder="Todos os meses" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todos os meses</SelectItem>
+                          {availableMonths.map(month => {
+                            const [m, y] = month.split('/');
+                            return (
+                              <SelectItem key={month} value={month}>
+                                {getMonthName(parseInt(m))} {y}
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <SaveReportDialog onSave={handleSaveReport} disabled={!hasData} />
@@ -310,13 +395,13 @@ const Index = () => {
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                   <MetricCard
                     title="Faturamento"
-                    value={totals ? formatCurrency(totals.totalVendas) : "R$ 0"}
+                    value={dashboardTotals ? formatCurrency(dashboardTotals.totalVendas) : "R$ 0"}
                     icon={DollarSign}
                     delay={0}
                   />
                   <MetricCard
                     title="Comissões"
-                    value={totals ? formatCurrency(totals.totalComissao) : "R$ 0"}
+                    value={dashboardTotals ? formatCurrency(dashboardTotals.totalComissao) : "R$ 0"}
                     icon={TrendingUp}
                     delay={50}
                   />
@@ -328,13 +413,13 @@ const Index = () => {
                   />
                   <MetricCard
                     title="Vendedores"
-                    value={totals ? String(totals.vendedoresAtivos) : "0"}
+                    value={dashboardTotals ? String(dashboardTotals.vendedoresAtivos) : "0"}
                     icon={Users}
                     delay={150}
                   />
                   <MetricCard
                     title="Pedidos"
-                    value={totals ? String(totals.totalNegocios) : "0"}
+                    value={dashboardTotals ? String(dashboardTotals.totalNegocios) : "0"}
                     icon={Package}
                     delay={200}
                   />
@@ -346,20 +431,28 @@ const Index = () => {
                   />
                 </div>
 
-                {/* Gráfico e Histórico */}
+                {/* Gráficos - Vendedor, Produto, Fornecedor */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <SalesChart salesReps={dashboardFilteredSalesReps} />
+                  <ProductChart salesReps={dashboardFilteredSalesReps} />
+                </div>
+                
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <div className="lg:col-span-2">
-                    <SalesChart salesReps={salesReps} />
-                  </div>
-                  <div>
-                    <HistoryPanel
-                      reports={reports}
-                      isLoading={historyLoading}
-                      onLoad={handleLoadReport}
-                      onDelete={handleDeleteReport}
-                      currentReportId={currentReportId}
-                    />
-                  </div>
+                  <SupplierChart salesReps={dashboardFilteredSalesReps} />
+                  <SalesGoalsPanel
+                    userId={user.id}
+                    month={currentGoalMonth}
+                    year={currentGoalYear}
+                    salesReps={dashboardFilteredSalesReps}
+                    totalSales={dashboardTotals?.totalVendas || 0}
+                  />
+                  <HistoryPanel
+                    reports={reports}
+                    isLoading={historyLoading}
+                    onLoad={handleLoadReport}
+                    onDelete={handleDeleteReport}
+                    currentReportId={currentReportId}
+                  />
                 </div>
               </>
             )}
