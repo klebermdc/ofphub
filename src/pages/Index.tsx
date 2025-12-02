@@ -198,10 +198,9 @@ const Index = () => {
       
       <main className="container mx-auto px-6 py-6 relative">
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-3">
+          <TabsList className="grid w-full max-w-xs grid-cols-2">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="vendedores">Vendedores</TabsTrigger>
-            <TabsTrigger value="importar">Importar</TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard" className="space-y-6">
@@ -314,31 +313,6 @@ const Index = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="importar" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="glass rounded-xl p-6">
-                <h3 className="text-lg font-semibold mb-4">Importar Planilha</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Cole o link da sua planilha do Google Sheets para importar os dados de vendas e comissões.
-                </p>
-                <SheetInput onAnalyze={handleAnalyze} isLoading={isLoading} />
-                {hasData && (
-                  <div className="mt-4 pt-4 border-t border-border">
-                    <SaveReportDialog onSave={handleSaveReport} disabled={!hasData} />
-                  </div>
-                )}
-              </div>
-              <div>
-                <HistoryPanel
-                  reports={reports}
-                  isLoading={historyLoading}
-                  onLoad={handleLoadReport}
-                  onDelete={handleDeleteReport}
-                  currentReportId={currentReportId}
-                />
-              </div>
-            </div>
-          </TabsContent>
         </Tabs>
       </main>
     </div>
