@@ -22,7 +22,6 @@ export function SalesRepTable({ salesReps, onGeneratePDF }: SalesRepTableProps) 
               <th className="text-right p-4 text-sm font-medium text-muted-foreground">Vendas</th>
               <th className="text-right p-4 text-sm font-medium text-muted-foreground">Comissão</th>
               <th className="text-right p-4 text-sm font-medium text-muted-foreground">Negócios</th>
-              <th className="text-right p-4 text-sm font-medium text-muted-foreground">Taxa</th>
               <th className="text-center p-4 text-sm font-medium text-muted-foreground">Ação</th>
             </tr>
           </thead>
@@ -49,9 +48,6 @@ export function SalesRepTable({ salesReps, onGeneratePDF }: SalesRepTableProps) 
                 </td>
                 <td className="p-4 text-right font-mono">
                   {rep.deals}
-                </td>
-                <td className="p-4 text-right font-mono">
-                  {rep.rate.toLocaleString('pt-BR', { minimumFractionDigits: 1 })}%
                 </td>
                 <td className="p-4 text-center">
                   <Button 

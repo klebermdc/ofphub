@@ -86,18 +86,6 @@ export const generateSalesRepPDF = (rep: SalesRep) => {
   doc.setFont("helvetica", "bold");
   doc.text(String(rep.deals), margin + 8, currentY + 22);
 
-  // Card 4 - Taxa
-  doc.setFillColor(248, 240, 255);
-  doc.roundedRect(margin + cardWidth + 10, currentY, cardWidth, cardHeight, 3, 3, 'F');
-  doc.setFontSize(9);
-  doc.setTextColor(100, 100, 100);
-  doc.setFont("helvetica", "normal");
-  doc.text("Taxa Média", margin + cardWidth + 18, currentY + 10);
-  doc.setFontSize(14);
-  doc.setTextColor(0, 0, 0);
-  doc.setFont("helvetica", "bold");
-  doc.text(`${rep.rate.toFixed(1)}%`, margin + cardWidth + 18, currentY + 22);
-
   currentY += cardHeight + 20;
 
   // Orders Table Header
