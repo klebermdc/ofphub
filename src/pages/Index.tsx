@@ -39,11 +39,15 @@ const Index = () => {
     salesReps.forEach(rep => {
       rep.orders?.forEach(order => {
         if (order.data) {
-          // Parse date in format DD/MM/YYYY or similar
+          // Parse date in format DD/MM/YYYY or DD/MM/YY
           const parts = order.data.split('/');
           if (parts.length >= 2) {
-            const month = parts[1];
-            const year = parts[2] || new Date().getFullYear().toString();
+            const month = parts[1].padStart(2, '0');
+            let year = parts[2] || new Date().getFullYear().toString();
+            // Convert 2-digit year to 4-digit
+            if (year.length === 2) {
+              year = `20${year}`;
+            }
             months.add(`${month}/${year}`);
           }
         }
@@ -65,8 +69,11 @@ const Index = () => {
         if (!order.data) return false;
         const parts = order.data.split('/');
         if (parts.length >= 2) {
-          const month = parts[1];
-          const year = parts[2] || new Date().getFullYear().toString();
+          const month = parts[1].padStart(2, '0');
+          let year = parts[2] || new Date().getFullYear().toString();
+          if (year.length === 2) {
+            year = `20${year}`;
+          }
           return `${month}/${year}` === selectedMonth;
         }
         return false;
