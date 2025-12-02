@@ -28,12 +28,14 @@ interface MarketingCostsDialogProps {
     googleAds: number,
     metaAds: number,
     otherMarketing: number,
+    leads: number,
     description?: string
   ) => Promise<boolean>;
   getCostForMonth: (month: number, year: number) => {
     google_ads: number;
     meta_ads: number;
     other_marketing: number;
+    leads: number;
     description: string | null;
   } | undefined;
 }
@@ -63,6 +65,7 @@ export function MarketingCostsDialog({ onSave, getCostForMonth }: MarketingCosts
   const [googleAds, setGoogleAds] = useState("");
   const [metaAds, setMetaAds] = useState("");
   const [otherMarketing, setOtherMarketing] = useState("");
+  const [leads, setLeads] = useState("");
   const [description, setDescription] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -78,11 +81,13 @@ export function MarketingCostsDialog({ onSave, getCostForMonth }: MarketingCosts
       setGoogleAds(String(existing.google_ads));
       setMetaAds(String(existing.meta_ads));
       setOtherMarketing(String(existing.other_marketing));
+      setLeads(String(existing.leads || ""));
       setDescription(existing.description || "");
     } else {
       setGoogleAds("");
       setMetaAds("");
       setOtherMarketing("");
+      setLeads("");
       setDescription("");
     }
   };
@@ -95,6 +100,7 @@ export function MarketingCostsDialog({ onSave, getCostForMonth }: MarketingCosts
       parseFloat(googleAds) || 0,
       parseFloat(metaAds) || 0,
       parseFloat(otherMarketing) || 0,
+      parseInt(leads) || 0,
       description
     );
     setIsSaving(false);
@@ -115,9 +121,9 @@ export function MarketingCostsDialog({ onSave, getCostForMonth }: MarketingCosts
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Custos de Marketing</DialogTitle>
+          <DialogTitle>Marketing e Leads</DialogTitle>
           <DialogDescription>
-            Cadastre os custos de marketing do mês selecionado.
+            Cadastre os custos de marketing e número de leads do mês.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -152,6 +158,19 @@ export function MarketingCostsDialog({ onSave, getCostForMonth }: MarketingCosts
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="leads">Número de Leads</Label>
+            <Input
+              id="leads"
+              type="number"
+              min="0"
+              step="1"
+              placeholder="0"
+              value={leads}
+              onChange={(e) => setLeads(e.target.value)}
+            />
           </div>
 
           <div className="space-y-2">

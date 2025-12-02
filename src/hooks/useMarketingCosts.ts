@@ -9,6 +9,7 @@ interface MarketingCost {
   google_ads: number;
   meta_ads: number;
   other_marketing: number;
+  leads: number;
   description: string | null;
 }
 
@@ -49,6 +50,7 @@ export function useMarketingCosts(userId: string | undefined) {
     googleAds: number,
     metaAds: number,
     otherMarketing: number,
+    leads: number,
     description?: string
   ) => {
     if (!userId) return false;
@@ -64,6 +66,7 @@ export function useMarketingCosts(userId: string | undefined) {
           google_ads: googleAds,
           meta_ads: metaAds,
           other_marketing: otherMarketing,
+          leads: leads,
           description: description || null,
         })
         .eq("id", existing.id);
@@ -84,6 +87,7 @@ export function useMarketingCosts(userId: string | undefined) {
         google_ads: googleAds,
         meta_ads: metaAds,
         other_marketing: otherMarketing,
+        leads: leads,
         description: description || null,
       });
 
@@ -117,11 +121,17 @@ export function useMarketingCosts(userId: string | undefined) {
     return cost.google_ads + cost.meta_ads + cost.other_marketing;
   };
 
+  const getLeadsForMonth = (month: number, year: number) => {
+    const cost = getCostForMonth(month, year);
+    return cost?.leads || 0;
+  };
+
   return {
     costs,
     isLoading,
     saveCost,
     getCostForMonth,
     getTotalForMonth,
+    getLeadsForMonth,
   };
 }
