@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { DollarSign, TrendingUp, Users, Target, Package, Building2, FileSpreadsheet, Calendar } from "lucide-react";
+import { DollarSign, TrendingUp, Users, Target, Package, Building2, FileSpreadsheet, Calendar, Wallet } from "lucide-react";
+import { getSalary } from "@/config/salaries";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { SheetInput } from "@/components/SheetInput";
 import { MetricCard } from "@/components/MetricCard";
@@ -294,6 +295,10 @@ const Index = () => {
     ? [...new Set(dashboardFilteredSalesReps.flatMap(r => r.orders?.map(o => o.produto) || []))].filter(p => p).length
     : 0;
 
+  // Calculate total cost (commissions + fixed salaries)
+  const totalSalaries = dashboardFilteredSalesReps.reduce((sum, rep) => sum + getSalary(rep.name), 0);
+  const totalCost = (dashboardTotals?.totalComissao || 0) + totalSalaries;
+
   // Get current selected month/year for goals
   const currentGoalMonth = dashboardMonth !== 'all' 
     ? parseInt(dashboardMonth.split('/')[0]) 
@@ -393,7 +398,7 @@ const Index = () => {
                 </div>
 
                 {/* KPIs Principais */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
                   <MetricCard
                     title="Faturamento"
                     value={dashboardTotals ? formatCurrency(dashboardTotals.totalVendas) : "R$ 0"}
@@ -405,6 +410,12 @@ const Index = () => {
                     value={dashboardTotals ? formatCurrency(dashboardTotals.totalComissao) : "R$ 0"}
                     icon={TrendingUp}
                     delay={50}
+                  />
+                  <MetricCard
+                    title="Custo Total"
+                    value={formatCurrency(totalCost)}
+                    icon={Wallet}
+                    delay={75}
                   />
                   <MetricCard
                     title="Ticket Médio"
