@@ -12,9 +12,10 @@ export interface CommissionReport {
   total_negocios: number;
   vendedores_ativos: number;
   created_at: string;
+  user_id: string | null;
 }
 
-export function useCommissionHistory() {
+export function useCommissionHistory(userId?: string) {
   const [reports, setReports] = useState<CommissionReport[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -42,13 +43,26 @@ export function useCommissionHistory() {
     totals: SalesTotals
   ) => {
     try {
-      // Check if report already exists
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Erro",
+          description: "Você precisa estar logado para salvar relatórios.",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      // Check if report already exists for this user
       const { data: existing } = await supabase
         .from('commission_reports')
         .select('id')
         .eq('period_month', month)
         .eq('period_year', year)
-        .single();
+        .eq('user_id', user.id)
+        .maybeSingle();
 
       if (existing) {
         // Delete existing report (cascade will delete related data)
@@ -67,7 +81,8 @@ export function useCommissionHistory() {
           total_vendas: totals.totalVendas,
           total_comissao: totals.totalComissao,
           total_negocios: totals.totalNegocios,
-          vendedores_ativos: totals.vendedoresAtivos
+          vendedores_ativos: totals.vendedoresAtivos,
+          user_id: user.id
         })
         .select()
         .single();
@@ -231,7 +246,7 @@ export function useCommissionHistory() {
 
   useEffect(() => {
     fetchReports();
-  }, []);
+  }, [userId]);
 
   return {
     reports,

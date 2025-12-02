@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { DollarSign, TrendingUp, Users } from "lucide-react";
-import { Header } from "@/components/Header";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { DollarSign, TrendingUp, Users, Target, Package, Building2 } from "lucide-react";
+import { DashboardHeader } from "@/components/DashboardHeader";
 import { SheetInput } from "@/components/SheetInput";
 import { MetricCard } from "@/components/MetricCard";
 import { SalesChart } from "@/components/SalesChart";
@@ -12,8 +13,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { SalesRep, SalesTotals } from "@/types/sales";
 import { generateSalesRepPDF } from "@/utils/pdfGenerator";
 import { useCommissionHistory, getMonthName } from "@/hooks/useCommissionHistory";
+import { useAuth } from "@/hooks/useAuth";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Index = () => {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+  
   const [isLoading, setIsLoading] = useState(false);
   const [hasData, setHasData] = useState(false);
   const [salesReps, setSalesReps] = useState<SalesRep[]>([]);
@@ -21,12 +27,18 @@ const Index = () => {
   const [currentReportId, setCurrentReportId] = useState<string | undefined>();
   const [currentPeriod, setCurrentPeriod] = useState<string | undefined>();
 
-  const { reports, isLoading: historyLoading, saveReport, loadReport, deleteReport } = useCommissionHistory();
+  const { reports, isLoading: historyLoading, saveReport, loadReport, deleteReport } = useCommissionHistory(user?.id);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate("/auth");
+    }
+  }, [user, loading, navigate]);
 
   const handleAnalyze = async (url: string) => {
     setIsLoading(true);
     setCurrentReportId(undefined);
-    setCurrentPeriod(undefined);
+    setCurrentPeriod("Importação atual");
     
     try {
       const { data, error } = await supabase.functions.invoke('parse-google-sheet', {
@@ -54,7 +66,6 @@ const Index = () => {
         return;
       }
 
-      // Transform data to match our SalesRep interface
       const transformedData: SalesRep[] = data.data.map((item: any, index: number) => ({
         id: String(index + 1),
         name: item.vendedor,
@@ -105,7 +116,7 @@ const Index = () => {
       
       toast({
         title: "Relatório carregado",
-        description: `Visualizando dados de ${currentPeriod || 'período selecionado'}.`,
+        description: "Dados do histórico carregados com sucesso.",
       });
     }
   };
@@ -145,9 +156,33 @@ const Index = () => {
     return `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
   };
 
+  // Calculate additional KPIs
+  const ticketMedio = totals && totals.totalNegocios > 0 
+    ? totals.totalVendas / totals.totalNegocios 
+    : 0;
+  
+  const topFornecedores = salesReps.length > 0 
+    ? [...new Set(salesReps.flatMap(r => r.orders?.map(o => o.fornecedor) || []))].filter(f => f).length
+    : 0;
+
+  const topProdutos = salesReps.length > 0
+    ? [...new Set(salesReps.flatMap(r => r.orders?.map(o => o.produto) || []))].filter(p => p).length
+    : 0;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Background gradient */}
       <div 
         className="fixed inset-0 pointer-events-none"
         style={{
@@ -155,82 +190,139 @@ const Index = () => {
         }}
       />
       
-      <Header />
+      <DashboardHeader />
       
-      <main className="container mx-auto px-6 py-8 relative">
-        {!hasData ? (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2">
-              <div className="max-w-xl mx-auto pt-12">
-                <div className="text-center mb-12 animate-fade-in">
-                  <h1 className="text-4xl md:text-5xl font-bold mb-4">
-                    Relatórios de <span className="gradient-text">Comissão</span>
-                  </h1>
-                  <p className="text-lg text-muted-foreground max-w-md mx-auto">
-                    Importe sua planilha do Google Sheets e gere relatórios PDF individuais para cada vendedor.
-                  </p>
+      <main className="container mx-auto px-6 py-6 relative">
+        <Tabs defaultValue="dashboard" className="space-y-6">
+          <TabsList className="grid w-full max-w-md grid-cols-3">
+            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+            <TabsTrigger value="vendedores">Vendedores</TabsTrigger>
+            <TabsTrigger value="importar">Importar</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="dashboard" className="space-y-6">
+            {!hasData ? (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2">
+                  <div className="glass rounded-xl p-8 text-center">
+                    <h2 className="text-2xl font-bold mb-4">Bem-vindo ao Hub de Gestão</h2>
+                    <p className="text-muted-foreground mb-6">
+                      Importe sua planilha ou selecione um relatório do histórico para visualizar os dados.
+                    </p>
+                    <SheetInput onAnalyze={handleAnalyze} isLoading={isLoading} />
+                  </div>
                 </div>
-                
-                <SheetInput onAnalyze={handleAnalyze} isLoading={isLoading} />
+                <div>
+                  <HistoryPanel
+                    reports={reports}
+                    isLoading={historyLoading}
+                    onLoad={handleLoadReport}
+                    onDelete={handleDeleteReport}
+                    currentReportId={currentReportId}
+                  />
+                </div>
               </div>
-            </div>
-            
-            <div className="lg:pt-12">
-              <HistoryPanel
-                reports={reports}
-                isLoading={historyLoading}
-                onLoad={handleLoadReport}
-                onDelete={handleDeleteReport}
-                currentReportId={currentReportId}
-              />
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-8">
-            {/* Header com período e ações */}
-            {currentPeriod && (
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-sm text-muted-foreground">Visualizando:</span>
-                  <span className="font-semibold text-lg">{currentPeriod}</span>
+            ) : (
+              <>
+                {/* Header com período */}
+                {currentPeriod && (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-muted-foreground">Período:</span>
+                      <span className="font-semibold text-lg bg-primary/10 px-3 py-1 rounded-full">
+                        {currentPeriod}
+                      </span>
+                    </div>
+                    <SaveReportDialog onSave={handleSaveReport} disabled={!hasData} />
+                  </div>
+                )}
+
+                {/* KPIs Principais */}
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                  <MetricCard
+                    title="Faturamento"
+                    value={totals ? formatCurrency(totals.totalVendas) : "R$ 0"}
+                    icon={DollarSign}
+                    delay={0}
+                  />
+                  <MetricCard
+                    title="Comissões"
+                    value={totals ? formatCurrency(totals.totalComissao) : "R$ 0"}
+                    icon={TrendingUp}
+                    delay={50}
+                  />
+                  <MetricCard
+                    title="Ticket Médio"
+                    value={formatCurrency(ticketMedio)}
+                    icon={Target}
+                    delay={100}
+                  />
+                  <MetricCard
+                    title="Vendedores"
+                    value={totals ? String(totals.vendedoresAtivos) : "0"}
+                    icon={Users}
+                    delay={150}
+                  />
+                  <MetricCard
+                    title="Pedidos"
+                    value={totals ? String(totals.totalNegocios) : "0"}
+                    icon={Package}
+                    delay={200}
+                  />
+                  <MetricCard
+                    title="Fornecedores"
+                    value={String(topFornecedores)}
+                    icon={Building2}
+                    delay={250}
+                  />
                 </div>
+
+                {/* Gráfico e Histórico */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="lg:col-span-2">
+                    <SalesChart salesReps={salesReps} />
+                  </div>
+                  <div>
+                    <HistoryPanel
+                      reports={reports}
+                      isLoading={historyLoading}
+                      onLoad={handleLoadReport}
+                      onDelete={handleDeleteReport}
+                      currentReportId={currentReportId}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+          </TabsContent>
+
+          <TabsContent value="vendedores" className="space-y-6">
+            {hasData ? (
+              <SalesRepTable salesReps={salesReps} onGeneratePDF={handleGeneratePDF} />
+            ) : (
+              <div className="glass rounded-xl p-8 text-center">
+                <p className="text-muted-foreground">
+                  Importe uma planilha ou carregue um relatório do histórico para ver os vendedores.
+                </p>
               </div>
             )}
+          </TabsContent>
 
-            {/* Métricas */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <MetricCard
-                title="Total de Vendas"
-                value={totals ? formatCurrency(totals.totalVendas) : "R$ 0"}
-                icon={DollarSign}
-                delay={0}
-              />
-              <MetricCard
-                title="Total de Comissões"
-                value={totals ? formatCurrency(totals.totalComissao) : "R$ 0"}
-                icon={TrendingUp}
-                delay={50}
-              />
-              <MetricCard
-                title="Vendedores Ativos"
-                value={totals ? String(totals.vendedoresAtivos) : "0"}
-                icon={Users}
-                delay={100}
-              />
-            </div>
-
-            {/* Gráfico, Input e Histórico */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2">
-                <SalesChart salesReps={salesReps} />
-              </div>
-              <div className="space-y-6">
-                <div className="glass rounded-xl p-4">
-                  <SheetInput onAnalyze={handleAnalyze} isLoading={isLoading} />
+          <TabsContent value="importar" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="glass rounded-xl p-6">
+                <h3 className="text-lg font-semibold mb-4">Importar Planilha</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Cole o link da sua planilha do Google Sheets para importar os dados de vendas e comissões.
+                </p>
+                <SheetInput onAnalyze={handleAnalyze} isLoading={isLoading} />
+                {hasData && (
                   <div className="mt-4 pt-4 border-t border-border">
                     <SaveReportDialog onSave={handleSaveReport} disabled={!hasData} />
                   </div>
-                </div>
+                )}
+              </div>
+              <div>
                 <HistoryPanel
                   reports={reports}
                   isLoading={historyLoading}
@@ -240,11 +332,8 @@ const Index = () => {
                 />
               </div>
             </div>
-
-            {/* Tabela de Vendedores */}
-            <SalesRepTable salesReps={salesReps} onGeneratePDF={handleGeneratePDF} />
-          </div>
-        )}
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
