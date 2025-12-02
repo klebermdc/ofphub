@@ -10,9 +10,12 @@ interface OrderDetail {
   data: string;
   pedido: string;
   venda: number;
+  fornecedor: string;
   produto: string;
   comissao: number;
-  porcentagem: number;
+  comissaoTotal: number;
+  porcentagemVendedor: number;
+  comissaoVendedor: number;
 }
 
 interface SalesData {
@@ -62,6 +65,12 @@ function parseNumber(value: string): number {
   return parseFloat(cleaned) || 0;
 }
 
+function parsePercentage(value: string): number {
+  if (!value) return 0;
+  const cleaned = value.replace('%', '').replace(',', '.').trim();
+  return parseFloat(cleaned) || 0;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -90,7 +99,6 @@ serve(async (req) => {
 
     console.log('Extracted sheet ID:', sheetId);
 
-    // Try to fetch the sheet as CSV (works for public sheets)
     const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
     
     console.log('Fetching CSV from:', csvUrl);
@@ -119,11 +127,10 @@ serve(async (req) => {
       );
     }
 
-    // Try to identify columns by header names
     const headers = rows[0].map(h => h.toLowerCase().trim());
     console.log('Headers found:', headers);
     
-    // Find column indices - matching exact user's spreadsheet headers
+    // Find column indices
     const vendedorIdx = headers.findIndex(h => h === 'vendedor');
     const vendasIdx = headers.findIndex(h => h === 'venda');
     const comissaoVendedorIdx = headers.findIndex(h => 
@@ -142,13 +149,14 @@ serve(async (req) => {
     const clienteIdx = headers.findIndex(h => h === 'cliente');
     const dataIdx = headers.findIndex(h => h === 'data');
     const produtoIdx = headers.findIndex(h => h === 'produto');
+    const fornecedorIdx = headers.findIndex(h => h === 'fornecedor');
 
     console.log('Column indices:', { 
       vendedorIdx, vendasIdx, comissaoVendedorIdx, comissaoTotalIdx, 
-      comissaoIdx, porcentagemIdx, pedidoIdx, clienteIdx, dataIdx, produtoIdx 
+      comissaoIdx, porcentagemIdx, pedidoIdx, clienteIdx, dataIdx, produtoIdx, fornecedorIdx 
     });
 
-    // Parse data rows and aggregate by salesperson with order details
+    // Parse data rows and aggregate by salesperson
     const salesByVendedor: Map<string, {
       vendas: number;
       comissao: number;
@@ -161,59 +169,49 @@ serve(async (req) => {
     for (let i = 1; i < rows.length; i++) {
       const row = rows[i];
       
-      // Skip empty rows
       if (row.every(cell => !cell)) continue;
       
       const vendedor = vendedorIdx >= 0 ? row[vendedorIdx]?.trim() : null;
       if (!vendedor) continue;
       
-      const vendas = vendasIdx >= 0 ? parseNumber(row[vendasIdx]) : 0;
-      
-      // Prefer "Comissão Vendedor" over generic "Comissão"
-      let comissao = 0;
-      if (comissaoVendedorIdx >= 0) {
-        comissao = parseNumber(row[comissaoVendedorIdx]);
-      } else if (comissaoIdx >= 0) {
-        comissao = parseNumber(row[comissaoIdx]);
-      }
-      
-      // Get percentage
-      let taxa = porcentagemIdx >= 0 ? parseNumber(row[porcentagemIdx]) : 0;
-      
-      // Calculate commission rate if not provided
-      if (taxa === 0 && vendas > 0 && comissao > 0) {
-        taxa = (comissao / vendas) * 100;
-      }
+      const venda = vendasIdx >= 0 ? parseNumber(row[vendasIdx]) : 0;
+      const comissaoVendedor = comissaoVendedorIdx >= 0 ? parseNumber(row[comissaoVendedorIdx]) : 0;
+      const comissaoTotal = comissaoTotalIdx >= 0 ? parseNumber(row[comissaoTotalIdx]) : 0;
+      const comissao = comissaoIdx >= 0 ? parsePercentage(row[comissaoIdx]) : 0;
+      const porcentagemVendedor = porcentagemIdx >= 0 ? parsePercentage(row[porcentagemIdx]) : 0;
 
-      // Create order detail
+      // Create order detail with all columns
       const orderDetail: OrderDetail = {
         cliente: clienteIdx >= 0 ? row[clienteIdx]?.trim() || '' : '',
         data: dataIdx >= 0 ? row[dataIdx]?.trim() || '' : '',
         pedido: pedidoIdx >= 0 ? row[pedidoIdx]?.trim() || '' : '',
-        venda: vendas,
+        venda: venda,
+        fornecedor: fornecedorIdx >= 0 ? row[fornecedorIdx]?.trim() || '' : '',
         produto: produtoIdx >= 0 ? row[produtoIdx]?.trim() || '' : '',
         comissao: comissao,
-        porcentagem: taxa
+        comissaoTotal: comissaoTotal,
+        porcentagemVendedor: porcentagemVendedor,
+        comissaoVendedor: comissaoVendedor
       };
       
       // Aggregate by salesperson
       const existing = salesByVendedor.get(vendedor);
       if (existing) {
-        existing.vendas += vendas;
-        existing.comissao += comissao;
+        existing.vendas += venda;
+        existing.comissao += comissaoVendedor;
         existing.negocios += 1;
-        if (taxa > 0) {
-          existing.taxa += taxa;
+        if (porcentagemVendedor > 0) {
+          existing.taxa += porcentagemVendedor;
           existing.taxaCount += 1;
         }
         existing.pedidos.push(orderDetail);
       } else {
         salesByVendedor.set(vendedor, {
-          vendas,
-          comissao,
+          vendas: venda,
+          comissao: comissaoVendedor,
           negocios: 1,
-          taxa,
-          taxaCount: taxa > 0 ? 1 : 0,
+          taxa: porcentagemVendedor,
+          taxaCount: porcentagemVendedor > 0 ? 1 : 0,
           pedidos: [orderDetail]
         });
       }
@@ -225,8 +223,7 @@ serve(async (req) => {
       vendas: data.vendas,
       comissao: data.comissao,
       negocios: data.negocios,
-      taxa: data.taxaCount > 0 ? Math.round((data.taxa / data.taxaCount) * 100) / 100 : 
-            (data.vendas > 0 ? Math.round((data.comissao / data.vendas) * 10000) / 100 : 0),
+      taxa: data.taxaCount > 0 ? Math.round((data.taxa / data.taxaCount) * 100) / 100 : 0,
       pedidos: data.pedidos
     }));
 
@@ -241,7 +238,6 @@ serve(async (req) => {
       );
     }
 
-    // Calculate totals
     const totals = {
       totalVendas: salesData.reduce((sum, d) => sum + d.vendas, 0),
       totalComissao: salesData.reduce((sum, d) => sum + d.comissao, 0),
