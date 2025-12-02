@@ -1,28 +1,13 @@
 import { FileDown, User } from "lucide-react";
 import { Button } from "./ui/button";
-
-export interface SalesRep {
-  id: string;
-  name: string;
-  sales: number;
-  commission: number;
-  deals: number;
-  rate: number;
-}
-
-const salesReps: SalesRep[] = [
-  { id: '1', name: 'Carlos Silva', sales: 45000, commission: 4500, deals: 12, rate: 10 },
-  { id: '2', name: 'Ana Santos', sales: 38000, commission: 3800, deals: 9, rate: 10 },
-  { id: '3', name: 'Pedro Lima', sales: 52000, commission: 6240, deals: 15, rate: 12 },
-  { id: '4', name: 'Maria Oliveira', sales: 41000, commission: 4100, deals: 11, rate: 10 },
-  { id: '5', name: 'João Costa', sales: 35000, commission: 3500, deals: 8, rate: 10 },
-];
+import { SalesRep } from "@/types/sales";
 
 interface SalesRepTableProps {
+  salesReps: SalesRep[];
   onGeneratePDF: (rep: SalesRep) => void;
 }
 
-export function SalesRepTable({ onGeneratePDF }: SalesRepTableProps) {
+export function SalesRepTable({ salesReps, onGeneratePDF }: SalesRepTableProps) {
   return (
     <div className="glass rounded-xl overflow-hidden animate-slide-up" style={{ animationDelay: '300ms' }}>
       <div className="p-6 border-b border-border">
@@ -57,16 +42,16 @@ export function SalesRepTable({ onGeneratePDF }: SalesRepTableProps) {
                   </div>
                 </td>
                 <td className="p-4 text-right font-mono">
-                  R$ {rep.sales.toLocaleString('pt-BR')}
+                  R$ {rep.sales.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </td>
                 <td className="p-4 text-right font-mono text-success">
-                  R$ {rep.commission.toLocaleString('pt-BR')}
+                  R$ {rep.commission.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </td>
                 <td className="p-4 text-right font-mono">
                   {rep.deals}
                 </td>
                 <td className="p-4 text-right font-mono">
-                  {rep.rate}%
+                  {rep.rate.toLocaleString('pt-BR', { minimumFractionDigits: 1 })}%
                 </td>
                 <td className="p-4 text-center">
                   <Button 

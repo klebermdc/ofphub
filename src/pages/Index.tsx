@@ -4,26 +4,74 @@ import { Header } from "@/components/Header";
 import { SheetInput } from "@/components/SheetInput";
 import { MetricCard } from "@/components/MetricCard";
 import { SalesChart } from "@/components/SalesChart";
-import { SalesRepTable, SalesRep } from "@/components/SalesRepTable";
+import { SalesRepTable } from "@/components/SalesRepTable";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { SalesRep, SalesTotals } from "@/types/sales";
 
 const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [hasData, setHasData] = useState(false);
+  const [salesReps, setSalesReps] = useState<SalesRep[]>([]);
+  const [totals, setTotals] = useState<SalesTotals | null>(null);
 
   const handleAnalyze = async (url: string) => {
     setIsLoading(true);
     
-    // Simula análise da planilha
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    try {
+      const { data, error } = await supabase.functions.invoke('parse-google-sheet', {
+        body: { sheetUrl: url }
+      });
+
+      if (error) {
+        console.error('Function error:', error);
+        toast({
+          title: "Erro ao importar",
+          description: error.message || "Não foi possível processar a planilha.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      if (data.error) {
+        toast({
+          title: "Erro na planilha",
+          description: data.error,
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Transform data to match our SalesRep interface
+      const transformedData: SalesRep[] = data.data.map((item: any, index: number) => ({
+        id: String(index + 1),
+        name: item.vendedor,
+        sales: item.vendas,
+        commission: item.comissao,
+        deals: item.negocios,
+        rate: item.taxa
+      }));
+
+      setSalesReps(transformedData);
+      setTotals(data.totals);
+      setHasData(true);
+      
+      toast({
+        title: "Planilha importada!",
+        description: data.message,
+      });
+    } catch (err) {
+      console.error('Error:', err);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao processar a planilha.",
+        variant: "destructive",
+      });
+    }
     
     setIsLoading(false);
-    setHasData(true);
-    
-    toast({
-      title: "Planilha importada!",
-      description: "Dados de 5 vendedores encontrados.",
-    });
   };
 
   const handleGeneratePDF = (rep: SalesRep) => {
@@ -32,13 +80,17 @@ const Index = () => {
       description: `Relatório de ${rep.name} será baixado em instantes.`,
     });
     
-    // Simula geração do PDF
+    // TODO: Implement real PDF generation
     setTimeout(() => {
       toast({
         title: "PDF pronto!",
         description: `Relatório de ${rep.name} disponível para download.`,
       });
     }, 1500);
+  };
+
+  const formatCurrency = (value: number) => {
+    return `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
   };
 
   return (
@@ -73,33 +125,25 @@ const Index = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <MetricCard
                 title="Total de Vendas"
-                value="R$ 211.000"
-                change="+12% comparado ao mês anterior"
-                changeType="positive"
+                value={totals ? formatCurrency(totals.totalVendas) : "R$ 0"}
                 icon={DollarSign}
                 delay={0}
               />
               <MetricCard
                 title="Total de Comissões"
-                value="R$ 22.140"
-                change="+8% comparado ao mês anterior"
-                changeType="positive"
+                value={totals ? formatCurrency(totals.totalComissao) : "R$ 0"}
                 icon={TrendingUp}
                 delay={50}
               />
               <MetricCard
                 title="Vendedores Ativos"
-                value="5"
-                change="Mesmo do mês anterior"
-                changeType="neutral"
+                value={totals ? String(totals.vendedoresAtivos) : "0"}
                 icon={Users}
                 delay={100}
               />
               <MetricCard
                 title="Taxa Média"
-                value="10,5%"
-                change="+0,5% de ajuste"
-                changeType="positive"
+                value={totals ? `${totals.taxaMedia.toLocaleString('pt-BR', { minimumFractionDigits: 1 })}%` : "0%"}
                 icon={Target}
                 delay={150}
               />
@@ -108,7 +152,7 @@ const Index = () => {
             {/* Gráfico e Input */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2">
-                <SalesChart />
+                <SalesChart salesReps={salesReps} />
               </div>
               <div>
                 <SheetInput onAnalyze={handleAnalyze} isLoading={isLoading} />
@@ -116,7 +160,7 @@ const Index = () => {
             </div>
 
             {/* Tabela de Vendedores */}
-            <SalesRepTable onGeneratePDF={handleGeneratePDF} />
+            <SalesRepTable salesReps={salesReps} onGeneratePDF={handleGeneratePDF} />
           </div>
         )}
       </main>
