@@ -402,6 +402,7 @@ const Index = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    <SheetInput onAnalyze={handleAnalyze} isLoading={isLoading} compact />
                     <SaveReportDialog onSave={handleSaveReport} disabled={!hasData} />
                   </div>
                 </div>

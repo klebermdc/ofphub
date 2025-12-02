@@ -1,16 +1,25 @@
 import { useState } from "react";
-import { Link, Loader2, FileSpreadsheet } from "lucide-react";
+import { Link, Loader2, FileSpreadsheet, RefreshCw } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { toast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./ui/dialog";
 
 interface SheetInputProps {
   onAnalyze: (url: string) => void;
   isLoading: boolean;
+  compact?: boolean;
 }
 
-export function SheetInput({ onAnalyze, isLoading }: SheetInputProps) {
+export function SheetInput({ onAnalyze, isLoading, compact = false }: SheetInputProps) {
   const [url, setUrl] = useState("");
+  const [open, setOpen] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +43,60 @@ export function SheetInput({ onAnalyze, isLoading }: SheetInputProps) {
     }
 
     onAnalyze(url);
+    setOpen(false);
+    setUrl("");
   };
+
+  if (compact) {
+    return (
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button variant="outline" size="sm" className="gap-2">
+            <RefreshCw className="h-4 w-4" />
+            Atualizar Planilha
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileSpreadsheet className="h-5 w-5 text-primary" />
+              Atualizar Planilha
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="relative">
+              <Link className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="url"
+                placeholder="https://docs.google.com/spreadsheets/d/..."
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Button 
+              type="submit" 
+              variant="gradient" 
+              className="w-full"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Analisando...
+                </>
+              ) : (
+                "Analisar Planilha"
+              )}
+            </Button>
+          </form>
+          <p className="text-xs text-muted-foreground">
+            <strong className="text-foreground">Dica:</strong> Certifique-se de que a planilha está compartilhada como "Qualquer pessoa com o link pode visualizar".
+          </p>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <div className="glass rounded-2xl p-8 animate-slide-up">
