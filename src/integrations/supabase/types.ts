@@ -79,6 +79,7 @@ export type Database = {
           total_comissao: number
           total_negocios: number
           total_vendas: number
+          user_id: string | null
           vendedores_ativos: number
         }
         Insert: {
@@ -89,6 +90,7 @@ export type Database = {
           total_comissao?: number
           total_negocios?: number
           total_vendas?: number
+          user_id?: string | null
           vendedores_ativos?: number
         }
         Update: {
@@ -99,6 +101,7 @@ export type Database = {
           total_comissao?: number
           total_negocios?: number
           total_vendas?: number
+          user_id?: string | null
           vendedores_ativos?: number
         }
         Relationships: []
@@ -140,6 +143,66 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sales_goals: {
+        Row: {
+          created_at: string
+          goal_comissao: number
+          goal_negocios: number
+          goal_vendas: number
+          id: string
+          period_month: number
+          period_year: number
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          goal_comissao?: number
+          goal_negocios?: number
+          goal_vendas?: number
+          id?: string
+          period_month: number
+          period_year: number
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          goal_comissao?: number
+          goal_negocios?: number
+          goal_vendas?: number
+          id?: string
+          period_month?: number
+          period_year?: number
+          user_id?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {
