@@ -17,7 +17,6 @@ import { MonthComparisonCard } from "@/components/MonthComparisonCard";
 import { RevenueForecastChart } from "@/components/RevenueForecastChart";
 import { TopClientsTable } from "@/components/TopClientsTable";
 import { SalespersonROI } from "@/components/SalespersonROI";
-import { PerformanceAlerts } from "@/components/PerformanceAlerts";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SalesRep, SalesTotals } from "@/types/sales";
@@ -534,13 +533,6 @@ const Index = () => {
 
                 {/* Comparação Mensal */}
                 <MonthComparisonCard 
-                  salesReps={salesReps}
-                  availableMonths={availableMonths}
-                  currentMonth={dashboardMonth}
-                />
-
-                {/* Alertas de Performance */}
-                <PerformanceAlerts
                   salesReps={salesReps}
                   availableMonths={availableMonths}
                   currentMonth={dashboardMonth}
