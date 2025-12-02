@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { DollarSign, TrendingUp, Users, Target, Package, Building2 } from "lucide-react";
+import { DollarSign, TrendingUp, Users, Target, Package, Building2, RefreshCw, Database } from "lucide-react";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { SheetInput } from "@/components/SheetInput";
 import { MetricCard } from "@/components/MetricCard";
@@ -10,24 +10,158 @@ import { HistoryPanel } from "@/components/HistoryPanel";
 import { SaveReportDialog } from "@/components/SaveReportDialog";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { SalesRep, SalesTotals } from "@/types/sales";
+import { SalesRep, SalesTotals, OrderDetail } from "@/types/sales";
 import { generateSalesRepPDF } from "@/utils/pdfGenerator";
 import { useCommissionHistory, getMonthName } from "@/hooks/useCommissionHistory";
 import { useAuth } from "@/hooks/useAuth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 const Index = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   
   const [isLoading, setIsLoading] = useState(false);
+  const [isNotionLoading, setIsNotionLoading] = useState(false);
   const [hasData, setHasData] = useState(false);
   const [salesReps, setSalesReps] = useState<SalesRep[]>([]);
   const [totals, setTotals] = useState<SalesTotals | null>(null);
   const [currentReportId, setCurrentReportId] = useState<string | undefined>();
   const [currentPeriod, setCurrentPeriod] = useState<string | undefined>();
+  const [dataSource, setDataSource] = useState<'notion' | 'sheet' | 'history'>('sheet');
+  const [lastSync, setLastSync] = useState<Date | null>(null);
 
   const { reports, isLoading: historyLoading, saveReport, loadReport, deleteReport } = useCommissionHistory(user?.id);
+
+  // Process Notion data from MCP results
+  const processNotionData = useCallback((notionResults: any[]) => {
+    const salesByRep: Record<string, {
+      name: string;
+      sales: number;
+      commission: number;
+      deals: number;
+      orders: OrderDetail[];
+    }> = {};
+
+    for (const page of notionResults) {
+      // Parse properties from page
+      const props = page.properties || {};
+      const highlight = page.highlight || '';
+      
+      // Parse from highlight text if available
+      const parseHighlight = (text: string): Record<string, string> => {
+        const result: Record<string, string> = {};
+        const lines = text.split('\n');
+        for (const line of lines) {
+          const colonIndex = line.indexOf(':');
+          if (colonIndex > 0) {
+            const key = line.substring(0, colonIndex).trim();
+            let value = line.substring(colonIndex + 1).trim();
+            value = value.replace(/\s*\(mailto:[^)]+\)/g, '');
+            value = value.replace('R$ ', '').replace(/\./g, '').replace(',', '.');
+            result[key] = value;
+          }
+        }
+        return result;
+      };
+
+      const data = parseHighlight(highlight);
+      
+      const vendedor = data.Atendende || data['Atendente$'] || props.Atendende || 'Sem Atendente';
+      const venda = parseFloat(data.Venda) || props.Venda || 0;
+      const comissaoTotal = parseFloat(data['Comissão Total']) || 0;
+      const porcentagemAtendente = parseFloat(data['Porcentagem Atendente']?.replace('%', '')) / 100 || props['Porcentagem Atendente'] || 0;
+      const comissaoVendedor = venda * porcentagemAtendente;
+      const fornecedor = data.Fornecedor || props.Fornecedor || 'Sem Fornecedor';
+      const produto = data.Produto || props.Produto || 'Sem Produto';
+
+      if (vendedor === 'Sem Atendente' || venda === 0) continue;
+
+      if (!salesByRep[vendedor]) {
+        salesByRep[vendedor] = {
+          name: vendedor,
+          sales: 0,
+          commission: 0,
+          deals: 0,
+          orders: [],
+        };
+      }
+
+      salesByRep[vendedor].sales += venda;
+      salesByRep[vendedor].commission += comissaoVendedor;
+      salesByRep[vendedor].deals += 1;
+      salesByRep[vendedor].orders.push({
+        cliente: page.title || data.Cliente || '',
+        data: data.DATA || '',
+        pedido: data.PEDIDO || '',
+        venda,
+        fornecedor,
+        produto,
+        comissao: comissaoTotal,
+        comissaoTotal,
+        porcentagemVendedor: porcentagemAtendente * 100,
+        comissaoVendedor,
+      });
+    }
+
+    const processedReps: SalesRep[] = Object.values(salesByRep)
+      .map((rep, index) => ({
+        id: `rep-${index}`,
+        name: rep.name,
+        sales: rep.sales,
+        commission: rep.commission,
+        deals: rep.deals,
+        rate: rep.sales > 0 ? (rep.commission / rep.sales) * 100 : 0,
+        orders: rep.orders,
+      }))
+      .sort((a, b) => b.sales - a.sales);
+
+    const totalVendas = processedReps.reduce((sum, rep) => sum + rep.sales, 0);
+    const totalComissao = processedReps.reduce((sum, rep) => sum + rep.commission, 0);
+    const totalNegocios = processedReps.reduce((sum, rep) => sum + rep.deals, 0);
+
+    const processedTotals: SalesTotals = {
+      totalVendas,
+      totalComissao,
+      totalNegocios,
+      taxaMedia: totalVendas > 0 ? (totalComissao / totalVendas) * 100 : 0,
+      vendedoresAtivos: processedReps.length,
+    };
+
+    return { salesReps: processedReps, totals: processedTotals };
+  }, []);
+
+  // Handle Notion sync - data comes from MCP search results passed via window event
+  const handleNotionSync = useCallback((notionResults: any[]) => {
+    setIsNotionLoading(true);
+    
+    try {
+      const { salesReps: newSalesReps, totals: newTotals } = processNotionData(notionResults);
+      
+      setSalesReps(newSalesReps);
+      setTotals(newTotals);
+      setHasData(true);
+      setDataSource('notion');
+      setCurrentReportId(undefined);
+      setCurrentPeriod('Notion - Tempo Real');
+      setLastSync(new Date());
+      
+      toast({
+        title: "Dados sincronizados!",
+        description: `${newSalesReps.length} vendedores e ${newTotals.totalNegocios} pedidos carregados do Notion.`,
+      });
+    } catch (error) {
+      console.error('Error processing Notion data:', error);
+      toast({
+        title: "Erro na sincronização",
+        description: "Não foi possível processar os dados do Notion.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsNotionLoading(false);
+    }
+  }, [processNotionData]);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -205,11 +339,34 @@ const Index = () => {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2">
                   <div className="glass rounded-xl p-8 text-center">
+                    <Database className="h-12 w-12 mx-auto mb-4 text-primary" />
                     <h2 className="text-2xl font-bold mb-4">Bem-vindo ao Hub de Gestão</h2>
                     <p className="text-muted-foreground mb-6">
-                      Importe sua planilha ou selecione um relatório do histórico para visualizar os dados.
+                      Seus dados de vendas serão carregados automaticamente do Notion.
                     </p>
-                    <SheetInput onAnalyze={handleAnalyze} isLoading={isLoading} />
+                    <div className="flex flex-col items-center gap-4">
+                      <Button
+                        onClick={() => {
+                          toast({
+                            title: "Sincronização do Notion",
+                            description: "Os dados estão sendo carregados do banco de dados Vendas Total.",
+                          });
+                        }}
+                        disabled={isNotionLoading}
+                        size="lg"
+                        className="gap-2"
+                      >
+                        {isNotionLoading ? (
+                          <RefreshCw className="h-5 w-5 animate-spin" />
+                        ) : (
+                          <Database className="h-5 w-5" />
+                        )}
+                        {isNotionLoading ? 'Carregando...' : 'Carregar Dados do Notion'}
+                      </Button>
+                      <p className="text-xs text-muted-foreground">
+                        Conectado ao banco "Vendas Total" no Notion
+                      </p>
+                    </div>
                   </div>
                 </div>
                 <div>
@@ -224,18 +381,39 @@ const Index = () => {
               </div>
             ) : (
               <>
-                {/* Header com período */}
-                {currentPeriod && (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm text-muted-foreground">Período:</span>
-                      <span className="font-semibold text-lg bg-primary/10 px-3 py-1 rounded-full">
-                        {currentPeriod}
+                {/* Header com período e fonte */}
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-muted-foreground">Fonte:</span>
+                    <Badge variant={dataSource === 'notion' ? 'default' : 'secondary'} className="gap-1">
+                      <Database className="h-3 w-3" />
+                      {dataSource === 'notion' ? 'Notion (Tempo Real)' : dataSource === 'sheet' ? 'Planilha' : 'Histórico'}
+                    </Badge>
+                    {lastSync && dataSource === 'notion' && (
+                      <span className="text-xs text-muted-foreground">
+                        Última sync: {lastSync.toLocaleTimeString('pt-BR')}
                       </span>
-                    </div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        toast({
+                          title: "Atualizando dados...",
+                          description: "Buscando dados mais recentes do Notion.",
+                        });
+                      }}
+                      disabled={isNotionLoading}
+                      className="gap-1"
+                    >
+                      <RefreshCw className={`h-4 w-4 ${isNotionLoading ? 'animate-spin' : ''}`} />
+                      Atualizar
+                    </Button>
                     <SaveReportDialog onSave={handleSaveReport} disabled={!hasData} />
                   </div>
-                )}
+                </div>
 
                 {/* KPIs Principais */}
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
