@@ -76,18 +76,27 @@ const Index = () => {
     setIsLoading(false);
   };
 
-  const handleGeneratePDF = (rep: SalesRep) => {
+  const handleGeneratePDF = async (rep: SalesRep) => {
     toast({
       title: "Gerando PDF...",
       description: `Relatório de ${rep.name} será baixado em instantes.`,
     });
 
-    generateSalesRepPDF(rep);
-    
-    toast({
-      title: "PDF pronto!",
-      description: `Relatório de ${rep.name} baixado com sucesso.`,
-    });
+    try {
+      await generateSalesRepPDF(rep);
+      
+      toast({
+        title: "PDF pronto!",
+        description: `Relatório de ${rep.name} baixado com sucesso.`,
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível gerar o PDF.",
+        variant: "destructive",
+      });
+    }
   };
 
   const formatCurrency = (value: number) => {
