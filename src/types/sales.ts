@@ -3,9 +3,12 @@ export interface OrderDetail {
   data: string;
   pedido: string;
   venda: number;
+  fornecedor: string;
   produto: string;
   comissao: number;
-  porcentagem: number;
+  comissaoTotal: number;
+  porcentagemVendedor: number;
+  comissaoVendedor: number;
 }
 
 export interface SalesRep {
