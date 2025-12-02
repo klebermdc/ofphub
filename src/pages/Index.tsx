@@ -295,6 +295,12 @@ const Index = () => {
     ? [...new Set(dashboardFilteredSalesReps.flatMap(r => r.orders?.map(o => o.produto) || []))].filter(p => p).length
     : 0;
 
+  // Calculate Comissão Total (from comissaoTotal column)
+  const totalComissaoTotal = dashboardFilteredSalesReps.reduce(
+    (sum, rep) => sum + (rep.orders?.reduce((s, o) => s + (o.comissaoTotal || 0), 0) || 0), 
+    0
+  );
+
   // Calculate total cost (commissions + fixed salaries)
   const totalSalaries = dashboardFilteredSalesReps.reduce((sum, rep) => sum + getSalary(rep.name), 0);
   const totalCost = (dashboardTotals?.totalComissao || 0) + totalSalaries;
@@ -398,7 +404,7 @@ const Index = () => {
                 </div>
 
                 {/* KPIs Principais - Financeiros */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                   <MetricCard
                     title="Faturamento"
                     value={dashboardTotals ? formatCurrency(dashboardTotals.totalVendas) : "R$ 0"}
@@ -407,24 +413,30 @@ const Index = () => {
                     variant="success"
                   />
                   <MetricCard
-                    title="Comissões"
-                    value={dashboardTotals ? formatCurrency(dashboardTotals.totalComissao) : "R$ 0"}
+                    title="Comissão Total"
+                    value={formatCurrency(totalComissaoTotal)}
                     icon={TrendingUp}
                     delay={50}
                     variant="warning"
                   />
                   <MetricCard
+                    title="Comissão Vendedor"
+                    value={dashboardTotals ? formatCurrency(dashboardTotals.totalComissao) : "R$ 0"}
+                    icon={TrendingUp}
+                    delay={75}
+                  />
+                  <MetricCard
                     title="Custo Total"
                     value={formatCurrency(totalCost)}
                     icon={Wallet}
-                    delay={75}
+                    delay={100}
                     variant="danger"
                   />
                   <MetricCard
                     title="Ticket Médio"
                     value={formatCurrency(ticketMedio)}
                     icon={Target}
-                    delay={100}
+                    delay={125}
                     variant="info"
                   />
                 </div>
