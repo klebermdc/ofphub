@@ -404,24 +404,28 @@ const Index = () => {
                     value={dashboardTotals ? formatCurrency(dashboardTotals.totalVendas) : "R$ 0"}
                     icon={DollarSign}
                     delay={0}
+                    variant="success"
                   />
                   <MetricCard
                     title="Comissões"
                     value={dashboardTotals ? formatCurrency(dashboardTotals.totalComissao) : "R$ 0"}
                     icon={TrendingUp}
                     delay={50}
+                    variant="warning"
                   />
                   <MetricCard
                     title="Custo Total"
                     value={formatCurrency(totalCost)}
                     icon={Wallet}
                     delay={75}
+                    variant="danger"
                   />
                   <MetricCard
                     title="Ticket Médio"
                     value={formatCurrency(ticketMedio)}
                     icon={Target}
                     delay={100}
+                    variant="info"
                   />
                 </div>
 
