@@ -4,7 +4,7 @@ import { Header } from "@/components/Header";
 import { SheetInput } from "@/components/SheetInput";
 import { MetricCard } from "@/components/MetricCard";
 import { SalesChart } from "@/components/SalesChart";
-import { SalesRepTable } from "@/components/SalesRepTable";
+import { SalesRepTable, SalesRep } from "@/components/SalesRepTable";
 import { toast } from "@/hooks/use-toast";
 
 const Index = () => {
@@ -26,7 +26,7 @@ const Index = () => {
     });
   };
 
-  const handleGeneratePDF = (rep: { name: string }) => {
+  const handleGeneratePDF = (rep: SalesRep) => {
     toast({
       title: "Gerando PDF...",
       description: `Relatório de ${rep.name} será baixado em instantes.`,
@@ -35,8 +35,8 @@ const Index = () => {
     // Simula geração do PDF
     setTimeout(() => {
       toast({
-        title: "PDF gerado!",
-        description: `Relatório de ${rep.name} pronto para download.`,
+        title: "PDF pronto!",
+        description: `Relatório de ${rep.name} disponível para download.`,
       });
     }, 1500);
   };
@@ -74,15 +74,15 @@ const Index = () => {
               <MetricCard
                 title="Total de Vendas"
                 value="R$ 211.000"
-                change="+12% vs mês anterior"
+                change="+12% comparado ao mês anterior"
                 changeType="positive"
                 icon={DollarSign}
                 delay={0}
               />
               <MetricCard
-                title="Total Comissões"
+                title="Total de Comissões"
                 value="R$ 22.140"
-                change="+8% vs mês anterior"
+                change="+8% comparado ao mês anterior"
                 changeType="positive"
                 icon={TrendingUp}
                 delay={50}
@@ -97,8 +97,8 @@ const Index = () => {
               />
               <MetricCard
                 title="Taxa Média"
-                value="10.5%"
-                change="+0.5% ajuste"
+                value="10,5%"
+                change="+0,5% de ajuste"
                 changeType="positive"
                 icon={Target}
                 delay={150}
