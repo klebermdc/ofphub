@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { DollarSign, TrendingUp, Users, Target, Package, Building2, FileSpreadsheet, Calendar, Wallet, CircleDollarSign } from "lucide-react";
+import { DollarSign, TrendingUp, Users, Target, Package, Building2, FileSpreadsheet, Calendar, Wallet, CircleDollarSign, FileText } from "lucide-react";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { SheetInput } from "@/components/SheetInput";
 import { MetricCard } from "@/components/MetricCard";
@@ -13,10 +13,15 @@ import { SaveReportDialog } from "@/components/SaveReportDialog";
 import { SalesGoalsPanel } from "@/components/SalesGoalsPanel";
 import { SalesRanking } from "@/components/SalesRanking";
 import { SalaryManagementDialog } from "@/components/SalaryManagementDialog";
+import { MonthComparisonCard } from "@/components/MonthComparisonCard";
+import { RevenueForecastChart } from "@/components/RevenueForecastChart";
+import { TopClientsTable } from "@/components/TopClientsTable";
+import { SalespersonROI } from "@/components/SalespersonROI";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SalesRep, SalesTotals } from "@/types/sales";
 import { generateSalesRepPDF } from "@/utils/pdfGenerator";
+import { generateConsolidatedPDF } from "@/utils/consolidatedPdfGenerator";
 import { useCommissionHistory, getMonthName } from "@/hooks/useCommissionHistory";
 import { useAuth } from "@/hooks/useAuth";
 import { useSheetSettings } from "@/hooks/useSheetSettings";
@@ -24,6 +29,7 @@ import { useSalespersonSalaries } from "@/hooks/useSalespersonSalaries";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -419,6 +425,26 @@ const Index = () => {
                     <SalaryManagementDialog salaries={salaries} onSave={saveSalaries} />
                     <SheetInput onAnalyze={handleAnalyze} isLoading={isLoading} compact />
                     <SaveReportDialog onSave={handleSaveReport} disabled={!hasData} />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        toast({ title: "Gerando PDF...", description: "Relatório consolidado será baixado em instantes." });
+                        const [m, y] = dashboardMonth !== 'all' ? dashboardMonth.split('/') : ['', ''];
+                        await generateConsolidatedPDF({
+                          salesReps: dashboardFilteredSalesReps,
+                          totals: dashboardTotals,
+                          getSalary,
+                          month: m ? getMonthName(parseInt(m)) : undefined,
+                          year: y || undefined
+                        });
+                        toast({ title: "PDF pronto!", description: "Relatório consolidado baixado com sucesso." });
+                      }}
+                      className="gap-2"
+                    >
+                      <FileText className="h-4 w-4" />
+                      PDF Consolidado
+                    </Button>
                   </div>
                 </div>
 
@@ -493,6 +519,13 @@ const Index = () => {
                   />
                 </div>
 
+                {/* Comparação Mensal */}
+                <MonthComparisonCard 
+                  salesReps={salesReps}
+                  availableMonths={availableMonths}
+                  currentMonth={dashboardMonth}
+                />
+
                 {/* Gráficos - Vendedor, Produto, Fornecedor */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <SalesChart salesReps={dashboardFilteredSalesReps} />
@@ -504,7 +537,15 @@ const Index = () => {
                   <SalesRanking salesReps={dashboardFilteredSalesReps} />
                 </div>
 
+                {/* Projeção e Top Clientes */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <RevenueForecastChart salesReps={salesReps} availableMonths={availableMonths} />
+                  <TopClientsTable salesReps={dashboardFilteredSalesReps} />
+                </div>
+
+                {/* ROI e Metas */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <SalespersonROI salesReps={dashboardFilteredSalesReps} getSalary={getSalary} />
                   <SalesGoalsPanel
                     userId={user.id}
                     month={currentGoalMonth}
@@ -512,14 +553,16 @@ const Index = () => {
                     salesReps={dashboardFilteredSalesReps}
                     totalSales={dashboardTotals?.totalVendas || 0}
                   />
-                  <HistoryPanel
-                    reports={reports}
-                    isLoading={historyLoading}
-                    onLoad={handleLoadReport}
-                    onDelete={handleDeleteReport}
-                    currentReportId={currentReportId}
-                  />
                 </div>
+
+                {/* Histórico */}
+                <HistoryPanel
+                  reports={reports}
+                  isLoading={historyLoading}
+                  onLoad={handleLoadReport}
+                  onDelete={handleDeleteReport}
+                  currentReportId={currentReportId}
+                />
               </>
             )}
           </TabsContent>
