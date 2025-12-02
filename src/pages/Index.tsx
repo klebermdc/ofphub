@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { DollarSign, TrendingUp, Users, Target, Package, Building2, FileSpreadsheet, Calendar, Wallet, CircleDollarSign } from "lucide-react";
-import { getSalary } from "@/config/salaries";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { SheetInput } from "@/components/SheetInput";
 import { MetricCard } from "@/components/MetricCard";
@@ -13,6 +12,7 @@ import { HistoryPanel } from "@/components/HistoryPanel";
 import { SaveReportDialog } from "@/components/SaveReportDialog";
 import { SalesGoalsPanel } from "@/components/SalesGoalsPanel";
 import { SalesRanking } from "@/components/SalesRanking";
+import { SalaryManagementDialog } from "@/components/SalaryManagementDialog";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SalesRep, SalesTotals } from "@/types/sales";
@@ -20,6 +20,7 @@ import { generateSalesRepPDF } from "@/utils/pdfGenerator";
 import { useCommissionHistory, getMonthName } from "@/hooks/useCommissionHistory";
 import { useAuth } from "@/hooks/useAuth";
 import { useSheetSettings } from "@/hooks/useSheetSettings";
+import { useSalespersonSalaries } from "@/hooks/useSalespersonSalaries";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -40,6 +41,7 @@ const Index = () => {
 
   const { reports, isLoading: historyLoading, saveReport, loadReport, deleteReport } = useCommissionHistory(user?.id);
   const { savedUrl, isLoading: settingsLoading, saveUrl } = useSheetSettings(user?.id);
+  const { salaries, saveSalaries, getSalary } = useSalespersonSalaries(user?.id);
 
   // Auto-load saved sheet URL on mount
   useEffect(() => {
@@ -414,6 +416,7 @@ const Index = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    <SalaryManagementDialog salaries={salaries} onSave={saveSalaries} />
                     <SheetInput onAnalyze={handleAnalyze} isLoading={isLoading} compact />
                     <SaveReportDialog onSave={handleSaveReport} disabled={!hasData} />
                   </div>
