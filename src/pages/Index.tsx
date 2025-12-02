@@ -10,13 +10,14 @@ import { HistoryPanel } from "@/components/HistoryPanel";
 import { SaveReportDialog } from "@/components/SaveReportDialog";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { SalesRep, SalesTotals, OrderDetail } from "@/types/sales";
+import { SalesRep, SalesTotals } from "@/types/sales";
 import { generateSalesRepPDF } from "@/utils/pdfGenerator";
 import { useCommissionHistory, getMonthName } from "@/hooks/useCommissionHistory";
 import { useAuth } from "@/hooks/useAuth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { processNotionData as loadNotionSalesData, getSalesBySupplier, getSalesByProduct } from "@/data/notionSalesData";
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -34,110 +35,12 @@ const Index = () => {
 
   const { reports, isLoading: historyLoading, saveReport, loadReport, deleteReport } = useCommissionHistory(user?.id);
 
-  // Process Notion data from MCP results
-  const processNotionData = useCallback((notionResults: any[]) => {
-    const salesByRep: Record<string, {
-      name: string;
-      sales: number;
-      commission: number;
-      deals: number;
-      orders: OrderDetail[];
-    }> = {};
-
-    for (const page of notionResults) {
-      // Parse properties from page
-      const props = page.properties || {};
-      const highlight = page.highlight || '';
-      
-      // Parse from highlight text if available
-      const parseHighlight = (text: string): Record<string, string> => {
-        const result: Record<string, string> = {};
-        const lines = text.split('\n');
-        for (const line of lines) {
-          const colonIndex = line.indexOf(':');
-          if (colonIndex > 0) {
-            const key = line.substring(0, colonIndex).trim();
-            let value = line.substring(colonIndex + 1).trim();
-            value = value.replace(/\s*\(mailto:[^)]+\)/g, '');
-            value = value.replace('R$ ', '').replace(/\./g, '').replace(',', '.');
-            result[key] = value;
-          }
-        }
-        return result;
-      };
-
-      const data = parseHighlight(highlight);
-      
-      const vendedor = data.Atendende || data['Atendente$'] || props.Atendende || 'Sem Atendente';
-      const venda = parseFloat(data.Venda) || props.Venda || 0;
-      const comissaoTotal = parseFloat(data['Comissão Total']) || 0;
-      const porcentagemAtendente = parseFloat(data['Porcentagem Atendente']?.replace('%', '')) / 100 || props['Porcentagem Atendente'] || 0;
-      const comissaoVendedor = venda * porcentagemAtendente;
-      const fornecedor = data.Fornecedor || props.Fornecedor || 'Sem Fornecedor';
-      const produto = data.Produto || props.Produto || 'Sem Produto';
-
-      if (vendedor === 'Sem Atendente' || venda === 0) continue;
-
-      if (!salesByRep[vendedor]) {
-        salesByRep[vendedor] = {
-          name: vendedor,
-          sales: 0,
-          commission: 0,
-          deals: 0,
-          orders: [],
-        };
-      }
-
-      salesByRep[vendedor].sales += venda;
-      salesByRep[vendedor].commission += comissaoVendedor;
-      salesByRep[vendedor].deals += 1;
-      salesByRep[vendedor].orders.push({
-        cliente: page.title || data.Cliente || '',
-        data: data.DATA || '',
-        pedido: data.PEDIDO || '',
-        venda,
-        fornecedor,
-        produto,
-        comissao: comissaoTotal,
-        comissaoTotal,
-        porcentagemVendedor: porcentagemAtendente * 100,
-        comissaoVendedor,
-      });
-    }
-
-    const processedReps: SalesRep[] = Object.values(salesByRep)
-      .map((rep, index) => ({
-        id: `rep-${index}`,
-        name: rep.name,
-        sales: rep.sales,
-        commission: rep.commission,
-        deals: rep.deals,
-        rate: rep.sales > 0 ? (rep.commission / rep.sales) * 100 : 0,
-        orders: rep.orders,
-      }))
-      .sort((a, b) => b.sales - a.sales);
-
-    const totalVendas = processedReps.reduce((sum, rep) => sum + rep.sales, 0);
-    const totalComissao = processedReps.reduce((sum, rep) => sum + rep.commission, 0);
-    const totalNegocios = processedReps.reduce((sum, rep) => sum + rep.deals, 0);
-
-    const processedTotals: SalesTotals = {
-      totalVendas,
-      totalComissao,
-      totalNegocios,
-      taxaMedia: totalVendas > 0 ? (totalComissao / totalVendas) * 100 : 0,
-      vendedoresAtivos: processedReps.length,
-    };
-
-    return { salesReps: processedReps, totals: processedTotals };
-  }, []);
-
-  // Handle Notion sync - data comes from MCP search results passed via window event
-  const handleNotionSync = useCallback((notionResults: any[]) => {
+  // Load Notion data
+  const loadNotionData = useCallback(() => {
     setIsNotionLoading(true);
     
     try {
-      const { salesReps: newSalesReps, totals: newTotals } = processNotionData(notionResults);
+      const { salesReps: newSalesReps, totals: newTotals } = loadNotionSalesData();
       
       setSalesReps(newSalesReps);
       setTotals(newTotals);
@@ -148,20 +51,20 @@ const Index = () => {
       setLastSync(new Date());
       
       toast({
-        title: "Dados sincronizados!",
-        description: `${newSalesReps.length} vendedores e ${newTotals.totalNegocios} pedidos carregados do Notion.`,
+        title: "Dados carregados!",
+        description: `${newSalesReps.length} vendedores e ${newTotals.totalNegocios} pedidos do Notion.`,
       });
     } catch (error) {
-      console.error('Error processing Notion data:', error);
+      console.error('Error loading Notion data:', error);
       toast({
-        title: "Erro na sincronização",
-        description: "Não foi possível processar os dados do Notion.",
+        title: "Erro",
+        description: "Não foi possível carregar os dados do Notion.",
         variant: "destructive",
       });
     } finally {
       setIsNotionLoading(false);
     }
-  }, [processNotionData]);
+  }, []);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -346,12 +249,7 @@ const Index = () => {
                     </p>
                     <div className="flex flex-col items-center gap-4">
                       <Button
-                        onClick={() => {
-                          toast({
-                            title: "Sincronização do Notion",
-                            description: "Os dados estão sendo carregados do banco de dados Vendas Total.",
-                          });
-                        }}
+                        onClick={loadNotionData}
                         disabled={isNotionLoading}
                         size="lg"
                         className="gap-2"
@@ -399,12 +297,7 @@ const Index = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => {
-                        toast({
-                          title: "Atualizando dados...",
-                          description: "Buscando dados mais recentes do Notion.",
-                        });
-                      }}
+                      onClick={loadNotionData}
                       disabled={isNotionLoading}
                       className="gap-1"
                     >
