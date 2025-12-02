@@ -150,6 +150,7 @@ export type Database = {
           description: string | null
           google_ads: number
           id: string
+          leads: number
           meta_ads: number
           other_marketing: number
           period_month: number
@@ -162,6 +163,7 @@ export type Database = {
           description?: string | null
           google_ads?: number
           id?: string
+          leads?: number
           meta_ads?: number
           other_marketing?: number
           period_month: number
@@ -174,6 +176,7 @@ export type Database = {
           description?: string | null
           google_ads?: number
           id?: string
+          leads?: number
           meta_ads?: number
           other_marketing?: number
           period_month?: number

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { DollarSign, TrendingUp, Users, Target, Package, Building2, FileSpreadsheet, Calendar, Wallet, CircleDollarSign, FileText, Megaphone } from "lucide-react";
+import { DollarSign, TrendingUp, Users, Target, Package, Building2, FileSpreadsheet, Calendar, Wallet, CircleDollarSign, FileText, Megaphone, UserPlus, Percent } from "lucide-react";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { SheetInput } from "@/components/SheetInput";
 import { MetricCard } from "@/components/MetricCard";
@@ -50,7 +50,7 @@ const Index = () => {
   const { reports, isLoading: historyLoading, saveReport, loadReport, deleteReport } = useCommissionHistory(user?.id);
   const { savedUrl, isLoading: settingsLoading, saveUrl } = useSheetSettings(user?.id);
   const { salaries, saveSalaries, getSalary } = useSalespersonSalaries(user?.id);
-  const { saveCost: saveMarketingCost, getCostForMonth, getTotalForMonth } = useMarketingCosts(user?.id);
+  const { saveCost: saveMarketingCost, getCostForMonth, getTotalForMonth, getLeadsForMonth } = useMarketingCosts(user?.id);
 
   // Auto-load saved sheet URL on mount
   useEffect(() => {
@@ -337,6 +337,11 @@ const Index = () => {
   const marketingCost = getTotalForMonth(currentGoalMonth, currentGoalYear);
   const totalCost = (dashboardTotals?.totalComissao || 0) + totalSalaries + marketingCost;
 
+  // Calculate leads and conversion rate
+  const totalLeads = getLeadsForMonth(currentGoalMonth, currentGoalYear);
+  const totalOrders = dashboardTotals?.totalNegocios || 0;
+  const conversionRate = totalLeads > 0 ? (totalOrders / totalLeads) * 100 : 0;
+
   // Calculate profit (Comissão Total - Custo Total)
   const resultado = totalComissaoTotal - totalCost;
 
@@ -510,7 +515,7 @@ const Index = () => {
                 </div>
 
                 {/* KPIs Terciários - Operacionais */}
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <MetricCard
                     title="Vendedores"
                     value={dashboardTotals ? String(dashboardTotals.vendedoresAtivos) : "0"}
@@ -524,10 +529,17 @@ const Index = () => {
                     delay={200}
                   />
                   <MetricCard
-                    title="Fornecedores"
-                    value={String(topFornecedores)}
-                    icon={Building2}
+                    title="Leads"
+                    value={String(totalLeads)}
+                    icon={UserPlus}
+                    delay={225}
+                  />
+                  <MetricCard
+                    title="Taxa de Conversão"
+                    value={`${conversionRate.toFixed(1)}%`}
+                    icon={Percent}
                     delay={250}
+                    variant={conversionRate >= 10 ? "success" : conversionRate >= 5 ? "warning" : "danger"}
                   />
                 </div>
 
