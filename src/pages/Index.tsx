@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { DollarSign, TrendingUp, Users, Target, Package, Building2, FileSpreadsheet, Calendar, Wallet, CircleDollarSign, FileText, Megaphone, UserPlus, Percent } from "lucide-react";
+import { DollarSign, TrendingUp, Users, Target, Package, Building2, FileSpreadsheet, Calendar, Wallet, CircleDollarSign, FileText, Megaphone, UserPlus, Percent, Receipt } from "lucide-react";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { SheetInput } from "@/components/SheetInput";
 import { MetricCard } from "@/components/MetricCard";
@@ -28,6 +28,7 @@ import { useSheetSettings } from "@/hooks/useSheetSettings";
 import { useSalespersonSalaries } from "@/hooks/useSalespersonSalaries";
 import { useMarketingCosts } from "@/hooks/useMarketingCosts";
 import { MarketingCostsDialog } from "@/components/MarketingCostsDialog";
+import { AccountingTab } from "@/components/AccountingTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -370,9 +371,13 @@ const Index = () => {
       
       <main className="container mx-auto px-6 py-6 relative">
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid w-full max-w-xs grid-cols-2">
+          <TabsList className="grid w-full max-w-md grid-cols-3">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="vendedores">Vendedores</TabsTrigger>
+            <TabsTrigger value="contabilidade" className="gap-1">
+              <Receipt className="h-4 w-4" />
+              Contabilidade
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard" className="space-y-6">
@@ -628,6 +633,10 @@ const Index = () => {
                 </p>
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="contabilidade" className="space-y-6">
+            <AccountingTab userId={user?.id} />
           </TabsContent>
 
         </Tabs>
