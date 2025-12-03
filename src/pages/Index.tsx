@@ -17,6 +17,7 @@ import { MonthComparisonCard } from "@/components/MonthComparisonCard";
 import { RevenueForecastChart } from "@/components/RevenueForecastChart";
 import { TopClientsTable } from "@/components/TopClientsTable";
 import { SalespersonROI } from "@/components/SalespersonROI";
+import { SalespersonAccountsDialog } from "@/components/SalespersonAccountsDialog";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SalesRep, SalesTotals } from "@/types/sales";
@@ -27,6 +28,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSheetSettings } from "@/hooks/useSheetSettings";
 import { useSalespersonSalaries } from "@/hooks/useSalespersonSalaries";
 import { useMarketingCosts } from "@/hooks/useMarketingCosts";
+import { useUserRole } from "@/hooks/useUserRole";
 import { MarketingCostsDialog } from "@/components/MarketingCostsDialog";
 import { AccountingTab } from "@/components/AccountingTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -52,6 +54,7 @@ const Index = () => {
   const { savedUrl, isLoading: settingsLoading, saveUrl } = useSheetSettings(user?.id);
   const { salaries, saveSalaries, getSalary } = useSalespersonSalaries(user?.id);
   const { saveCost: saveMarketingCost, getCostForMonth, getTotalForMonth, getLeadsForMonth } = useMarketingCosts(user?.id);
+  const { role, isLoading: roleLoading, assignManagerRole } = useUserRole(user?.id);
 
   // Auto-load saved sheet URL on mount
   useEffect(() => {
@@ -174,11 +177,22 @@ const Index = () => {
     };
   }, [dashboardMonth, dashboardFilteredSalesReps, totals]);
 
+  // Handle authentication and role-based routing
   useEffect(() => {
-    if (!loading && !user) {
-      navigate("/auth");
-    }
-  }, [user, loading, navigate]);
+    const handleRoleCheck = async () => {
+      if (!loading && !roleLoading) {
+        if (!user) {
+          navigate("/auth");
+        } else if (role === 'salesperson') {
+          navigate("/vendedor");
+        } else if (!role) {
+          // No role assigned - assign manager role (first user or existing managers)
+          await assignManagerRole();
+        }
+      }
+    };
+    handleRoleCheck();
+  }, [user, loading, role, roleLoading, navigate, assignManagerRole]);
 
   const handleAnalyze = async (url: string) => {
     setIsLoading(true);
@@ -346,7 +360,7 @@ const Index = () => {
   // Calculate profit (Comissão Total - Custo Total)
   const resultado = totalComissaoTotal - totalCost;
 
-  if (loading) {
+  if (loading || roleLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full"></div>
@@ -435,7 +449,11 @@ const Index = () => {
                       </Select>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <SalespersonAccountsDialog 
+                      userId={user?.id} 
+                      availableSalespeople={salesReps.map(r => r.name)} 
+                    />
                     <SalaryManagementDialog salaries={salaries} onSave={saveSalaries} />
                     <MarketingCostsDialog onSave={saveMarketingCost} getCostForMonth={getCostForMonth} />
                     <SheetInput onAnalyze={handleAnalyze} isLoading={isLoading} compact />
