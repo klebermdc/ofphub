@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounting_entries: {
+        Row: {
+          banco: string | null
+          cliente: string | null
+          created_at: string
+          data: string
+          forma_de_pagamento: string | null
+          id: string
+          justificativa: string | null
+          movimentacao: string | null
+          nf: string | null
+          plano_de_contas: string | null
+          updated_at: string
+          user_id: string
+          valor_enviado: number
+          valor_recebido: number
+        }
+        Insert: {
+          banco?: string | null
+          cliente?: string | null
+          created_at?: string
+          data: string
+          forma_de_pagamento?: string | null
+          id?: string
+          justificativa?: string | null
+          movimentacao?: string | null
+          nf?: string | null
+          plano_de_contas?: string | null
+          updated_at?: string
+          user_id: string
+          valor_enviado?: number
+          valor_recebido?: number
+        }
+        Update: {
+          banco?: string | null
+          cliente?: string | null
+          created_at?: string
+          data?: string
+          forma_de_pagamento?: string | null
+          id?: string
+          justificativa?: string | null
+          movimentacao?: string | null
+          nf?: string | null
+          plano_de_contas?: string | null
+          updated_at?: string
+          user_id?: string
+          valor_enviado?: number
+          valor_recebido?: number
+        }
+        Relationships: []
+      }
       commission_orders: {
         Row: {
           cliente: string | null
