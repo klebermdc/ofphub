@@ -47,14 +47,11 @@ export function SalespersonAccountsDialog({ userId, availableSalespeople }: Sale
     setIsLinking(true);
 
     try {
-      // Find user by email in profiles
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', email)
-        .single();
+      // Find user by email using security definer function
+      const { data: userId, error: findError } = await supabase
+        .rpc('find_user_by_email', { _email: email });
 
-      if (profileError || !profile) {
+      if (findError || !userId) {
         toast({
           title: "Usuário não encontrado",
           description: "Esse email não está cadastrado. O vendedor precisa criar uma conta primeiro.",
@@ -64,7 +61,7 @@ export function SalespersonAccountsDialog({ userId, availableSalespeople }: Sale
         return;
       }
 
-      const success = await linkSalesperson(profile.id, selectedName);
+      const success = await linkSalesperson(userId, selectedName);
 
       if (success) {
         toast({
