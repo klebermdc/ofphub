@@ -20,7 +20,6 @@ import {
 import { AccountingEntry, useAccountingEntries } from "@/hooks/useAccountingEntries";
 import { useAccountingFiles } from "@/hooks/useAccountingFiles";
 import { toast } from "@/hooks/use-toast";
-import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 
 interface AccountingTabProps {
@@ -228,7 +227,9 @@ export function AccountingTab({ userId }: AccountingTabProps) {
   const saldo = totalRecebido - totalEnviado;
 
   // Export to Excel
-  const exportToExcel = () => {
+  const exportToExcel = async () => {
+    const XLSX = await import("xlsx");
+    
     const data = filteredEntries.map(entry => ({
       Data: formatDate(entry.data),
       "Valor Recebido": entry.valor_recebido,
