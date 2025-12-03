@@ -48,22 +48,21 @@ export function useUserRole(userId: string | undefined) {
     loadRole();
   }, [loadRole]);
 
-  // Assign manager role to current user
+  // Assign manager role to current user (first user only)
   const assignManagerRole = async () => {
     if (!userId) return false;
 
     try {
-      const { error } = await supabase
-        .from('user_roles')
-        .insert({
-          user_id: userId,
-          role: 'manager'
-        });
+      const { data, error } = await supabase
+        .rpc('assign_first_manager', { _user_id: userId });
 
       if (error) throw error;
       
-      setRole('manager');
-      return true;
+      if (data) {
+        setRole('manager');
+        return true;
+      }
+      return false;
     } catch (error) {
       console.error('Error assigning manager role:', error);
       return false;
@@ -105,36 +104,19 @@ export function useSalespersonAccounts(userId: string | undefined) {
 
   const linkSalesperson = async (salespersonUserId: string, salespersonName: string) => {
     try {
-      // First check if user already has a role
-      const { data: existing } = await supabase
-        .from('user_roles')
-        .select('*')
-        .eq('user_id', salespersonUserId)
-        .single();
+      const { data, error } = await supabase
+        .rpc('link_salesperson', { 
+          _target_user_id: salespersonUserId, 
+          _salesperson_name: salespersonName 
+        });
 
-      if (existing) {
-        // Update existing role
-        const { error } = await supabase
-          .from('user_roles')
-          .update({ salesperson_name: salespersonName })
-          .eq('user_id', salespersonUserId);
-
-        if (error) throw error;
-      } else {
-        // Insert new role
-        const { error } = await supabase
-          .from('user_roles')
-          .insert({
-            user_id: salespersonUserId,
-            role: 'salesperson',
-            salesperson_name: salespersonName
-          });
-
-        if (error) throw error;
+      if (error) throw error;
+      
+      if (data) {
+        await loadAccounts();
+        return true;
       }
-
-      await loadAccounts();
-      return true;
+      return false;
     } catch (error) {
       console.error('Error linking salesperson:', error);
       return false;
