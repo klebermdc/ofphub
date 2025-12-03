@@ -226,29 +226,37 @@ export function AccountingTab({ userId }: AccountingTabProps) {
   const totalEnviado = filteredEntries.reduce((sum, e) => sum + e.valor_enviado, 0);
   const saldo = totalRecebido - totalEnviado;
 
-  // Export to Excel
-  const exportToExcel = async () => {
-    const XLSX = await import("xlsx");
+  // Export to Excel (CSV format)
+  const exportToExcel = () => {
+    const headers = ["Data", "Valor Recebido", "Valor Enviado", "Movimentação", "Cliente", "NF", "Plano de Contas", "Justificativa", "Forma de Pagamento", "Banco"];
     
-    const data = filteredEntries.map(entry => ({
-      Data: formatDate(entry.data),
-      "Valor Recebido": entry.valor_recebido,
-      "Valor Enviado": entry.valor_enviado,
-      Movimentação: entry.movimentacao || "",
-      Cliente: entry.cliente || "",
-      NF: entry.nf || "",
-      "Plano de Contas": entry.plano_de_contas || "",
-      Justificativa: entry.justificativa || "",
-      "Forma de Pagamento": entry.forma_de_pagamento || "",
-      Banco: entry.banco || "",
-    }));
+    const csvContent = [
+      headers.join(";"),
+      ...filteredEntries.map(entry => [
+        formatDate(entry.data),
+        entry.valor_recebido,
+        entry.valor_enviado,
+        entry.movimentacao || "",
+        entry.cliente || "",
+        entry.nf || "",
+        entry.plano_de_contas || "",
+        entry.justificativa || "",
+        entry.forma_de_pagamento || "",
+        entry.banco || "",
+      ].join(";"))
+    ].join("\n");
 
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Contabilidade");
-    XLSX.writeFile(wb, `contabilidade_${new Date().toISOString().split("T")[0]}.xlsx`);
+    const blob = new Blob(["\ufeff" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `contabilidade_${new Date().toISOString().split("T")[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
     
-    toast({ title: "Excel exportado!", description: "Arquivo baixado com sucesso." });
+    toast({ title: "Exportado!", description: "Arquivo CSV baixado com sucesso." });
   };
 
   // Export to PDF
