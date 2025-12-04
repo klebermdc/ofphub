@@ -360,6 +360,9 @@ const Index = () => {
   const totalOrders = dashboardTotals?.totalNegocios || 0;
   const conversionRate = totalLeads > 0 ? (totalOrders / totalLeads) * 100 : 0;
 
+  // Calculate estimated tax (12% of Comissão Total)
+  const impostoEstimado = totalComissaoTotal * 0.12;
+
   // Calculate profit (Comissão Total - Custo Total)
   const resultado = totalComissaoTotal - totalCost;
 
@@ -536,7 +539,7 @@ const Index = () => {
                 </div>
 
                 {/* KPIs Secundários - Custos e Resultado */}
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
                   <MetricCard
                     title="Marketing"
                     value={formatCurrency(marketingCost)}
@@ -549,6 +552,13 @@ const Index = () => {
                     value={formatCurrency(operationalCost)}
                     icon={Briefcase}
                     delay={85}
+                    variant="warning"
+                  />
+                  <MetricCard
+                    title="Imposto Estimado (12%)"
+                    value={formatCurrency(impostoEstimado)}
+                    icon={Receipt}
+                    delay={90}
                     variant="warning"
                   />
                   <MetricCard
