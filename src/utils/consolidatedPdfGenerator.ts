@@ -51,7 +51,7 @@ export async function generateConsolidatedPDF(options: ConsolidatedPdfOptions): 
   // Load logo
   let logoData: string | null = null;
   try {
-    logoData = await loadImage('/images/logo-ofp.png');
+    logoData = await loadImage('/images/logo-branco.png');
   } catch (e) {
     console.warn('Could not load logo');
   }

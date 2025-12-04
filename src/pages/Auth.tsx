@@ -103,7 +103,7 @@ export default function Auth() {
       <div className="w-full max-w-md relative">
         <div className="text-center mb-8">
           <img 
-            src="/images/logo-ofp.png" 
+            src="/images/logo-branco.png" 
             alt="Orlando Fast Pass" 
             className="h-16 mx-auto mb-4"
           />
