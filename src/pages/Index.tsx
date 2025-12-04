@@ -15,7 +15,6 @@ import { SalesRanking } from "@/components/SalesRanking";
 import { SalaryManagementDialog } from "@/components/SalaryManagementDialog";
 import { MonthComparisonCard } from "@/components/MonthComparisonCard";
 import { RevenueForecastChart } from "@/components/RevenueForecastChart";
-import { TopClientsTable } from "@/components/TopClientsTable";
 import { SalespersonROI } from "@/components/SalespersonROI";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -584,10 +583,9 @@ const Index = () => {
                   <SupplierChart salesReps={dashboardFilteredSalesReps} />
                 </div>
 
-                {/* Projeção e Top Clientes */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Projeção */}
+                <div className="grid grid-cols-1 gap-6">
                   <RevenueForecastChart salesReps={salesReps} availableMonths={availableMonths} />
-                  <TopClientsTable salesReps={dashboardFilteredSalesReps} />
                 </div>
 
                 {/* Metas */}
