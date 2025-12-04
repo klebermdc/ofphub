@@ -31,6 +31,7 @@ import { useMarketingCosts } from "@/hooks/useMarketingCosts";
 import { useUserRole } from "@/hooks/useUserRole";
 import { MarketingCostsDialog } from "@/components/MarketingCostsDialog";
 import { AccountingTab } from "@/components/AccountingTab";
+import { MarketingTab } from "@/components/MarketingTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -53,7 +54,7 @@ const Index = () => {
   const { reports, isLoading: historyLoading, saveReport, loadReport, deleteReport } = useCommissionHistory(user?.id);
   const { savedUrl, isLoading: settingsLoading, saveUrl } = useSheetSettings(user?.id);
   const { salaries, saveSalaries, getSalary } = useSalespersonSalaries(user?.id);
-  const { saveCost: saveMarketingCost, getCostForMonth, getTotalForMonth, getLeadsForMonth } = useMarketingCosts(user?.id);
+  const { costs: marketingCosts, saveCost: saveMarketingCost, getCostForMonth, getTotalForMonth, getLeadsForMonth } = useMarketingCosts(user?.id);
   const { role, isLoading: roleLoading, assignManagerRole } = useUserRole(user?.id);
 
   // Auto-load saved sheet URL on mount
@@ -387,9 +388,13 @@ const Index = () => {
       
       <main className="container mx-auto px-6 py-6 relative">
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-3">
+          <TabsList className="grid w-full max-w-lg grid-cols-4">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="vendedores">Vendedores</TabsTrigger>
+            <TabsTrigger value="marketing" className="gap-1">
+              <Megaphone className="h-4 w-4" />
+              Marketing
+            </TabsTrigger>
             <TabsTrigger value="contabilidade" className="gap-1">
               <Receipt className="h-4 w-4" />
               Contabilidade
@@ -653,6 +658,14 @@ const Index = () => {
                 </p>
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="marketing" className="space-y-6">
+            <MarketingTab 
+              costs={marketingCosts}
+              onSave={saveMarketingCost}
+              getCostForMonth={getCostForMonth}
+            />
           </TabsContent>
 
           <TabsContent value="contabilidade" className="space-y-6">
