@@ -245,7 +245,7 @@ const AllOrders = () => {
             </Button>
             <div className="flex items-center gap-3">
               <img 
-                src="/images/logo-ofp.png" 
+                src="/images/logo-branco.png" 
                 alt="Orlando Fast Pass" 
                 className="h-10 w-auto"
               />

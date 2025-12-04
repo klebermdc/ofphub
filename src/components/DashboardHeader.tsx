@@ -29,11 +29,11 @@ export function DashboardHeader({ availableSalespeople = [] }: DashboardHeaderPr
   return (
     <header className="border-b border-border bg-background/80 backdrop-blur-md sticky top-0 z-50">
       <div className="container mx-auto px-6 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <img 
-            src="/images/logo-ofp.png" 
+            src="/images/logo-branco.png" 
             alt="Orlando Fast Pass" 
-            className="h-10"
+            className="h-10 w-auto"
           />
           <div className="hidden md:block">
             <h1 className="font-semibold text-lg">Hub de Gestão</h1>

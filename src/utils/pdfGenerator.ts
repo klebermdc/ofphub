@@ -63,7 +63,7 @@ export const generateSalesRepPDF = async (rep: SalesRep) => {
   // Try to load logo
   let logoData: string | null = null;
   try {
-    logoData = await loadImage('/images/logo-ofp.png');
+    logoData = await loadImage('/images/logo-branco.png');
   } catch (e) {
     console.log('Could not load logo:', e);
   }

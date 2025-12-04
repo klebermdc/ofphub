@@ -125,7 +125,7 @@ const MarketingDashboard = () => {
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img 
-              src="/images/logo-ofp.png" 
+              src="/images/logo-branco.png" 
               alt="Orlando Fast Pass" 
               className="h-10 w-auto"
             />
