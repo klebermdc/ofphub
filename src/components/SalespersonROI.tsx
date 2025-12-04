@@ -31,10 +31,12 @@ export function SalespersonROI({ salesReps, getSalary }: SalespersonROIProps) {
   );
 
   const roiData: ROIData[] = filteredReps.map(rep => {
+    // Receita = soma da comissão total (o que a empresa ganha)
     const revenue = rep.orders?.reduce((sum, o) => sum + (o.comissaoTotal || 0), 0) || 0;
     const salary = getSalary(rep.name);
-    const commission = rep.commission;
-    const cost = salary + commission;
+    // Custo = salário + soma da comissão do vendedor (o que a empresa paga)
+    const salespersonCommission = rep.orders?.reduce((sum, o) => sum + (o.comissaoVendedor || 0), 0) || 0;
+    const cost = salary + salespersonCommission;
     const profit = revenue - cost;
     const roi = cost > 0 ? ((revenue - cost) / cost) * 100 : 0;
 
