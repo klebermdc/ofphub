@@ -52,28 +52,26 @@ export function MetricCard({
 
   return (
     <div 
-      className="glass rounded-xl p-4 sm:p-6 animate-slide-up"
+      className="glass rounded-xl p-4 sm:p-5 animate-slide-up h-full"
       style={{ animationDelay: `${delay}ms` }}
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="space-y-2 min-w-0 flex-1">
-          <p className="text-xs sm:text-sm text-muted-foreground">{title}</p>
-          <p className={cn("text-lg sm:text-xl lg:text-2xl font-bold tracking-tight break-all", styles.valueBg)}>{value}</p>
-          {change && (
-            <p className={cn(
-              "text-xs sm:text-sm font-medium",
-              changeType === "positive" && "text-success",
-              changeType === "negative" && "text-destructive",
-              changeType === "neutral" && "text-muted-foreground"
-            )}>
-              {change}
-            </p>
-          )}
-        </div>
-        <div className={cn("rounded-lg p-2 sm:p-3 shrink-0", styles.iconBg)}>
-          <Icon className={cn("h-5 w-5 sm:h-6 sm:w-6", styles.iconColor)} />
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs sm:text-sm text-muted-foreground">{title}</p>
+        <div className={cn("rounded-lg p-2", styles.iconBg)}>
+          <Icon className={cn("h-4 w-4 sm:h-5 sm:w-5", styles.iconColor)} />
         </div>
       </div>
+      <p className={cn("text-xl sm:text-2xl font-bold tracking-tight", styles.valueBg)}>{value}</p>
+      {change && (
+        <p className={cn(
+          "text-xs sm:text-sm font-medium mt-1",
+          changeType === "positive" && "text-success",
+          changeType === "negative" && "text-destructive",
+          changeType === "neutral" && "text-muted-foreground"
+        )}>
+          {change}
+        </p>
+      )}
     </div>
   );
 }
