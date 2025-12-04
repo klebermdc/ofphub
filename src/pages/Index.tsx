@@ -47,8 +47,17 @@ const Index = () => {
   const [currentReportId, setCurrentReportId] = useState<string | undefined>();
   const [currentPeriod, setCurrentPeriod] = useState<string | undefined>();
   const [dataSource, setDataSource] = useState<'sheet' | 'history'>('sheet');
-  const [selectedMonth, setSelectedMonth] = useState<string>('all');
-  const [dashboardMonth, setDashboardMonth] = useState<string>('all');
+  
+  // Get current month in format MM/YYYY
+  const getCurrentMonthKey = () => {
+    const now = new Date();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = now.getFullYear();
+    return `${month}/${year}`;
+  };
+  
+  const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonthKey());
+  const [dashboardMonth, setDashboardMonth] = useState<string>(getCurrentMonthKey());
 
   const { reports, isLoading: historyLoading, saveReport, loadReport, deleteReport } = useCommissionHistory(user?.id);
   const { savedUrl, isLoading: settingsLoading, saveUrl } = useSheetSettings(user?.id);
