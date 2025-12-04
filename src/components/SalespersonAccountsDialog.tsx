@@ -26,17 +26,30 @@ import { supabase } from "@/integrations/supabase/client";
 interface SalespersonAccountsDialogProps {
   userId: string | undefined;
   availableSalespeople: string[];
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  showTrigger?: boolean;
 }
 
-export function SalespersonAccountsDialog({ userId, availableSalespeople }: SalespersonAccountsDialogProps) {
+export function SalespersonAccountsDialog({ 
+  userId, 
+  availableSalespeople, 
+  open: controlledOpen, 
+  onOpenChange: controlledOnOpenChange,
+  showTrigger = true 
+}: SalespersonAccountsDialogProps) {
   const { accounts, linkSalesperson, unlinkSalesperson, loadAccounts } = useSalespersonAccounts(userId);
   const { accounts: marketingAccounts, linkMarketing, unlinkMarketing } = useMarketingAccounts(userId);
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [selectedName, setSelectedName] = useState("");
   const [isLinking, setIsLinking] = useState(false);
   const [marketingEmail, setMarketingEmail] = useState("");
   const [isLinkingMarketing, setIsLinkingMarketing] = useState(false);
+
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = isControlled ? controlledOnOpenChange! : setInternalOpen;
 
   const handleLink = async () => {
     if (!email || !selectedName) {
@@ -188,12 +201,14 @@ export function SalespersonAccountsDialog({ userId, availableSalespeople }: Sale
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
-          <Users className="h-4 w-4" />
-          Usuários
-        </Button>
-      </DialogTrigger>
+      {showTrigger && (
+        <DialogTrigger asChild>
+          <Button variant="outline" size="sm" className="gap-2">
+            <Users className="h-4 w-4" />
+            Usuários
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Gerenciar Acesso de Usuários</DialogTitle>

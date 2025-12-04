@@ -1,7 +1,9 @@
-import { LogOut, User, Settings } from "lucide-react";
+import { useState } from "react";
+import { LogOut, User, Settings, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { SalespersonAccountsDialog } from "./SalespersonAccountsDialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,9 +13,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export function DashboardHeader() {
+interface DashboardHeaderProps {
+  availableSalespeople?: string[];
+}
+
+export function DashboardHeader({ availableSalespeople = [] }: DashboardHeaderProps) {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const [usersDialogOpen, setUsersDialogOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -54,12 +61,19 @@ export function DashboardHeader() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                className="gap-2 cursor-pointer"
+                onClick={() => setUsersDialogOpen(true)}
+              >
+                <Users className="h-4 w-4" />
+                Gerenciar Usuários
+              </DropdownMenuItem>
               <DropdownMenuItem className="gap-2">
                 <Settings className="h-4 w-4" />
                 Configurações
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleSignOut} className="gap-2 text-destructive">
+              <DropdownMenuItem onClick={handleSignOut} className="gap-2 text-destructive cursor-pointer">
                 <LogOut className="h-4 w-4" />
                 Sair
               </DropdownMenuItem>
@@ -67,6 +81,15 @@ export function DashboardHeader() {
           </DropdownMenu>
         </div>
       </div>
+
+      {/* Dialog de Usuários */}
+      <SalespersonAccountsDialog 
+        userId={user?.id} 
+        availableSalespeople={availableSalespeople}
+        open={usersDialogOpen}
+        onOpenChange={setUsersDialogOpen}
+        showTrigger={false}
+      />
     </header>
   );
 }

@@ -17,7 +17,6 @@ import { MonthComparisonCard } from "@/components/MonthComparisonCard";
 import { RevenueForecastChart } from "@/components/RevenueForecastChart";
 import { TopClientsTable } from "@/components/TopClientsTable";
 import { SalespersonROI } from "@/components/SalespersonROI";
-import { SalespersonAccountsDialog } from "@/components/SalespersonAccountsDialog";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SalesRep, SalesTotals } from "@/types/sales";
@@ -384,7 +383,7 @@ const Index = () => {
         }}
       />
       
-      <DashboardHeader />
+      <DashboardHeader availableSalespeople={salesReps.map(r => r.name)} />
       
       <main className="container mx-auto px-6 py-6 relative">
         <Tabs defaultValue="dashboard" className="space-y-6">
@@ -457,10 +456,6 @@ const Index = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <SalespersonAccountsDialog 
-                      userId={user?.id} 
-                      availableSalespeople={salesReps.map(r => r.name)} 
-                    />
                     <MarketingCostsDialog onSave={saveMarketingCost} getCostForMonth={getCostForMonth} />
                     <SheetInput onAnalyze={handleAnalyze} isLoading={isLoading} compact />
                     <SaveReportDialog onSave={handleSaveReport} disabled={!hasData} />
