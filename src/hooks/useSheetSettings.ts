@@ -5,7 +5,7 @@ export function useSheetSettings(userId: string | undefined) {
   const [savedUrl, setSavedUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load saved URL on mount
+  // Load saved URL on mount - first try user's own, then any available
   useEffect(() => {
     if (!userId) {
       setIsLoading(false);
@@ -14,16 +14,33 @@ export function useSheetSettings(userId: string | undefined) {
 
     const loadSavedUrl = async () => {
       try {
-        const { data, error } = await supabase
+        // First, try to get the current user's saved URL
+        const { data: userSettings, error: userError } = await supabase
           .from('user_sheet_settings')
           .select('sheet_url')
           .eq('user_id', userId)
           .maybeSingle();
 
-        if (error) {
-          console.error('Error loading sheet settings:', error);
-        } else if (data) {
-          setSavedUrl(data.sheet_url);
+        if (userError) {
+          console.error('Error loading user sheet settings:', userError);
+        }
+
+        if (userSettings?.sheet_url) {
+          setSavedUrl(userSettings.sheet_url);
+        } else {
+          // If user doesn't have their own URL, get any available URL (shared data source)
+          const { data: anySettings, error: anyError } = await supabase
+            .from('user_sheet_settings')
+            .select('sheet_url')
+            .order('updated_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (anyError) {
+            console.error('Error loading shared sheet settings:', anyError);
+          } else if (anySettings?.sheet_url) {
+            setSavedUrl(anySettings.sheet_url);
+          }
         }
       } catch (err) {
         console.error('Error loading sheet settings:', err);
