@@ -2,37 +2,20 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { DollarSign, TrendingUp, Package, Calendar, LogOut, User } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
-import { toast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useSheetData } from "@/contexts/SheetDataContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getMonthName } from "@/hooks/useCommissionHistory";
 import { SalespersonGoalKPI } from "@/components/SalespersonGoalKPI";
 
-interface SalespersonOrder {
-  id: string;
-  cliente: string | null;
-  data: string | null;
-  pedido: string | null;
-  venda: number;
-  fornecedor: string | null;
-  produto: string | null;
-  comissao: number;
-  comissao_total: number;
-  porcentagem_vendedor: number;
-  comissao_vendedor: number;
-}
-
 const SalespersonDashboard = () => {
   const { user, loading, signOut } = useAuth();
   const { role, salespersonName, isLoading: roleLoading } = useUserRole(user?.id);
+  const { salesReps, isLoading: sheetLoading } = useSheetData();
   const navigate = useNavigate();
-  
-  const [orders, setOrders] = useState<SalespersonOrder[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   
   // Get current month in format MM/YYYY
   const getCurrentMonthKey = () => {
@@ -51,69 +34,30 @@ const SalespersonDashboard = () => {
         navigate("/auth");
       } else if (role === 'manager') {
         navigate("/");
-      } else if (!role) {
-        // No role assigned - show message
-        setIsLoading(false);
       }
     }
   }, [user, loading, role, roleLoading, navigate]);
 
-  // Load salesperson's orders
-  useEffect(() => {
-    const loadOrders = async () => {
-      if (!salespersonName) {
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        // Get all salespeople IDs that match this name across all reports
-        const { data: salespeople, error: spError } = await supabase
-          .from('commission_salespeople')
-          .select('id, name')
-          .ilike('name', `%${salespersonName}%`);
-
-        if (spError) throw spError;
-
-        if (!salespeople || salespeople.length === 0) {
-          setIsLoading(false);
-          return;
-        }
-
-        const salespeopleIds = salespeople.map(sp => sp.id);
-
-        // Get all orders for these salespeople
-        const { data: ordersData, error: ordersError } = await supabase
-          .from('commission_orders')
-          .select('*')
-          .in('salesperson_id', salespeopleIds);
-
-        if (ordersError) throw ordersError;
-
-        setOrders((ordersData || []) as SalespersonOrder[]);
-      } catch (error) {
-        console.error('Error loading orders:', error);
-        toast({
-          title: "Erro ao carregar dados",
-          description: "Não foi possível carregar suas vendas.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (salespersonName) {
-      loadOrders();
-    }
-  }, [salespersonName]);
+  // Get orders for this salesperson from salesReps
+  const salespersonOrders = useMemo(() => {
+    if (!salespersonName || !salesReps.length) return [];
+    
+    // Find the salesperson in salesReps
+    const salesRep = salesReps.find(rep => 
+      rep.name.toLowerCase().includes(salespersonName.toLowerCase()) ||
+      salespersonName.toLowerCase().includes(rep.name.toLowerCase())
+    );
+    
+    return salesRep?.orders || [];
+  }, [salesReps, salespersonName]);
 
   // Extract available months
   const availableMonths = useMemo(() => {
     const months = new Set<string>();
-    orders.forEach(order => {
-      if (order.data) {
-        const parts = order.data.split('/');
+    salespersonOrders.forEach(order => {
+      const data = order.data || '';
+      if (data) {
+        const parts = data.split('/');
         if (parts.length >= 2) {
           const month = parts[1].padStart(2, '0');
           let year = parts[2] || new Date().getFullYear().toString();
@@ -129,15 +73,16 @@ const SalespersonDashboard = () => {
       const [mB, yB] = b.split('/').map(Number);
       return yB - yA || mB - mA;
     });
-  }, [orders]);
+  }, [salespersonOrders]);
 
   // Filter orders by month
   const filteredOrders = useMemo(() => {
-    if (selectedMonth === 'all') return orders;
+    if (selectedMonth === 'all') return salespersonOrders;
     
-    return orders.filter(order => {
-      if (!order.data) return false;
-      const parts = order.data.split('/');
+    return salespersonOrders.filter(order => {
+      const data = order.data || '';
+      if (!data) return false;
+      const parts = data.split('/');
       if (parts.length >= 2) {
         const month = parts[1].padStart(2, '0');
         let year = parts[2] || new Date().getFullYear().toString();
@@ -148,12 +93,12 @@ const SalespersonDashboard = () => {
       }
       return false;
     });
-  }, [orders, selectedMonth]);
+  }, [salespersonOrders, selectedMonth]);
 
   // Calculate totals
   const totals = useMemo(() => {
-    const totalVendas = filteredOrders.reduce((sum, o) => sum + o.venda, 0);
-    const totalComissao = filteredOrders.reduce((sum, o) => sum + o.comissao_vendedor, 0);
+    const totalVendas = filteredOrders.reduce((sum, order) => sum + (order.venda || 0), 0);
+    const totalComissao = filteredOrders.reduce((sum, order) => sum + (order.comissaoVendedor || 0), 0);
     const totalPedidos = filteredOrders.length;
     return { totalVendas, totalComissao, totalPedidos };
   }, [filteredOrders]);
@@ -167,7 +112,7 @@ const SalespersonDashboard = () => {
     navigate("/auth");
   };
 
-  if (loading || roleLoading || isLoading) {
+  if (loading || roleLoading || sheetLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full"></div>
@@ -301,18 +246,18 @@ const SalespersonDashboard = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredOrders.map((order) => (
-                    <TableRow key={order.id}>
+                  {filteredOrders.map((order, index) => (
+                    <TableRow key={index}>
                       <TableCell>{order.data || '-'}</TableCell>
                       <TableCell>{order.pedido || '-'}</TableCell>
                       <TableCell>{order.cliente || '-'}</TableCell>
                       <TableCell className="max-w-[200px] truncate">{order.produto || '-'}</TableCell>
                       <TableCell>{order.fornecedor || '-'}</TableCell>
                       <TableCell className="text-right font-mono">
-                        {formatCurrency(order.venda)}
+                        {formatCurrency(order.venda || 0)}
                       </TableCell>
                       <TableCell className="text-right font-mono text-success">
-                        {formatCurrency(order.comissao_vendedor)}
+                        {formatCurrency(order.comissaoVendedor || 0)}
                       </TableCell>
                     </TableRow>
                   ))}
