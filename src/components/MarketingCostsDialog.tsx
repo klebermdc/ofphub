@@ -28,6 +28,7 @@ interface MarketingCostsDialogProps {
     googleAds: number,
     metaAds: number,
     otherMarketing: number,
+    operationalCosts: number,
     leads: number,
     description?: string
   ) => Promise<boolean>;
@@ -35,6 +36,7 @@ interface MarketingCostsDialogProps {
     google_ads: number;
     meta_ads: number;
     other_marketing: number;
+    operational_costs: number;
     leads: number;
     description: string | null;
   } | undefined;
@@ -65,6 +67,7 @@ export function MarketingCostsDialog({ onSave, getCostForMonth }: MarketingCosts
   const [googleAds, setGoogleAds] = useState("");
   const [metaAds, setMetaAds] = useState("");
   const [otherMarketing, setOtherMarketing] = useState("");
+  const [operationalCosts, setOperationalCosts] = useState("");
   const [leads, setLeads] = useState("");
   const [description, setDescription] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -81,12 +84,14 @@ export function MarketingCostsDialog({ onSave, getCostForMonth }: MarketingCosts
       setGoogleAds(String(existing.google_ads));
       setMetaAds(String(existing.meta_ads));
       setOtherMarketing(String(existing.other_marketing));
+      setOperationalCosts(String(existing.operational_costs || 0));
       setLeads(String(existing.leads || ""));
       setDescription(existing.description || "");
     } else {
       setGoogleAds("");
       setMetaAds("");
       setOtherMarketing("");
+      setOperationalCosts("");
       setLeads("");
       setDescription("");
     }
@@ -100,6 +105,7 @@ export function MarketingCostsDialog({ onSave, getCostForMonth }: MarketingCosts
       parseFloat(googleAds) || 0,
       parseFloat(metaAds) || 0,
       parseFloat(otherMarketing) || 0,
+      parseFloat(operationalCosts) || 0,
       parseInt(leads) || 0,
       description
     );
@@ -200,7 +206,7 @@ export function MarketingCostsDialog({ onSave, getCostForMonth }: MarketingCosts
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="other">Outros (R$)</Label>
+            <Label htmlFor="other">Outros Marketing (R$)</Label>
             <Input
               id="other"
               type="number"
@@ -209,6 +215,19 @@ export function MarketingCostsDialog({ onSave, getCostForMonth }: MarketingCosts
               placeholder="0,00"
               value={otherMarketing}
               onChange={(e) => setOtherMarketing(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="operational">Custos Operacionais (R$)</Label>
+            <Input
+              id="operational"
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="0,00"
+              value={operationalCosts}
+              onChange={(e) => setOperationalCosts(e.target.value)}
             />
           </div>
 

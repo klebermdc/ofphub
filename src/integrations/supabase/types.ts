@@ -239,6 +239,7 @@ export type Database = {
           id: string
           leads: number
           meta_ads: number
+          operational_costs: number
           other_marketing: number
           period_month: number
           period_year: number
@@ -252,6 +253,7 @@ export type Database = {
           id?: string
           leads?: number
           meta_ads?: number
+          operational_costs?: number
           other_marketing?: number
           period_month: number
           period_year: number
@@ -265,6 +267,7 @@ export type Database = {
           id?: string
           leads?: number
           meta_ads?: number
+          operational_costs?: number
           other_marketing?: number
           period_month?: number
           period_year?: number

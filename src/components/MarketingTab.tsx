@@ -16,13 +16,14 @@ interface MarketingCost {
   google_ads: number;
   meta_ads: number;
   other_marketing: number;
+  operational_costs: number;
   leads: number;
   description: string | null;
 }
 
 interface MarketingTabProps {
   costs: MarketingCost[];
-  onSave: (month: number, year: number, googleAds: number, metaAds: number, otherMarketing: number, leads: number, description?: string) => Promise<boolean>;
+  onSave: (month: number, year: number, googleAds: number, metaAds: number, otherMarketing: number, operationalCosts: number, leads: number, description?: string) => Promise<boolean>;
   getCostForMonth: (month: number, year: number) => MarketingCost | undefined;
   salesReps?: SalesRep[];
 }
