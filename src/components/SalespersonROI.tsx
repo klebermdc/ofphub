@@ -120,15 +120,20 @@ export function SalespersonROI({ salesReps, getSalary }: SalespersonROIProps) {
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: 'hsl(var(--card))',
+                backgroundColor: 'hsl(var(--popover))',
                 border: '1px solid hsl(var(--border))',
                 borderRadius: '8px',
-                color: 'hsl(var(--card-foreground))',
+              }}
+              labelStyle={{
+                color: 'hsl(var(--popover-foreground))',
+              }}
+              itemStyle={{
+                color: 'hsl(var(--popover-foreground))',
               }}
               formatter={(value: number, name: string, props: any) => {
                 const data = props.payload as ROIData;
                 return [
-                  <div key="tooltip" className="space-y-1">
+                  <div key="tooltip" className="space-y-1 text-popover-foreground">
                     <p><strong>ROI:</strong> {value.toFixed(1)}%</p>
                     <p><strong>Receita:</strong> {formatCurrency(data.revenue)}</p>
                     <p><strong>Custo:</strong> {formatCurrency(data.cost)}</p>
