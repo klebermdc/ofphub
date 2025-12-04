@@ -33,7 +33,16 @@ const SalespersonDashboard = () => {
   
   const [orders, setOrders] = useState<SalespersonOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedMonth, setSelectedMonth] = useState<string>('all');
+  
+  // Get current month in format MM/YYYY
+  const getCurrentMonthKey = () => {
+    const now = new Date();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = now.getFullYear();
+    return `${month}/${year}`;
+  };
+  
+  const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonthKey());
 
   // Redirect if not salesperson
   useEffect(() => {
