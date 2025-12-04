@@ -141,15 +141,15 @@ export function useMarketingCosts(userId: string | undefined, isMarketingRole: b
   const getOperationalCostsForMonth = (month: number, year: number) => {
     const cost = getCostForMonth(month, year);
     if (!cost) return 0;
-    return (cost.software || 0) + (cost.telefonia || 0) + (cost.imposto || 0);
+    // Imposto removido - agora calculado como 12% da Comissão Total
+    return (cost.software || 0) + (cost.telefonia || 0);
   };
 
   const saveOperationalCosts = async (
     month: number,
     year: number,
     software: number,
-    telefonia: number,
-    imposto: number
+    telefonia: number
   ) => {
     if (!userId) return false;
 
@@ -163,7 +163,6 @@ export function useMarketingCosts(userId: string | undefined, isMarketingRole: b
         .update({
           software,
           telefonia,
-          imposto,
         })
         .eq("id", existing.id);
 
@@ -182,7 +181,6 @@ export function useMarketingCosts(userId: string | undefined, isMarketingRole: b
         period_year: year,
         software,
         telefonia,
-        imposto,
       });
 
       if (error) {
