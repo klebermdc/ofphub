@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getMonthName } from "@/hooks/useCommissionHistory";
+import { SalespersonGoalKPI } from "@/components/SalespersonGoalKPI";
 
 interface SalespersonOrder {
   id: string;
@@ -234,6 +235,16 @@ const SalespersonDashboard = () => {
             </SelectContent>
           </Select>
         </div>
+
+        {/* Goal KPI */}
+        {selectedMonth !== 'all' && salespersonName && (
+          <SalespersonGoalKPI
+            salespersonName={salespersonName}
+            month={parseInt(selectedMonth.split('/')[0])}
+            year={parseInt(selectedMonth.split('/')[1])}
+            currentSales={totals.totalVendas}
+          />
+        )}
 
         {/* Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
