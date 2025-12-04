@@ -28,7 +28,7 @@ import { useSheetSettings } from "@/hooks/useSheetSettings";
 import { useSalespersonSalaries } from "@/hooks/useSalespersonSalaries";
 import { useMarketingCosts } from "@/hooks/useMarketingCosts";
 import { useUserRole } from "@/hooks/useUserRole";
-import { MarketingCostsDialog } from "@/components/MarketingCostsDialog";
+import { OperationalCostsDialog } from "@/components/OperationalCostsDialog";
 import { AccountingTab } from "@/components/AccountingTab";
 import { MarketingTab } from "@/components/MarketingTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -54,7 +54,7 @@ const Index = () => {
   const { savedUrl, isLoading: settingsLoading, saveUrl } = useSheetSettings(user?.id);
   const { salaries, saveSalaries, getSalary } = useSalespersonSalaries(user?.id);
   const { role, isLoading: roleLoading, assignManagerRole } = useUserRole(user?.id);
-  const { costs: marketingCosts, saveCost: saveMarketingCost, getCostForMonth, getTotalForMonth, getLeadsForMonth, getOperationalCostsForMonth } = useMarketingCosts(user?.id, role === 'marketing' || role === 'manager');
+  const { costs: marketingCosts, saveCost: saveMarketingCost, saveOperationalCosts, getCostForMonth, getTotalForMonth, getLeadsForMonth, getOperationalCostsForMonth } = useMarketingCosts(user?.id, role === 'marketing' || role === 'manager');
 
   // Auto-load saved sheet URL on mount
   useEffect(() => {
@@ -485,7 +485,7 @@ const Index = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <MarketingCostsDialog onSave={saveMarketingCost} getCostForMonth={getCostForMonth} />
+                    <OperationalCostsDialog onSave={saveOperationalCosts} getCostForMonth={getCostForMonth} />
                     <SheetInput onAnalyze={handleAnalyze} isLoading={isLoading} compact />
                     <SaveReportDialog onSave={handleSaveReport} disabled={!hasData} />
                     <Button
