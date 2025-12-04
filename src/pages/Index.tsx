@@ -665,6 +665,7 @@ const Index = () => {
               costs={marketingCosts}
               onSave={saveMarketingCost}
               getCostForMonth={getCostForMonth}
+              salesReps={salesReps}
             />
           </TabsContent>
 
