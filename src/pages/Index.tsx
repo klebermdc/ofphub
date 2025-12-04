@@ -54,8 +54,8 @@ const Index = () => {
   const { reports, isLoading: historyLoading, saveReport, loadReport, deleteReport } = useCommissionHistory(user?.id);
   const { savedUrl, isLoading: settingsLoading, saveUrl } = useSheetSettings(user?.id);
   const { salaries, saveSalaries, getSalary } = useSalespersonSalaries(user?.id);
-  const { costs: marketingCosts, saveCost: saveMarketingCost, getCostForMonth, getTotalForMonth, getLeadsForMonth } = useMarketingCosts(user?.id);
   const { role, isLoading: roleLoading, assignManagerRole } = useUserRole(user?.id);
+  const { costs: marketingCosts, saveCost: saveMarketingCost, getCostForMonth, getTotalForMonth, getLeadsForMonth } = useMarketingCosts(user?.id, role === 'marketing' || role === 'manager');
 
   // Auto-load saved sheet URL on mount
   useEffect(() => {
