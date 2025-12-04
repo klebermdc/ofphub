@@ -237,12 +237,14 @@ export type Database = {
           description: string | null
           google_ads: number
           id: string
+          imposto: number
           leads: number
           meta_ads: number
-          operational_costs: number
           other_marketing: number
           period_month: number
           period_year: number
+          software: number
+          telefonia: number
           updated_at: string
           user_id: string
         }
@@ -251,12 +253,14 @@ export type Database = {
           description?: string | null
           google_ads?: number
           id?: string
+          imposto?: number
           leads?: number
           meta_ads?: number
-          operational_costs?: number
           other_marketing?: number
           period_month: number
           period_year: number
+          software?: number
+          telefonia?: number
           updated_at?: string
           user_id: string
         }
@@ -265,12 +269,14 @@ export type Database = {
           description?: string | null
           google_ads?: number
           id?: string
+          imposto?: number
           leads?: number
           meta_ads?: number
-          operational_costs?: number
           other_marketing?: number
           period_month?: number
           period_year?: number
+          software?: number
+          telefonia?: number
           updated_at?: string
           user_id?: string
         }

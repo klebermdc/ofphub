@@ -9,7 +9,9 @@ interface MarketingCost {
   google_ads: number;
   meta_ads: number;
   other_marketing: number;
-  operational_costs: number;
+  software: number;
+  telefonia: number;
+  imposto: number;
   leads: number;
   description: string | null;
   user_id?: string;
@@ -60,7 +62,6 @@ export function useMarketingCosts(userId: string | undefined, isMarketingRole: b
     googleAds: number,
     metaAds: number,
     otherMarketing: number,
-    operationalCosts: number,
     leads: number,
     description?: string
   ) => {
@@ -77,7 +78,6 @@ export function useMarketingCosts(userId: string | undefined, isMarketingRole: b
           google_ads: googleAds,
           meta_ads: metaAds,
           other_marketing: otherMarketing,
-          operational_costs: operationalCosts,
           leads: leads,
           description: description || null,
         })
@@ -99,7 +99,6 @@ export function useMarketingCosts(userId: string | undefined, isMarketingRole: b
         google_ads: googleAds,
         meta_ads: metaAds,
         other_marketing: otherMarketing,
-        operational_costs: operationalCosts,
         leads: leads,
         description: description || null,
       });
@@ -141,13 +140,74 @@ export function useMarketingCosts(userId: string | undefined, isMarketingRole: b
 
   const getOperationalCostsForMonth = (month: number, year: number) => {
     const cost = getCostForMonth(month, year);
-    return cost?.operational_costs || 0;
+    if (!cost) return 0;
+    return (cost.software || 0) + (cost.telefonia || 0) + (cost.imposto || 0);
+  };
+
+  const saveOperationalCosts = async (
+    month: number,
+    year: number,
+    software: number,
+    telefonia: number,
+    imposto: number
+  ) => {
+    if (!userId) return false;
+
+    const existing = costs.find(
+      (c) => c.period_month === month && c.period_year === year
+    );
+
+    if (existing) {
+      const { error } = await supabase
+        .from("marketing_costs")
+        .update({
+          software,
+          telefonia,
+          imposto,
+        })
+        .eq("id", existing.id);
+
+      if (error) {
+        toast({
+          title: "Erro",
+          description: "Não foi possível atualizar os custos operacionais.",
+          variant: "destructive",
+        });
+        return false;
+      }
+    } else {
+      const { error } = await supabase.from("marketing_costs").insert({
+        user_id: userId,
+        period_month: month,
+        period_year: year,
+        software,
+        telefonia,
+        imposto,
+      });
+
+      if (error) {
+        toast({
+          title: "Erro",
+          description: "Não foi possível salvar os custos operacionais.",
+          variant: "destructive",
+        });
+        return false;
+      }
+    }
+
+    await fetchCosts();
+    toast({
+      title: "Custos salvos",
+      description: "Custos operacionais atualizados com sucesso.",
+    });
+    return true;
   };
 
   return {
     costs,
     isLoading,
     saveCost,
+    saveOperationalCosts,
     getCostForMonth,
     getTotalForMonth,
     getLeadsForMonth,
