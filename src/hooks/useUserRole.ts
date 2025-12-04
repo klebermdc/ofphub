@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-export type AppRole = 'manager' | 'salesperson';
+export type AppRole = 'manager' | 'salesperson' | 'marketing';
 
 interface UserRole {
   id: string;
@@ -140,4 +140,73 @@ export function useSalespersonAccounts(userId: string | undefined) {
   };
 
   return { accounts, isLoading, loadAccounts, linkSalesperson, unlinkSalesperson };
+}
+
+// Hook for managers to manage marketing accounts
+export function useMarketingAccounts(userId: string | undefined) {
+  const [accounts, setAccounts] = useState<UserRole[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const loadAccounts = useCallback(async () => {
+    if (!userId) {
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('*')
+        .eq('role', 'marketing');
+
+      if (error) throw error;
+      setAccounts((data || []) as UserRole[]);
+    } catch (error) {
+      console.error('Error loading marketing accounts:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    loadAccounts();
+  }, [loadAccounts]);
+
+  const linkMarketing = async (targetUserId: string) => {
+    try {
+      const { data, error } = await supabase
+        .rpc('link_marketing', { 
+          _target_user_id: targetUserId
+        });
+
+      if (error) throw error;
+      
+      if (data) {
+        await loadAccounts();
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error linking marketing:', error);
+      return false;
+    }
+  };
+
+  const unlinkMarketing = async (marketingUserId: string) => {
+    try {
+      const { error } = await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', marketingUserId);
+
+      if (error) throw error;
+      await loadAccounts();
+      return true;
+    } catch (error) {
+      console.error('Error unlinking marketing:', error);
+      return false;
+    }
+  };
+
+  return { accounts, isLoading, loadAccounts, linkMarketing, unlinkMarketing };
 }

@@ -185,6 +185,8 @@ const Index = () => {
           navigate("/auth");
         } else if (role === 'salesperson') {
           navigate("/vendedor");
+        } else if (role === 'marketing') {
+          navigate("/marketing");
         } else if (!role) {
           // No role assigned - assign manager role (first user or existing managers)
           await assignManagerRole();
