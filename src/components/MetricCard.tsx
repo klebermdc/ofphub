@@ -57,8 +57,8 @@ export function MetricCard({
     >
       <div className="flex items-start justify-between gap-2">
         <div className="space-y-2 min-w-0 flex-1">
-          <p className="text-xs sm:text-sm text-muted-foreground truncate">{title}</p>
-          <p className={cn("text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight truncate", styles.valueBg)}>{value}</p>
+          <p className="text-xs sm:text-sm text-muted-foreground">{title}</p>
+          <p className={cn("text-lg sm:text-xl lg:text-2xl font-bold tracking-tight break-all", styles.valueBg)}>{value}</p>
           {change && (
             <p className={cn(
               "text-xs sm:text-sm font-medium",
