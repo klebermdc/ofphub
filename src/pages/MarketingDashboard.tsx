@@ -1,12 +1,13 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Megaphone, DollarSign, TrendingUp, Calendar, LogOut, UserPlus, Percent, Target, User, Settings } from "lucide-react";
+import { Megaphone, DollarSign, TrendingUp, Calendar, LogOut, UserPlus, Target, User, Settings, Upload, FileText, Download, Trash2, File } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useMarketingCosts } from "@/hooks/useMarketingCosts";
+import { useMarketingFiles } from "@/hooks/useMarketingFiles";
 import { MarketingCostsDialog } from "@/components/MarketingCostsDialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -38,7 +39,22 @@ const MarketingDashboard = () => {
   const navigate = useNavigate();
   
   const { costs, isLoading: costsLoading, saveCost, getCostForMonth, getTotalForMonth, getLeadsForMonth } = useMarketingCosts(user?.id, true);
+  const { files, isLoading: filesLoading, uploadFile, deleteFile, downloadFile } = useMarketingFiles(user?.id);
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
+  
+  // File upload
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadCategory, setUploadCategory] = useState<string>("NF Fornecedor");
+  const [isUploading, setIsUploading] = useState(false);
+  
+  const fileCategories = [
+    "NF Fornecedor",
+    "NF Google",
+    "NF Meta",
+    "Comprovante",
+    "Contrato",
+    "Outro",
+  ];
 
   // Redirect if not marketing
   useEffect(() => {
@@ -93,7 +109,27 @@ const MarketingDashboard = () => {
     navigate("/auth");
   };
 
-  if (loading || roleLoading || costsLoading) {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setIsUploading(true);
+    await uploadFile(file, uploadCategory);
+    setIsUploading(false);
+    
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const formatFileSize = (bytes: number | null) => {
+    if (!bytes) return "-";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  if (loading || roleLoading || costsLoading || filesLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full"></div>
@@ -345,6 +381,97 @@ const MarketingDashboard = () => {
                     </TableCell>
                     <TableCell></TableCell>
                   </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </div>
+
+        {/* File Upload Section */}
+        <div className="glass rounded-xl p-6">
+          <h3 className="text-lg font-semibold mb-4">Notas Fiscais de Fornecedores</h3>
+          
+          <div className="flex flex-wrap items-center gap-4 mb-6">
+            <Select value={uploadCategory} onValueChange={setUploadCategory}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Categoria" />
+              </SelectTrigger>
+              <SelectContent>
+                {fileCategories.map(cat => (
+                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              onChange={handleFileUpload}
+              accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx"
+            />
+            
+            <Button 
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              className="gap-2"
+            >
+              <Upload className="h-4 w-4" />
+              {isUploading ? "Enviando..." : "Upload de Arquivo"}
+            </Button>
+          </div>
+
+          {files.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>Nenhum arquivo enviado ainda.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Arquivo</TableHead>
+                    <TableHead>Categoria</TableHead>
+                    <TableHead>Tamanho</TableHead>
+                    <TableHead>Data</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {files.map((file) => (
+                    <TableRow key={file.id}>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          <File className="h-4 w-4 text-muted-foreground" />
+                          <span className="truncate max-w-[200px]">{file.file_name}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>{file.category || '-'}</TableCell>
+                      <TableCell>{formatFileSize(file.file_size)}</TableCell>
+                      <TableCell>
+                        {new Date(file.created_at).toLocaleDateString('pt-BR')}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => downloadFile(file.file_path, file.file_name)}
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => deleteFile(file.id, file.file_path)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
             </div>
