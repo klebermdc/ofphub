@@ -353,7 +353,6 @@ const Index = () => {
   const totalSalaries = dashboardFilteredSalesReps.reduce((sum, rep) => sum + getSalary(rep.name), 0);
   const marketingCost = getTotalForMonth(currentGoalMonth, currentGoalYear);
   const operationalCost = getOperationalCostsForMonth(currentGoalMonth, currentGoalYear);
-  const totalCost = (dashboardTotals?.totalComissao || 0) + totalSalaries + marketingCost + operationalCost;
 
   // Calculate leads and conversion rate
   const totalLeads = getLeadsForMonth(currentGoalMonth, currentGoalYear);
@@ -363,8 +362,11 @@ const Index = () => {
   // Calculate estimated tax (12% of Comissão Total)
   const impostoEstimado = totalComissaoTotal * 0.12;
 
-  // Calculate profit (Comissão Total - Custo Total - Imposto Estimado)
-  const resultado = totalComissaoTotal - totalCost - impostoEstimado;
+  // Calculate total cost (commissions + salaries + marketing + operational + estimated tax)
+  const totalCost = (dashboardTotals?.totalComissao || 0) + totalSalaries + marketingCost + operationalCost + impostoEstimado;
+
+  // Calculate profit (Comissão Total - Custo Total)
+  const resultado = totalComissaoTotal - totalCost;
 
   // Calculate results by fortnight (quinzena)
   const { primeiraQuinzena, segundaQuinzena } = useMemo(() => {
