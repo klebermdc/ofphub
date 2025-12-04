@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { DollarSign, TrendingUp, Users, Target, Package, Building2, FileSpreadsheet, Calendar, Wallet, CircleDollarSign, FileText, Megaphone, UserPlus, Percent, Receipt, ClipboardList, Settings2 } from "lucide-react";
+import { DollarSign, TrendingUp, Users, Target, Package, Building2, FileSpreadsheet, Calendar, Wallet, CircleDollarSign, FileText, Megaphone, UserPlus, Percent, Receipt, ClipboardList, Settings2, Briefcase } from "lucide-react";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { SheetInput } from "@/components/SheetInput";
 import { MetricCard } from "@/components/MetricCard";
@@ -54,7 +54,7 @@ const Index = () => {
   const { savedUrl, isLoading: settingsLoading, saveUrl } = useSheetSettings(user?.id);
   const { salaries, saveSalaries, getSalary } = useSalespersonSalaries(user?.id);
   const { role, isLoading: roleLoading, assignManagerRole } = useUserRole(user?.id);
-  const { costs: marketingCosts, saveCost: saveMarketingCost, getCostForMonth, getTotalForMonth, getLeadsForMonth } = useMarketingCosts(user?.id, role === 'marketing' || role === 'manager');
+  const { costs: marketingCosts, saveCost: saveMarketingCost, getCostForMonth, getTotalForMonth, getLeadsForMonth, getOperationalCostsForMonth } = useMarketingCosts(user?.id, role === 'marketing' || role === 'manager');
 
   // Auto-load saved sheet URL on mount
   useEffect(() => {
@@ -349,10 +349,11 @@ const Index = () => {
     ? parseInt(dashboardMonth.split('/')[1]) 
     : new Date().getFullYear();
 
-  // Calculate total cost (commissions + fixed salaries + marketing)
+  // Calculate total cost (commissions + fixed salaries + marketing + operational)
   const totalSalaries = dashboardFilteredSalesReps.reduce((sum, rep) => sum + getSalary(rep.name), 0);
   const marketingCost = getTotalForMonth(currentGoalMonth, currentGoalYear);
-  const totalCost = (dashboardTotals?.totalComissao || 0) + totalSalaries + marketingCost;
+  const operationalCost = getOperationalCostsForMonth(currentGoalMonth, currentGoalYear);
+  const totalCost = (dashboardTotals?.totalComissao || 0) + totalSalaries + marketingCost + operationalCost;
 
   // Calculate leads and conversion rate
   const totalLeads = getLeadsForMonth(currentGoalMonth, currentGoalYear);
@@ -535,12 +536,19 @@ const Index = () => {
                 </div>
 
                 {/* KPIs Secundários - Custos e Resultado */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                   <MetricCard
                     title="Marketing"
                     value={formatCurrency(marketingCost)}
                     icon={Megaphone}
                     delay={75}
+                    variant="warning"
+                  />
+                  <MetricCard
+                    title="Custos Operacionais"
+                    value={formatCurrency(operationalCost)}
+                    icon={Briefcase}
+                    delay={85}
                     variant="warning"
                   />
                   <MetricCard
