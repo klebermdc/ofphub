@@ -52,16 +52,16 @@ export function MetricCard({
 
   return (
     <div 
-      className="glass rounded-xl p-6 animate-slide-up"
+      className="glass rounded-xl p-4 sm:p-6 animate-slide-up"
       style={{ animationDelay: `${delay}ms` }}
     >
-      <div className="flex items-start justify-between">
-        <div className="space-y-2">
-          <p className="text-sm text-muted-foreground">{title}</p>
-          <p className={cn("text-3xl font-bold tracking-tight", styles.valueBg)}>{value}</p>
+      <div className="flex items-start justify-between gap-2">
+        <div className="space-y-2 min-w-0 flex-1">
+          <p className="text-xs sm:text-sm text-muted-foreground truncate">{title}</p>
+          <p className={cn("text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight truncate", styles.valueBg)}>{value}</p>
           {change && (
             <p className={cn(
-              "text-sm font-medium",
+              "text-xs sm:text-sm font-medium",
               changeType === "positive" && "text-success",
               changeType === "negative" && "text-destructive",
               changeType === "neutral" && "text-muted-foreground"
@@ -70,8 +70,8 @@ export function MetricCard({
             </p>
           )}
         </div>
-        <div className={cn("rounded-lg p-3", styles.iconBg)}>
-          <Icon className={cn("h-6 w-6", styles.iconColor)} />
+        <div className={cn("rounded-lg p-2 sm:p-3 shrink-0", styles.iconBg)}>
+          <Icon className={cn("h-5 w-5 sm:h-6 sm:w-6", styles.iconColor)} />
         </div>
       </div>
     </div>
