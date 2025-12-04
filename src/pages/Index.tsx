@@ -10,7 +10,8 @@ import { SupplierChart } from "@/components/SupplierChart";
 import { SalesRepTable } from "@/components/SalesRepTable";
 import { HistoryPanel } from "@/components/HistoryPanel";
 import { SaveReportDialog } from "@/components/SaveReportDialog";
-import { SalesGoalsPanel } from "@/components/SalesGoalsPanel";
+import { GoalsManagementDialog } from "@/components/GoalsManagementDialog";
+import { GoalsKPICard } from "@/components/GoalsKPICard";
 import { SalesRanking } from "@/components/SalesRanking";
 import { SalaryManagementDialog } from "@/components/SalaryManagementDialog";
 import { MonthComparisonCard } from "@/components/MonthComparisonCard";
@@ -589,15 +590,12 @@ const Index = () => {
                 </div>
 
                 {/* Metas */}
-                <div className="grid grid-cols-1 gap-6">
-                  <SalesGoalsPanel
-                    userId={user.id}
-                    month={currentGoalMonth}
-                    year={currentGoalYear}
-                    salesReps={dashboardFilteredSalesReps}
-                    totalSales={dashboardTotals?.totalVendas || 0}
-                  />
-                </div>
+                <GoalsKPICard
+                  userId={user.id}
+                  month={currentGoalMonth}
+                  year={currentGoalYear}
+                  totalSales={dashboardTotals?.totalVendas || 0}
+                />
 
                 {/* Histórico */}
                 <HistoryPanel
@@ -645,6 +643,12 @@ const Index = () => {
                   {/* Ações Comerciais */}
                   <div className="flex items-center gap-2 flex-wrap">
                     <SalaryManagementDialog salaries={salaries} onSave={saveSalaries} />
+                    <GoalsManagementDialog
+                      userId={user.id}
+                      month={currentGoalMonth}
+                      year={currentGoalYear}
+                      salesReps={filteredSalesReps}
+                    />
                     <Button 
                       variant="outline" 
                       size="sm" 
