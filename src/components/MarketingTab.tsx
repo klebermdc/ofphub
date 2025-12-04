@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Megaphone, DollarSign, TrendingUp, Calendar, UserPlus, Target, Banknote } from "lucide-react";
+import { Megaphone, DollarSign, TrendingUp, Calendar, UserPlus, Target, Banknote, Percent } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
 import { MarketingCostsDialog } from "@/components/MarketingCostsDialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -279,7 +279,7 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
       </div>
 
       {/* Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <MetricCard
           title="Faturamento"
           value={formatCurrency(revenue)}
@@ -297,6 +297,12 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
           value={totals.totalLeads.toString()}
           icon={UserPlus}
           variant="info"
+        />
+        <MetricCard
+          title="Taxa de Conversão"
+          value={`${totals.conversionRate.toFixed(1)}%`}
+          icon={Percent}
+          variant={totals.conversionRate >= 10 ? "success" : "warning"}
         />
         <MetricCard
           title="Custo por Lead"
