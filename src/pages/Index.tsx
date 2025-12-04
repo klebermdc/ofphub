@@ -362,6 +362,34 @@ const Index = () => {
   // Calculate profit (Comissão Total - Custo Total)
   const resultado = totalComissaoTotal - totalCost;
 
+  // Calculate results by fortnight (quinzena)
+  const { primeiraQuinzena, segundaQuinzena } = useMemo(() => {
+    let primeira = { comissaoTotal: 0, comissaoVendedor: 0 };
+    let segunda = { comissaoTotal: 0, comissaoVendedor: 0 };
+    
+    dashboardFilteredSalesReps.forEach(rep => {
+      rep.orders?.forEach(order => {
+        if (order.data) {
+          const parts = order.data.split('/');
+          const day = parseInt(parts[0]);
+          
+          if (day >= 1 && day <= 15) {
+            primeira.comissaoTotal += order.comissaoTotal || 0;
+            primeira.comissaoVendedor += order.comissaoVendedor || 0;
+          } else if (day >= 16 && day <= 31) {
+            segunda.comissaoTotal += order.comissaoTotal || 0;
+            segunda.comissaoVendedor += order.comissaoVendedor || 0;
+          }
+        }
+      });
+    });
+    
+    return {
+      primeiraQuinzena: primeira.comissaoTotal - primeira.comissaoVendedor,
+      segundaQuinzena: segunda.comissaoTotal - segunda.comissaoVendedor
+    };
+  }, [dashboardFilteredSalesReps]);
+
   if (loading || roleLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -535,6 +563,24 @@ const Index = () => {
                     icon={Target}
                     delay={150}
                     variant="info"
+                  />
+                </div>
+
+                {/* KPIs por Quinzena */}
+                <div className="grid grid-cols-2 gap-4">
+                  <MetricCard
+                    title="1ª Quinzena (1-15)"
+                    value={formatCurrency(primeiraQuinzena)}
+                    icon={Calendar}
+                    delay={175}
+                    variant={primeiraQuinzena >= 0 ? "success" : "danger"}
+                  />
+                  <MetricCard
+                    title="2ª Quinzena (16-31)"
+                    value={formatCurrency(segundaQuinzena)}
+                    icon={Calendar}
+                    delay={200}
+                    variant={segundaQuinzena >= 0 ? "success" : "danger"}
                   />
                 </div>
 
