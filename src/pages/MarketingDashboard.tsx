@@ -144,10 +144,6 @@ const MarketingDashboard = () => {
           </div>
 
           <div className="flex items-center gap-4">
-            <MarketingCostsDialog 
-              onSave={saveCost}
-              getCostForMonth={getCostForMonth}
-            />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="gap-2">
@@ -184,20 +180,26 @@ const MarketingDashboard = () => {
       
       <main className="container mx-auto px-6 py-6 relative space-y-6">
         {/* Year Filter */}
-        <div className="flex items-center gap-4">
-          <Calendar className="h-4 w-4 text-muted-foreground" />
-          <Select value={selectedYear} onValueChange={setSelectedYear}>
-            <SelectTrigger className="w-[120px]">
-              <SelectValue placeholder="Ano" />
-            </SelectTrigger>
-            <SelectContent>
-              {availableYears.map(year => (
-                <SelectItem key={year} value={year}>
-                  {year}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <Select value={selectedYear} onValueChange={setSelectedYear}>
+              <SelectTrigger className="w-[120px]">
+                <SelectValue placeholder="Ano" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableYears.map(year => (
+                  <SelectItem key={year} value={year}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <MarketingCostsDialog 
+            onSave={saveCost}
+            getCostForMonth={getCostForMonth}
+          />
         </div>
 
         {/* Metrics */}
