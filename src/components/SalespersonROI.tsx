@@ -21,9 +21,16 @@ function formatCurrency(value: number): string {
   return `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 }
 
+// Names to exclude from ROI calculation (company partners)
+const EXCLUDED_NAMES = ['Kleber', 'Renata', 'Site'];
+
 export function SalespersonROI({ salesReps, getSalary }: SalespersonROIProps) {
-  // Calculate ROI for each salesperson
-  const roiData: ROIData[] = salesReps.map(rep => {
+  // Filter out company partners and calculate ROI for each salesperson
+  const filteredReps = salesReps.filter(rep => 
+    !EXCLUDED_NAMES.some(name => rep.name.toLowerCase().includes(name.toLowerCase()))
+  );
+
+  const roiData: ROIData[] = filteredReps.map(rep => {
     const revenue = rep.orders?.reduce((sum, o) => sum + (o.comissaoTotal || 0), 0) || 0;
     const salary = getSalary(rep.name);
     const commission = rep.commission;
