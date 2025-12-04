@@ -59,8 +59,16 @@ const chartConfig = {
 };
 
 export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }: MarketingTabProps) {
+  // Get current month in format MM/YYYY
+  const getCurrentMonthKey = () => {
+    const now = new Date();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = now.getFullYear();
+    return `${month}/${year}`;
+  };
+  
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
-  const [selectedMonth, setSelectedMonth] = useState<string>('all');
+  const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonthKey());
 
   // Extract available months from sales data
   const availableMonths = useMemo(() => {
