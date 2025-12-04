@@ -1,4 +1,4 @@
-import { LogOut, User, Settings, ClipboardList } from "lucide-react";
+import { LogOut, User, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -35,16 +35,6 @@ export function DashboardHeader() {
         </div>
 
         <div className="flex items-center gap-4">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => navigate('/pedidos')}
-            className="gap-2"
-          >
-            <ClipboardList className="h-4 w-4" />
-            <span className="hidden sm:inline">Todos os Pedidos</span>
-          </Button>
-
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="gap-2">

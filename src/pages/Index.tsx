@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { DollarSign, TrendingUp, Users, Target, Package, Building2, FileSpreadsheet, Calendar, Wallet, CircleDollarSign, FileText, Megaphone, UserPlus, Percent, Receipt } from "lucide-react";
+import { DollarSign, TrendingUp, Users, Target, Package, Building2, FileSpreadsheet, Calendar, Wallet, CircleDollarSign, FileText, Megaphone, UserPlus, Percent, Receipt, ClipboardList, Settings2 } from "lucide-react";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { SheetInput } from "@/components/SheetInput";
 import { MetricCard } from "@/components/MetricCard";
@@ -461,7 +461,6 @@ const Index = () => {
                       userId={user?.id} 
                       availableSalespeople={salesReps.map(r => r.name)} 
                     />
-                    <SalaryManagementDialog salaries={salaries} onSave={saveSalaries} />
                     <MarketingCostsDialog onSave={saveMarketingCost} getCostForMonth={getCostForMonth} />
                     <SheetInput onAnalyze={handleAnalyze} isLoading={isLoading} compact />
                     <SaveReportDialog onSave={handleSaveReport} disabled={!hasData} />
@@ -586,9 +585,8 @@ const Index = () => {
                   <ProductChart salesReps={dashboardFilteredSalesReps} />
                 </div>
                 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-6">
                   <SupplierChart salesReps={dashboardFilteredSalesReps} />
-                  <SalesRanking salesReps={dashboardFilteredSalesReps} />
                 </div>
 
                 {/* Projeção e Top Clientes */}
@@ -597,9 +595,8 @@ const Index = () => {
                   <TopClientsTable salesReps={dashboardFilteredSalesReps} />
                 </div>
 
-                {/* ROI e Metas */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <SalespersonROI salesReps={dashboardFilteredSalesReps} getSalary={getSalary} />
+                {/* Metas */}
+                <div className="grid grid-cols-1 gap-6">
                   <SalesGoalsPanel
                     userId={user.id}
                     month={currentGoalMonth}
@@ -624,31 +621,56 @@ const Index = () => {
           <TabsContent value="vendedores" className="space-y-6">
             {hasData ? (
               <>
-                <div className="flex items-center gap-3">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Filtrar por mês:</span>
-                  <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Todos os meses" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos os meses</SelectItem>
-                      {availableMonths.map(month => {
-                        const [m, y] = month.split('/');
-                        return (
-                          <SelectItem key={month} value={month}>
-                            {getMonthName(parseInt(m))} {y}
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
-                  {selectedMonth !== 'all' && (
-                    <Badge variant="secondary">
-                      {filteredSalesReps.length} vendedor(es)
-                    </Badge>
-                  )}
+                {/* Ações e Filtros */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">Filtrar por mês:</span>
+                    <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Todos os meses" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos os meses</SelectItem>
+                        {availableMonths.map(month => {
+                          const [m, y] = month.split('/');
+                          return (
+                            <SelectItem key={month} value={month}>
+                              {getMonthName(parseInt(m))} {y}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                    {selectedMonth !== 'all' && (
+                      <Badge variant="secondary">
+                        {filteredSalesReps.length} vendedor(es)
+                      </Badge>
+                    )}
+                  </div>
+                  
+                  {/* Ações Comerciais */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <SalaryManagementDialog salaries={salaries} onSave={saveSalaries} />
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => navigate('/pedidos')}
+                      className="gap-2"
+                    >
+                      <ClipboardList className="h-4 w-4" />
+                      Todos os Pedidos
+                    </Button>
+                  </div>
                 </div>
+
+                {/* Ranking e ROI */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <SalesRanking salesReps={filteredSalesReps} />
+                  <SalespersonROI salesReps={filteredSalesReps} getSalary={getSalary} />
+                </div>
+
+                {/* Tabela de Vendedores */}
                 <SalesRepTable salesReps={filteredSalesReps} onGeneratePDF={handleGeneratePDF} />
               </>
             ) : (
