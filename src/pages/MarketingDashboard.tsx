@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Megaphone, DollarSign, TrendingUp, Calendar, LogOut, UserPlus, Percent, Target } from "lucide-react";
+import { Megaphone, DollarSign, TrendingUp, Calendar, LogOut, UserPlus, Percent, Target, User, Settings } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +12,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getMonthName } from "@/hooks/useCommissionHistory";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface MarketingCostData {
   id: string;
@@ -120,29 +128,56 @@ const MarketingDashboard = () => {
         }}
       />
       
-      {/* Header */}
-      <header className="sticky top-0 z-50 glass border-b border-border/50">
-        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
+      {/* Header - igual ao do gestor */}
+      <header className="border-b border-border bg-background/80 backdrop-blur-md sticky top-0 z-50">
+        <div className="container mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img 
               src="/images/logo-branco.png" 
               alt="Orlando Fast Pass" 
               className="h-10 w-auto"
             />
-            <div>
-              <h1 className="text-xl font-bold">Marketing Dashboard</h1>
-              <p className="text-sm text-muted-foreground">Custos e Leads</p>
+            <div className="hidden md:block">
+              <h1 className="font-semibold text-lg">Hub de Gestão</h1>
+              <p className="text-xs text-muted-foreground">Orlando Fast Pass</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+
+          <div className="flex items-center gap-4">
             <MarketingCostsDialog 
               onSave={saveCost}
               getCostForMonth={getCostForMonth}
             />
-            <Button variant="ghost" size="sm" onClick={handleSignOut}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Sair
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="gap-2">
+                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <User className="h-4 w-4 text-primary" />
+                  </div>
+                  <span className="hidden md:inline text-sm">
+                    {user?.email?.split('@')[0]}
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>
+                  <div className="flex flex-col">
+                    <span className="font-medium">{user?.user_metadata?.full_name || 'Marketing'}</span>
+                    <span className="text-xs text-muted-foreground">{user?.email}</span>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="gap-2">
+                  <Settings className="h-4 w-4" />
+                  Configurações
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut} className="gap-2 text-destructive cursor-pointer">
+                  <LogOut className="h-4 w-4" />
+                  Sair
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>
