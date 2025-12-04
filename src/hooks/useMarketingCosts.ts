@@ -11,9 +11,10 @@ interface MarketingCost {
   other_marketing: number;
   leads: number;
   description: string | null;
+  user_id?: string;
 }
 
-export function useMarketingCosts(userId: string | undefined) {
+export function useMarketingCosts(userId: string | undefined, isMarketingRole: boolean = false) {
   const [costs, setCosts] = useState<MarketingCost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -23,18 +24,26 @@ export function useMarketingCosts(userId: string | undefined) {
       return;
     }
     fetchCosts();
-  }, [userId]);
+  }, [userId, isMarketingRole]);
 
   const fetchCosts = async () => {
     if (!userId) return;
     
     setIsLoading(true);
-    const { data, error } = await supabase
+    
+    // Marketing role users can see all marketing costs
+    let query = supabase
       .from("marketing_costs")
       .select("*")
-      .eq("user_id", userId)
       .order("period_year", { ascending: false })
       .order("period_month", { ascending: false });
+    
+    // Only filter by user_id for non-marketing users
+    if (!isMarketingRole) {
+      query = query.eq("user_id", userId);
+    }
+    
+    const { data, error } = await query;
 
     if (error) {
       console.error("Error fetching marketing costs:", error);

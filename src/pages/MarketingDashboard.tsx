@@ -29,7 +29,7 @@ const MarketingDashboard = () => {
   const { role, isLoading: roleLoading } = useUserRole(user?.id);
   const navigate = useNavigate();
   
-  const { costs, isLoading: costsLoading, saveCost, getCostForMonth, getTotalForMonth, getLeadsForMonth } = useMarketingCosts(user?.id);
+  const { costs, isLoading: costsLoading, saveCost, getCostForMonth, getTotalForMonth, getLeadsForMonth } = useMarketingCosts(user?.id, true);
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
 
   // Redirect if not marketing
