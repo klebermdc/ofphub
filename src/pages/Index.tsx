@@ -363,8 +363,8 @@ const Index = () => {
   // Calculate estimated tax (12% of Comissão Total)
   const impostoEstimado = totalComissaoTotal * 0.12;
 
-  // Calculate profit (Comissão Total - Custo Total)
-  const resultado = totalComissaoTotal - totalCost;
+  // Calculate profit (Comissão Total - Custo Total - Imposto Estimado)
+  const resultado = totalComissaoTotal - totalCost - impostoEstimado;
 
   // Calculate results by fortnight (quinzena)
   const { primeiraQuinzena, segundaQuinzena } = useMemo(() => {

@@ -25,13 +25,11 @@ interface OperationalCostsDialogProps {
     month: number,
     year: number,
     software: number,
-    telefonia: number,
-    imposto: number
+    telefonia: number
   ) => Promise<boolean>;
   getCostForMonth: (month: number, year: number) => {
     software: number;
     telefonia: number;
-    imposto: number;
   } | undefined;
 }
 
@@ -59,7 +57,6 @@ export function OperationalCostsDialog({ onSave, getCostForMonth }: OperationalC
   const [year, setYear] = useState(currentYear);
   const [software, setSoftware] = useState("");
   const [telefonia, setTelefonia] = useState("");
-  const [imposto, setImposto] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -73,11 +70,9 @@ export function OperationalCostsDialog({ onSave, getCostForMonth }: OperationalC
     if (existing) {
       setSoftware(String(existing.software || 0));
       setTelefonia(String(existing.telefonia || 0));
-      setImposto(String(existing.imposto || 0));
     } else {
       setSoftware("");
       setTelefonia("");
-      setImposto("");
     }
   };
 
@@ -87,8 +82,7 @@ export function OperationalCostsDialog({ onSave, getCostForMonth }: OperationalC
       month,
       year,
       parseFloat(software) || 0,
-      parseFloat(telefonia) || 0,
-      parseFloat(imposto) || 0
+      parseFloat(telefonia) || 0
     );
     setIsSaving(false);
     if (success) {
@@ -96,7 +90,7 @@ export function OperationalCostsDialog({ onSave, getCostForMonth }: OperationalC
     }
   };
 
-  const total = (parseFloat(software) || 0) + (parseFloat(telefonia) || 0) + (parseFloat(imposto) || 0);
+  const total = (parseFloat(software) || 0) + (parseFloat(telefonia) || 0);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -110,7 +104,7 @@ export function OperationalCostsDialog({ onSave, getCostForMonth }: OperationalC
         <DialogHeader>
           <DialogTitle>Custos Operacionais</DialogTitle>
           <DialogDescription>
-            Cadastre os custos operacionais do mês.
+            Cadastre os custos operacionais do mês. O imposto é calculado automaticamente (12% da Comissão Total).
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -170,19 +164,6 @@ export function OperationalCostsDialog({ onSave, getCostForMonth }: OperationalC
               placeholder="0,00"
               value={telefonia}
               onChange={(e) => setTelefonia(e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="imposto">Imposto (R$)</Label>
-            <Input
-              id="imposto"
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="0,00"
-              value={imposto}
-              onChange={(e) => setImposto(e.target.value)}
             />
           </div>
 
