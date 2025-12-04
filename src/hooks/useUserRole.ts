@@ -174,10 +174,10 @@ export function useMarketingAccounts(userId: string | undefined) {
 
   const linkMarketing = async (targetUserId: string) => {
     try {
-      const { data, error } = await supabase
-        .rpc('link_marketing', { 
-          _target_user_id: targetUserId
-        });
+      // Using any type cast until types regenerate
+      const { data, error } = await (supabase.rpc as any)('link_marketing', { 
+        _target_user_id: targetUserId
+      });
 
       if (error) throw error;
       

@@ -423,6 +423,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      link_marketing: { Args: { _target_user_id: string }; Returns: boolean }
       link_salesperson: {
         Args: { _salesperson_name: string; _target_user_id: string }
         Returns: boolean
