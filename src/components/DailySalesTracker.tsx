@@ -132,6 +132,17 @@ export function DailySalesTracker({
   // Daily result metrics
   const dailyResultado = businessDaysElapsed > 0 ? resultadoAtual / businessDaysElapsed : 0;
   
+  // Calculate daily result goal based on monthly sales goal
+  // Estimate commission from goal using current average commission rate
+  const avgCommissionRate = monthSales > 0 ? totalComissao / monthSales : 0.1; // fallback 10%
+  const avgVendedorRate = monthSales > 0 ? totalComissaoVendedor / monthSales : 0.05; // fallback 5%
+  const expectedMonthlyComissao = monthlyGoal * avgCommissionRate;
+  const expectedMonthlyComissaoVendedor = monthlyGoal * avgVendedorRate;
+  const expectedImposto = expectedMonthlyComissao * 0.12;
+  const expectedCustoTotal = expectedMonthlyComissaoVendedor + totalSalaries + marketingCosts + operationalCosts + expectedImposto;
+  const expectedMonthlyResultado = expectedMonthlyComissao - expectedCustoTotal;
+  const dailyResultGoal = totalBusinessDays > 0 ? expectedMonthlyResultado / totalBusinessDays : 0;
+  
   const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
   return (
@@ -232,30 +243,27 @@ export function DailySalesTracker({
           </p>
         </div>
 
-        {/* Projeção Resultado */}
+        {/* Resultado Diário */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <DollarSign className="h-4 w-4 text-emerald-500" />
-            <span className="text-sm text-muted-foreground">Projeção Resultado</span>
+            <span className="text-sm text-muted-foreground">Resultado Diário</span>
           </div>
           <p className={cn(
             "text-2xl font-bold",
-            projectedResultado >= 0 ? "text-emerald-500" : "text-red-500"
-          )}>{formatCurrency(projectedResultado)}</p>
+            dailyResultado >= 0 ? "text-emerald-500" : "text-red-500"
+          )}>{formatCurrency(dailyResultado)}</p>
           <div className="space-y-1">
             <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Atual: {formatCurrency(resultadoAtual)}</span>
+              <span className="text-muted-foreground">Meta: {formatCurrency(dailyResultGoal)}</span>
               <span className={cn(
-                resultadoAtual >= 0 ? "text-emerald-500" : "text-red-500"
-              )}>{resultadoAtual >= 0 ? "+" : ""}{((resultadoAtual / (custoTotal || 1)) * 100).toFixed(0)}%</span>
+                dailyResultado >= dailyResultGoal ? "text-emerald-500" : dailyResultado >= dailyResultGoal * 0.8 ? "text-warning" : "text-red-500"
+              )}>{dailyResultGoal > 0 ? ((dailyResultado / dailyResultGoal) * 100).toFixed(0) : 0}%</span>
             </div>
-            <Progress 
-              value={Math.min(Math.max((projectedResultado / (projectedCustoTotal || 1)) * 100 + 50, 0), 100)} 
-              className="h-2" 
-            />
+            <Progress value={Math.min(dailyResultGoal > 0 ? (dailyResultado / dailyResultGoal) * 100 : 0, 100)} className="h-2" />
           </div>
           <p className="text-xs text-muted-foreground">
-            Média/dia: {formatCurrency(dailyResultado)}
+            Projeção mês: {formatCurrency(projectedResultado)}
           </p>
         </div>
       </div>
