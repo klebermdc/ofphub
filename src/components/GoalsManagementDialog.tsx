@@ -85,9 +85,13 @@ export function GoalsManagementDialog({ userId, month, year, salesReps }: GoalsM
   };
 
   const handleSalespersonGoalChange = (name: string, value: number) => {
-    setSalespersonGoals(prev => 
-      prev.map(g => g.name === name ? { ...g, goal: value } : g)
-    );
+    setSalespersonGoals(prev => {
+      const updated = prev.map(g => g.name === name ? { ...g, goal: value } : g);
+      // Auto-update total goal based on sum of individual goals
+      const newTotal = updated.reduce((sum, g) => sum + g.goal, 0);
+      setTotalGoal(newTotal);
+      return updated;
+    });
   };
 
   const handleSave = async () => {
