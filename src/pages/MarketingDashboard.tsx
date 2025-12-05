@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Megaphone, DollarSign, TrendingUp, Calendar, LogOut, UserPlus, Target, User, Settings, Upload, FileText, Download, Trash2, File, Banknote, Percent } from "lucide-react";
+import { Megaphone, DollarSign, TrendingUp, Calendar, LogOut, UserPlus, Target, User, Settings, Upload, FileText, Download, Trash2, File, Banknote, Percent, Users } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,7 +8,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useMarketingCosts } from "@/hooks/useMarketingCosts";
 import { useMarketingFiles } from "@/hooks/useMarketingFiles";
+import { useLeadsData } from "@/hooks/useLeadsData";
 import { MarketingCostsDialog } from "@/components/MarketingCostsDialog";
+import { LeadsSheetDialog } from "@/components/LeadsSheetDialog";
+import { LeadsBySourceChart } from "@/components/LeadsBySourceChart";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -64,6 +67,7 @@ const MarketingDashboard = () => {
   const { salesReps, isLoading: sheetLoading } = useSheetData();
   const { costs, isLoading: costsLoading, saveCost, getCostForMonth } = useMarketingCosts(user?.id, true);
   const { files, isLoading: filesLoading, uploadFile, deleteFile, downloadFile } = useMarketingFiles(user?.id);
+  const { leadsData, isLoading: leadsLoading, sheetUrl: leadsSheetUrl, fetchLeadsData, clearUrl: clearLeadsUrl } = useLeadsData();
   
   // Get current month in format MM/YYYY
   const getCurrentMonthKey = () => {
@@ -298,7 +302,7 @@ const MarketingDashboard = () => {
 
   const monthsForYear = availableMonths.filter(m => m.endsWith(`/${selectedYear}`));
 
-  if (loading || roleLoading || costsLoading || filesLoading || sheetLoading) {
+  if (loading || roleLoading || costsLoading || filesLoading || sheetLoading || leadsLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full"></div>
@@ -417,10 +421,18 @@ const MarketingDashboard = () => {
               </SelectContent>
             </Select>
           </div>
-          <MarketingCostsDialog 
-            onSave={saveCost}
-            getCostForMonth={getCostForMonth}
-          />
+          <div className="flex gap-2">
+            <LeadsSheetDialog
+              onConnect={fetchLeadsData}
+              currentUrl={leadsSheetUrl}
+              onDisconnect={clearLeadsUrl}
+              isLoading={leadsLoading}
+            />
+            <MarketingCostsDialog 
+              onSave={saveCost}
+              getCostForMonth={getCostForMonth}
+            />
+          </div>
         </div>
 
         {/* Metrics - igual ao MarketingTab do gestor */}
@@ -609,6 +621,69 @@ const MarketingDashboard = () => {
             </p>
           </div>
         </div>
+
+        {/* Leads by Source Section */}
+        {leadsData && leadsData.sourceBreakdown.length > 0 && (
+          <>
+            <div className="flex items-center gap-2 mt-6">
+              <Users className="h-5 w-5 text-info" />
+              <h2 className="text-xl font-semibold">Leads por Canal</h2>
+              <span className="text-sm text-muted-foreground">({leadsData.totals.total} total)</span>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Pie Chart */}
+              <div className="glass rounded-xl p-6">
+                <h3 className="text-lg font-semibold mb-4">Distribuição por Fonte</h3>
+                <LeadsBySourceChart data={leadsData.sourceBreakdown} />
+              </div>
+
+              {/* Leads Breakdown Cards */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="glass rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-3 h-3 rounded-full" style={{ background: "hsl(217, 91%, 60%)" }}></div>
+                    <span className="text-sm font-medium">Google Ads</span>
+                  </div>
+                  <p className="text-2xl font-bold">{leadsData.totals.googleAds}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {leadsData.totals.total > 0 ? ((leadsData.totals.googleAds / leadsData.totals.total) * 100).toFixed(1) : 0}% dos leads
+                  </p>
+                </div>
+                <div className="glass rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-3 h-3 rounded-full" style={{ background: "hsl(270, 70%, 60%)" }}></div>
+                    <span className="text-sm font-medium">Meta Ads</span>
+                  </div>
+                  <p className="text-2xl font-bold">{leadsData.totals.metaAds}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {leadsData.totals.total > 0 ? ((leadsData.totals.metaAds / leadsData.totals.total) * 100).toFixed(1) : 0}% dos leads
+                  </p>
+                </div>
+                <div className="glass rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-3 h-3 rounded-full" style={{ background: "hsl(142, 71%, 45%)" }}></div>
+                    <span className="text-sm font-medium">Orgânico</span>
+                  </div>
+                  <p className="text-2xl font-bold">{leadsData.totals.organic}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {leadsData.totals.total > 0 ? ((leadsData.totals.organic / leadsData.totals.total) * 100).toFixed(1) : 0}% dos leads
+                  </p>
+                </div>
+                <div className="glass rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-3 h-3 rounded-full" style={{ background: "hsl(45, 93%, 47%)" }}></div>
+                    <span className="text-sm font-medium">Direto</span>
+                  </div>
+                  <p className="text-2xl font-bold">{leadsData.totals.direct}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {leadsData.totals.total > 0 ? ((leadsData.totals.direct / leadsData.totals.total) * 100).toFixed(1) : 0}% dos leads
+                  </p>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Monthly Breakdown Table */}
         <div className="glass rounded-xl p-6">

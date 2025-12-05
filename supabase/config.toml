@@ -1,1 +1,7 @@
 project_id = "eypbkwmmoitaprtinpjg"
+
+[functions.parse-google-sheet]
+verify_jwt = false
+
+[functions.parse-leads-sheet]
+verify_jwt = false
