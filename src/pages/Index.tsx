@@ -256,6 +256,9 @@ const Index = () => {
       // Save URL for auto-load next time
       await saveUrl(url);
       
+      // Reload goals for current month
+      await fetchMonthlyGoal();
+      
       toast({
         title: "Planilha importada!",
         description: data.message,
