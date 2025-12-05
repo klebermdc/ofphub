@@ -144,7 +144,7 @@ export function DailySalesTracker({
         </div>
         <div className="text-right">
           <span className="text-sm text-muted-foreground">
-            {monthNames[m - 1]} {y}
+            Dia {now.getDate()} • {monthNames[m - 1]} {y}
           </span>
           <p className="text-xs text-muted-foreground">
             {businessDaysElapsed} de {totalBusinessDays} dias úteis
