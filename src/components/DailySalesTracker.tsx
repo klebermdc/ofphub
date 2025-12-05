@@ -120,17 +120,11 @@ export function DailySalesTracker({
   const custoTotal = totalComissaoVendedor + totalSalaries + marketingCosts + operationalCosts + impostoEstimado;
   const resultadoAtual = totalComissao - custoTotal;
   
-  // Project costs based on proportion
-  const projectionRatio = businessDaysElapsed > 0 ? totalBusinessDays / businessDaysElapsed : 1;
-  const projectedComissao = totalComissao * projectionRatio;
-  const projectedComissaoVendedor = totalComissaoVendedor * projectionRatio;
-  const projectedImposto = projectedComissao * 0.12;
-  // Fixed costs stay the same (salaries, marketing, operational)
-  const projectedCustoTotal = projectedComissaoVendedor + totalSalaries + marketingCosts + operationalCosts + projectedImposto;
-  const projectedResultado = projectedComissao - projectedCustoTotal;
-  
   // Daily result metrics
   const dailyResultado = businessDaysElapsed > 0 ? resultadoAtual / businessDaysElapsed : 0;
+  
+  // Project monthly result based on daily average (consistent approach)
+  const projectedResultado = dailyResultado * totalBusinessDays;
   
   // Calculate daily result goal based on monthly sales goal
   // Estimate commission from goal using current average commission rate
