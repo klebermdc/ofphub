@@ -67,7 +67,7 @@ function normalizeSource(source: string): string {
   const s = source.toLowerCase().trim();
   
   if (s.includes('google') || s.includes('gclid')) return 'Google Ads';
-  if (s.includes('facebook') || s.includes('fb') || s.includes('instagram') || s.includes('meta')) return 'Meta Ads';
+  if (s.includes('facebook') || s.includes('fb') || s.includes('instagram') || s.includes('meta') || s === 'ig') return 'Meta Ads';
   if (s.includes('organic') || s.includes('organico')) return 'Orgânico';
   if (s.includes('direct') || s.includes('direto') || s === '(direct)') return 'Direto';
   if (s.includes('referral') || s.includes('referencia')) return 'Referência';
