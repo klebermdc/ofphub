@@ -127,12 +127,24 @@ export function useMarketingFiles(userId: string | undefined) {
   };
 
   const downloadFile = async (filePath: string, fileName: string) => {
-    const { data, error } = await supabase.storage
+    // Use signed URL for secure file access (bucket is now private)
+    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
       .from("marketing-files")
-      .download(filePath);
+      .createSignedUrl(filePath, 60); // 60 seconds expiration
 
-    if (error) {
-      console.error("Error downloading file:", error);
+    if (signedUrlError || !signedUrlData?.signedUrl) {
+      console.error("Error creating signed URL:", signedUrlError);
+      toast({
+        title: "Erro",
+        description: "Não foi possível gerar link de download.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Fetch file using signed URL
+    const response = await fetch(signedUrlData.signedUrl);
+    if (!response.ok) {
       toast({
         title: "Erro",
         description: "Não foi possível baixar o arquivo.",
@@ -141,7 +153,8 @@ export function useMarketingFiles(userId: string | undefined) {
       return;
     }
 
-    const url = URL.createObjectURL(data);
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
     a.download = fileName;
