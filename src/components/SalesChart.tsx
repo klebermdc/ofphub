@@ -22,23 +22,26 @@ const COLORS = [
 export function SalesChart({ salesReps }: SalesChartProps) {
   const totalSales = salesReps.reduce((sum, rep) => sum + rep.sales, 0);
   
-  const chartData = salesReps.map(rep => ({
-    name: rep.name.split(' ')[0],
-    vendas: rep.sales,
-  }));
+  // Sort by sales descending for bar chart
+  const chartData = [...salesReps]
+    .sort((a, b) => b.sales - a.sales)
+    .map(rep => ({
+      name: rep.name.split(' ')[0],
+      vendas: rep.sales,
+    }));
 
-  const pieData = salesReps.map((rep, index) => ({
+  const pieData = salesReps.map((rep) => ({
     name: rep.name.split(' ')[0],
     value: rep.sales,
     percentage: totalSales > 0 ? ((rep.sales / totalSales) * 100).toFixed(1) : 0,
   })).sort((a, b) => b.value - a.value);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="space-y-6">
       {/* Bar Chart - Vendas por Vendedor */}
       <div className="glass rounded-xl p-6 animate-slide-up" style={{ animationDelay: '200ms' }}>
         <h3 className="text-lg font-semibold mb-6">Vendas por Vendedor</h3>
-        <div className="h-[300px]">
+        <div className="h-[350px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(222, 30%, 18%)" />
@@ -85,15 +88,15 @@ export function SalesChart({ salesReps }: SalesChartProps) {
       {/* Pie Chart - Participação no Faturamento */}
       <div className="glass rounded-xl p-6 animate-slide-up" style={{ animationDelay: '300ms' }}>
         <h3 className="text-lg font-semibold mb-6">Participação no Faturamento</h3>
-        <div className="h-[300px]">
+        <div className="h-[400px]">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
                 data={pieData}
                 cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={100}
+                cy="45%"
+                innerRadius={80}
+                outerRadius={130}
                 paddingAngle={2}
                 dataKey="value"
                 nameKey="name"
@@ -119,7 +122,7 @@ export function SalesChart({ salesReps }: SalesChartProps) {
               <Legend 
                 verticalAlign="bottom"
                 height={36}
-                formatter={(value, entry: any) => (
+                formatter={(value) => (
                   <span style={{ color: 'hsl(210, 40%, 98%)' }}>{value}</span>
                 )}
               />
