@@ -1,11 +1,16 @@
-import { Calendar, Target, TrendingUp, Zap } from "lucide-react";
+import { Calendar, Target, TrendingUp, Zap, DollarSign } from "lucide-react";
 import { Progress } from "./ui/progress";
 import { cn } from "@/lib/utils";
 
 interface DailySalesTrackerProps {
-  salesReps: { orders?: { data?: string; venda: number }[] }[];
+  salesReps: { orders?: { data?: string; venda: number; comissao?: number; comissaoVendedor?: number }[] }[];
   monthlyGoal: number;
   currentMonth: string;
+  totalComissao?: number;
+  totalComissaoVendedor?: number;
+  totalSalaries?: number;
+  marketingCosts?: number;
+  operationalCosts?: number;
 }
 
 function getBusinessDaysInMonth(month: number, year: number): number {
@@ -15,7 +20,6 @@ function getBusinessDaysInMonth(month: number, year: number): number {
   for (let day = 1; day <= daysInMonth; day++) {
     const date = new Date(year, month - 1, day);
     const dayOfWeek = date.getDay();
-    // 0 = Sunday, 6 = Saturday
     if (dayOfWeek !== 0 && dayOfWeek !== 6) {
       businessDays++;
     }
@@ -32,7 +36,6 @@ function getBusinessDaysElapsed(month: number, year: number): number {
   
   let businessDays = 0;
   
-  // If it's the current month, count business days up to today
   if (month === currentMonth && year === currentYear) {
     for (let day = 1; day <= today; day++) {
       const date = new Date(year, month - 1, day);
@@ -44,7 +47,6 @@ function getBusinessDaysElapsed(month: number, year: number): number {
     return businessDays;
   }
   
-  // Otherwise return all business days in that month
   return getBusinessDaysInMonth(month, year);
 }
 
@@ -60,24 +62,27 @@ function formatCurrency(value: number): string {
   return `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 }
 
-export function DailySalesTracker({ salesReps, monthlyGoal, currentMonth }: DailySalesTrackerProps) {
+export function DailySalesTracker({ 
+  salesReps, 
+  monthlyGoal, 
+  currentMonth,
+  totalComissao = 0,
+  totalComissaoVendedor = 0,
+  totalSalaries = 0,
+  marketingCosts = 0,
+  operationalCosts = 0
+}: DailySalesTrackerProps) {
   const [m, y] = currentMonth.split('/').map(Number);
   const now = new Date();
-  const isCurrentMonth = m === (now.getMonth() + 1) && y === now.getFullYear();
   
-  // Calculate business days
   const totalBusinessDays = getBusinessDaysInMonth(m, y);
   const businessDaysElapsed = getBusinessDaysElapsed(m, y);
   
-  // Daily goal = monthly goal / business days
   const dailyGoal = totalBusinessDays > 0 ? monthlyGoal / totalBusinessDays : 0;
   
-  // Calculate today's sales
   const todayKey = getTodayKey();
   let todaySales = 0;
   let todayOrders = 0;
-  
-  // Calculate total month sales
   let monthSales = 0;
   
   salesReps.forEach(rep => {
@@ -92,7 +97,6 @@ export function DailySalesTracker({ salesReps, monthlyGoal, currentMonth }: Dail
         if (`${orderMonth}/${orderYear}` === currentMonth) {
           monthSales += order.venda;
           
-          // Check if it's today
           const orderDay = parts[0].padStart(2, '0');
           const orderDateKey = `${orderDay}/${orderMonth}/${orderYear}`;
           if (orderDateKey === todayKey) {
@@ -104,21 +108,29 @@ export function DailySalesTracker({ salesReps, monthlyGoal, currentMonth }: Dail
     });
   });
   
-  // Calculate accumulated goal (what should have been sold by now)
   const accumulatedGoal = dailyGoal * businessDaysElapsed;
-  
-  // Progress for today
   const todayProgress = dailyGoal > 0 ? (todaySales / dailyGoal) * 100 : 0;
-  
-  // Progress for month accumulated
   const monthProgress = accumulatedGoal > 0 ? (monthSales / accumulatedGoal) * 100 : 0;
-  
-  // Daily average so far
   const dailyAverage = businessDaysElapsed > 0 ? monthSales / businessDaysElapsed : 0;
-  
-  // Projection for end of month
   const projectedMonthSales = dailyAverage * totalBusinessDays;
   const projectionVsGoal = monthlyGoal > 0 ? ((projectedMonthSales / monthlyGoal) * 100) : 0;
+  
+  // Calculate Result (Resultado) - Profit calculation
+  const impostoEstimado = totalComissao * 0.12;
+  const custoTotal = totalComissaoVendedor + totalSalaries + marketingCosts + operationalCosts + impostoEstimado;
+  const resultadoAtual = totalComissao - custoTotal;
+  
+  // Project costs based on proportion
+  const projectionRatio = businessDaysElapsed > 0 ? totalBusinessDays / businessDaysElapsed : 1;
+  const projectedComissao = totalComissao * projectionRatio;
+  const projectedComissaoVendedor = totalComissaoVendedor * projectionRatio;
+  const projectedImposto = projectedComissao * 0.12;
+  // Fixed costs stay the same (salaries, marketing, operational)
+  const projectedCustoTotal = projectedComissaoVendedor + totalSalaries + marketingCosts + operationalCosts + projectedImposto;
+  const projectedResultado = projectedComissao - projectedCustoTotal;
+  
+  // Daily result metrics
+  const dailyResultado = businessDaysElapsed > 0 ? resultadoAtual / businessDaysElapsed : 0;
   
   const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
@@ -139,7 +151,7 @@ export function DailySalesTracker({ salesReps, monthlyGoal, currentMonth }: Dail
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         {/* Vendas Hoje */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">
@@ -149,14 +161,14 @@ export function DailySalesTracker({ salesReps, monthlyGoal, currentMonth }: Dail
           <p className="text-2xl font-bold">{formatCurrency(todaySales)}</p>
           <div className="space-y-1">
             <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Meta do dia: {formatCurrency(dailyGoal)}</span>
+              <span className="text-muted-foreground">Meta: {formatCurrency(dailyGoal)}</span>
               <span className={cn(
                 todayProgress >= 100 ? "text-emerald-500" : "text-warning"
               )}>{todayProgress.toFixed(0)}%</span>
             </div>
             <Progress value={Math.min(todayProgress, 100)} className="h-2" />
           </div>
-          <p className="text-xs text-muted-foreground">{todayOrders} pedidos hoje</p>
+          <p className="text-xs text-muted-foreground">{todayOrders} pedidos</p>
         </div>
 
         {/* Meta Acumulada */}
@@ -168,7 +180,7 @@ export function DailySalesTracker({ salesReps, monthlyGoal, currentMonth }: Dail
           <p className="text-2xl font-bold">{formatCurrency(monthSales)}</p>
           <div className="space-y-1">
             <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Deveria ter: {formatCurrency(accumulatedGoal)}</span>
+              <span className="text-muted-foreground">Deveria: {formatCurrency(accumulatedGoal)}</span>
               <span className={cn(
                 monthProgress >= 100 ? "text-emerald-500" : monthProgress >= 80 ? "text-warning" : "text-red-500"
               )}>{monthProgress.toFixed(0)}%</span>
@@ -176,7 +188,7 @@ export function DailySalesTracker({ salesReps, monthlyGoal, currentMonth }: Dail
             <Progress value={Math.min(monthProgress, 100)} className="h-2" />
           </div>
           <p className="text-xs text-muted-foreground">
-            {monthProgress >= 100 ? "Acima da meta!" : `Faltam ${formatCurrency(accumulatedGoal - monthSales)}`}
+            {monthProgress >= 100 ? "Acima!" : `Faltam ${formatCurrency(Math.max(0, accumulatedGoal - monthSales))}`}
           </p>
         </div>
 
@@ -189,21 +201,21 @@ export function DailySalesTracker({ salesReps, monthlyGoal, currentMonth }: Dail
           <p className="text-2xl font-bold">{formatCurrency(dailyAverage)}</p>
           <div className="space-y-1">
             <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Meta diária: {formatCurrency(dailyGoal)}</span>
+              <span className="text-muted-foreground">Meta: {formatCurrency(dailyGoal)}</span>
               <span className={cn(
                 dailyAverage >= dailyGoal ? "text-emerald-500" : "text-warning"
               )}>{dailyGoal > 0 ? ((dailyAverage / dailyGoal) * 100).toFixed(0) : 0}%</span>
             </div>
             <Progress value={Math.min(dailyGoal > 0 ? (dailyAverage / dailyGoal) * 100 : 0, 100)} className="h-2" />
           </div>
-          <p className="text-xs text-muted-foreground">Baseado em {businessDaysElapsed} dias úteis</p>
+          <p className="text-xs text-muted-foreground">{businessDaysElapsed} dias úteis</p>
         </div>
 
         {/* Projeção do Mês */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <Target className="h-4 w-4 text-success" />
-            <span className="text-sm text-muted-foreground">Projeção do Mês</span>
+            <span className="text-sm text-muted-foreground">Projeção Vendas</span>
           </div>
           <p className="text-2xl font-bold">{formatCurrency(projectedMonthSales)}</p>
           <div className="space-y-1">
@@ -216,7 +228,34 @@ export function DailySalesTracker({ salesReps, monthlyGoal, currentMonth }: Dail
             <Progress value={Math.min(projectionVsGoal, 100)} className="h-2" />
           </div>
           <p className="text-xs text-muted-foreground">
-            {projectionVsGoal >= 100 ? "Meta será batida!" : `Faltam ${formatCurrency(monthlyGoal - projectedMonthSales)}`}
+            {projectionVsGoal >= 100 ? "Meta OK!" : `Faltam ${formatCurrency(Math.max(0, monthlyGoal - projectedMonthSales))}`}
+          </p>
+        </div>
+
+        {/* Projeção Resultado */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4 text-emerald-500" />
+            <span className="text-sm text-muted-foreground">Projeção Resultado</span>
+          </div>
+          <p className={cn(
+            "text-2xl font-bold",
+            projectedResultado >= 0 ? "text-emerald-500" : "text-red-500"
+          )}>{formatCurrency(projectedResultado)}</p>
+          <div className="space-y-1">
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Atual: {formatCurrency(resultadoAtual)}</span>
+              <span className={cn(
+                resultadoAtual >= 0 ? "text-emerald-500" : "text-red-500"
+              )}>{resultadoAtual >= 0 ? "+" : ""}{((resultadoAtual / (custoTotal || 1)) * 100).toFixed(0)}%</span>
+            </div>
+            <Progress 
+              value={Math.min(Math.max((projectedResultado / (projectedCustoTotal || 1)) * 100 + 50, 0), 100)} 
+              className="h-2" 
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Média/dia: {formatCurrency(dailyResultado)}
           </p>
         </div>
       </div>
