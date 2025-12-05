@@ -679,6 +679,9 @@ const Index = () => {
                   month={currentGoalMonth}
                   year={currentGoalYear}
                   totalSales={dashboardTotals?.totalVendas || 0}
+                  currentComissaoTotal={totalComissaoTotal}
+                  currentComissaoVendedor={dashboardTotals?.totalComissao || 0}
+                  fixedCosts={totalSalaries + marketingCost + operationalCost}
                 />
 
                 {/* Histórico */}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Gauge, TrendingUp, Calendar, Target } from 'lucide-react';
+import { Gauge, TrendingUp, Calendar, Target, CircleDollarSign } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface SalesVelocityKPIProps {
@@ -7,9 +7,21 @@ interface SalesVelocityKPIProps {
   month: number;
   year: number;
   totalSales: number;
+  // For resultado projection
+  currentComissaoTotal?: number;
+  currentComissaoVendedor?: number;
+  fixedCosts?: number; // salaries + marketing + operational
 }
 
-export function SalesVelocityKPI({ userId, month, year, totalSales }: SalesVelocityKPIProps) {
+export function SalesVelocityKPI({ 
+  userId, 
+  month, 
+  year, 
+  totalSales,
+  currentComissaoTotal = 0,
+  currentComissaoVendedor = 0,
+  fixedCosts = 0
+}: SalesVelocityKPIProps) {
   const [goalValue, setGoalValue] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -26,7 +38,7 @@ export function SalesVelocityKPI({ userId, month, year, totalSales }: SalesVeloc
         .eq('user_id', userId)
         .eq('period_month', month)
         .eq('period_year', year)
-        .single();
+        .maybeSingle();
 
       if (data) {
         setGoalValue(data.goal_vendas);
@@ -57,41 +69,61 @@ export function SalesVelocityKPI({ userId, month, year, totalSales }: SalesVeloc
   let remainingDays: number;
   
   if (year === currentYear && month === currentMonth) {
-    // Current month - use actual current day
     elapsedDays = currentDay;
     remainingDays = daysInMonth - currentDay;
   } else if (year < currentYear || (year === currentYear && month < currentMonth)) {
-    // Past month - all days elapsed
     elapsedDays = daysInMonth;
     remainingDays = 0;
   } else {
-    // Future month - no days elapsed
     elapsedDays = 0;
     remainingDays = daysInMonth;
   }
 
-  // Calculate velocities
+  // Calculate velocities for sales
   const currentDailyRate = elapsedDays > 0 ? totalSales / elapsedDays : 0;
   const requiredDailyRate = remainingDays > 0 && goalValue > totalSales 
     ? (goalValue - totalSales) / remainingDays 
     : 0;
 
-  // Project end-of-month result based on current pace
+  // Project end-of-month sales based on current pace
   const projectedTotal = elapsedDays > 0 
     ? currentDailyRate * daysInMonth 
     : 0;
 
-  // Calculate if on track
+  // Calculate if on track for sales goal
   const isOnTrack = projectedTotal >= goalValue;
   const projectedDifference = projectedTotal - goalValue;
 
-  // Velocity ratio (how fast compared to needed)
+  // Velocity ratio
   const velocityRatio = requiredDailyRate > 0 ? currentDailyRate / requiredDailyRate : 
     (goalValue > 0 && totalSales >= goalValue ? 999 : 0);
 
+  // === RESULTADO PROJECTION ===
+  // Daily rates for comissões
+  const dailyComissaoTotal = elapsedDays > 0 ? currentComissaoTotal / elapsedDays : 0;
+  const dailyComissaoVendedor = elapsedDays > 0 ? currentComissaoVendedor / elapsedDays : 0;
+
+  // Projected values
+  const projectedComissaoTotal = dailyComissaoTotal * daysInMonth;
+  const projectedComissaoVendedor = dailyComissaoVendedor * daysInMonth;
+  const projectedImposto = projectedComissaoTotal * 0.12;
+
+  // Custo Total projetado = Comissão Vendedor projetada + Custos Fixos + Imposto projetado
+  const projectedCustoTotal = projectedComissaoVendedor + fixedCosts + projectedImposto;
+
+  // Resultado projetado = Comissão Total projetada - Custo Total projetado
+  const projectedResultado = projectedComissaoTotal - projectedCustoTotal;
+
+  // Current resultado for comparison
+  const currentImposto = currentComissaoTotal * 0.12;
+  const currentResultado = currentComissaoTotal - (currentComissaoVendedor + fixedCosts + currentImposto);
+
+  const isResultadoPositive = projectedResultado >= 0;
+
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-pulse">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-pulse">
+        <div className="glass rounded-xl p-6 h-48 bg-muted/20"></div>
         <div className="glass rounded-xl p-6 h-48 bg-muted/20"></div>
         <div className="glass rounded-xl p-6 h-48 bg-muted/20"></div>
       </div>
@@ -103,7 +135,7 @@ export function SalesVelocityKPI({ userId, month, year, totalSales }: SalesVeloc
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-slide-up">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-slide-up">
       {/* Velocidade de Vendas */}
       <div className="glass rounded-xl p-6">
         <div className="flex items-center gap-2 mb-4">
@@ -136,18 +168,18 @@ export function SalesVelocityKPI({ userId, month, year, totalSales }: SalesVeloc
             </div>
             {velocityRatio > 0 && velocityRatio < 999 && (
               <span className={`text-sm font-medium ${velocityRatio >= 1 ? 'text-green-500' : 'text-orange-500'}`}>
-                {(velocityRatio * 100).toFixed(0)}% da velocidade
+                {(velocityRatio * 100).toFixed(0)}%
               </span>
             )}
           </div>
         </div>
       </div>
 
-      {/* Projeção de Resultado */}
+      {/* Projeção de Faturamento */}
       <div className="glass rounded-xl p-6">
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp className="h-5 w-5 text-primary" />
-          <h3 className="text-lg font-semibold">Projeção do Mês</h3>
+          <h3 className="text-lg font-semibold">Projeção Faturamento</h3>
         </div>
 
         <div className="space-y-4">
@@ -163,7 +195,7 @@ export function SalesVelocityKPI({ userId, month, year, totalSales }: SalesVeloc
                 ? 'bg-green-500/10 border-green-500/30' 
                 : 'bg-orange-500/10 border-orange-500/30'
             }`}>
-              <span className="text-xs text-muted-foreground block mb-1">Projeção Final</span>
+              <span className="text-xs text-muted-foreground block mb-1">Projeção</span>
               <span className={`text-lg font-bold ${isOnTrack ? 'text-green-500' : 'text-orange-500'}`}>
                 {elapsedDays > 0 ? formatCurrency(projectedTotal) : '---'}
               </span>
@@ -178,13 +210,58 @@ export function SalesVelocityKPI({ userId, month, year, totalSales }: SalesVeloc
                 <Target className="h-4 w-4" />
                 {isOnTrack ? (
                   <span className="text-sm text-green-500">
-                    No ritmo atual, você superará a meta em {formatCurrency(projectedDifference)}
+                    +{formatCurrency(projectedDifference)} acima da meta
                   </span>
                 ) : (
                   <span className="text-sm text-orange-500">
-                    No ritmo atual, faltarão {formatCurrency(Math.abs(projectedDifference))} para a meta
+                    {formatCurrency(Math.abs(projectedDifference))} abaixo
                   </span>
                 )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Projeção de Resultado */}
+      <div className="glass rounded-xl p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <CircleDollarSign className="h-5 w-5 text-primary" />
+          <h3 className="text-lg font-semibold">Projeção Resultado</h3>
+        </div>
+
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="p-3 bg-background/50 rounded-lg border border-border/50">
+              <span className="text-xs text-muted-foreground block mb-1">Resultado Atual</span>
+              <span className={`text-lg font-bold ${currentResultado >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                {formatCurrency(currentResultado)}
+              </span>
+            </div>
+            <div className={`p-3 rounded-lg border ${
+              isResultadoPositive 
+                ? 'bg-green-500/10 border-green-500/30' 
+                : 'bg-red-500/10 border-red-500/30'
+            }`}>
+              <span className="text-xs text-muted-foreground block mb-1">Projeção</span>
+              <span className={`text-lg font-bold ${isResultadoPositive ? 'text-green-500' : 'text-red-500'}`}>
+                {elapsedDays > 0 ? formatCurrency(projectedResultado) : '---'}
+              </span>
+            </div>
+          </div>
+
+          {elapsedDays > 0 && (
+            <div className={`p-3 rounded-lg ${
+              isResultadoPositive ? 'bg-green-500/10' : 'bg-red-500/10'
+            }`}>
+              <div className="flex items-center gap-2">
+                <CircleDollarSign className="h-4 w-4" />
+                <span className={`text-sm ${isResultadoPositive ? 'text-green-500' : 'text-red-500'}`}>
+                  {isResultadoPositive 
+                    ? `Lucro projetado de ${formatCurrency(projectedResultado)}`
+                    : `Prejuízo projetado de ${formatCurrency(Math.abs(projectedResultado))}`
+                  }
+                </span>
               </div>
             </div>
           )}
