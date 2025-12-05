@@ -642,12 +642,10 @@ const Index = () => {
                 />
 
                 {/* Gráficos - Vendedor, Produto, Fornecedor */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <SalesChart salesReps={dashboardFilteredSalesReps} />
-                  <ProductChart salesReps={dashboardFilteredSalesReps} />
-                </div>
+                <SalesChart salesReps={dashboardFilteredSalesReps} />
                 
-                <div className="grid grid-cols-1 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <ProductChart salesReps={dashboardFilteredSalesReps} />
                   <SupplierChart salesReps={dashboardFilteredSalesReps} />
                 </div>
 
