@@ -546,6 +546,11 @@ const Index = () => {
                   salesReps={salesReps}
                   monthlyGoal={monthlyGoal}
                   currentMonth={dashboardMonth !== 'all' ? dashboardMonth : `${String(new Date().getMonth() + 1).padStart(2, '0')}/${new Date().getFullYear()}`}
+                  totalComissao={totalComissaoTotal}
+                  totalComissaoVendedor={dashboardTotals?.totalComissao || 0}
+                  totalSalaries={totalSalaries}
+                  marketingCosts={marketingCost}
+                  operationalCosts={operationalCost}
                 />
 
                 {/* KPIs Principais - Receitas */}
