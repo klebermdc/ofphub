@@ -8,7 +8,7 @@ import { SalesChart } from "@/components/SalesChart";
 import { ProductChart } from "@/components/ProductChart";
 import { SupplierChart } from "@/components/SupplierChart";
 import { SalesRepTable } from "@/components/SalesRepTable";
-import { HistoryPanel } from "@/components/HistoryPanel";
+
 import { SaveReportDialog } from "@/components/SaveReportDialog";
 import { GoalsManagementDialog } from "@/components/GoalsManagementDialog";
 import { GoalsKPICard } from "@/components/GoalsKPICard";
@@ -457,15 +457,6 @@ const Index = () => {
                     <SheetInput onAnalyze={handleAnalyze} isLoading={isLoading} />
                   </div>
                 </div>
-                <div>
-                  <HistoryPanel
-                    reports={reports}
-                    isLoading={historyLoading}
-                    onLoad={handleLoadReport}
-                    onDelete={handleDeleteReport}
-                    currentReportId={currentReportId}
-                  />
-                </div>
               </div>
             ) : (
               <>
@@ -684,14 +675,6 @@ const Index = () => {
                   fixedCosts={totalSalaries + marketingCost + operationalCost}
                 />
 
-                {/* Histórico */}
-                <HistoryPanel
-                  reports={reports}
-                  isLoading={historyLoading}
-                  onLoad={handleLoadReport}
-                  onDelete={handleDeleteReport}
-                  currentReportId={currentReportId}
-                />
               </>
             )}
           </TabsContent>
