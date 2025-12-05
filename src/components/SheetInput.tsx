@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, Loader2, FileSpreadsheet, RefreshCw } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -15,11 +15,19 @@ interface SheetInputProps {
   onAnalyze: (url: string) => void;
   isLoading: boolean;
   compact?: boolean;
+  savedUrl?: string;
 }
 
-export function SheetInput({ onAnalyze, isLoading, compact = false }: SheetInputProps) {
+export function SheetInput({ onAnalyze, isLoading, compact = false, savedUrl = "" }: SheetInputProps) {
   const [url, setUrl] = useState("");
   const [open, setOpen] = useState(false);
+
+  // Pre-fill URL when dialog opens
+  useEffect(() => {
+    if (open && savedUrl) {
+      setUrl(savedUrl);
+    }
+  }, [open, savedUrl]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +52,6 @@ export function SheetInput({ onAnalyze, isLoading, compact = false }: SheetInput
 
     onAnalyze(url);
     setOpen(false);
-    setUrl("");
   };
 
   if (compact) {

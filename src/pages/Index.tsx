@@ -523,7 +523,7 @@ const Index = () => {
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <OperationalCostsDialog onSave={saveOperationalCosts} getCostForMonth={getCostForMonth} />
-                    <SheetInput onAnalyze={handleAnalyze} isLoading={isLoading} compact />
+                    <SheetInput onAnalyze={handleAnalyze} isLoading={isLoading} compact savedUrl={savedUrl} />
                     <SaveReportDialog onSave={handleSaveReport} disabled={!hasData} />
                     <Button
                       variant="outline"
