@@ -12,6 +12,7 @@ import { HistoryPanel } from "@/components/HistoryPanel";
 import { SaveReportDialog } from "@/components/SaveReportDialog";
 import { GoalsManagementDialog } from "@/components/GoalsManagementDialog";
 import { GoalsKPICard } from "@/components/GoalsKPICard";
+import { SalesVelocityKPI } from "@/components/SalesVelocityKPI";
 import { SalesRanking } from "@/components/SalesRanking";
 import { SalaryManagementDialog } from "@/components/SalaryManagementDialog";
 import { MonthComparisonCard } from "@/components/MonthComparisonCard";
@@ -666,6 +667,14 @@ const Index = () => {
 
                 {/* Metas */}
                 <GoalsKPICard
+                  userId={user.id}
+                  month={currentGoalMonth}
+                  year={currentGoalYear}
+                  totalSales={dashboardTotals?.totalVendas || 0}
+                />
+
+                {/* Velocidade e Projeção */}
+                <SalesVelocityKPI
                   userId={user.id}
                   month={currentGoalMonth}
                   year={currentGoalYear}
