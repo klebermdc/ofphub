@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Gauge, TrendingUp, Calendar, Target, CircleDollarSign } from 'lucide-react';
+import { Gauge, TrendingUp, Calendar, Target, CircleDollarSign, DollarSign } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface SalesVelocityKPIProps {
@@ -24,10 +24,22 @@ export function SalesVelocityKPI({
 }: SalesVelocityKPIProps) {
   const [goalValue, setGoalValue] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [dollarRate, setDollarRate] = useState<number | null>(null);
 
   useEffect(() => {
     loadGoal();
+    fetchDollarRate();
   }, [userId, month, year]);
+
+  const fetchDollarRate = async () => {
+    try {
+      const response = await fetch('https://economia.awesomeapi.com.br/json/last/USD-BRL');
+      const data = await response.json();
+      setDollarRate(parseFloat(data.USDBRL.bid));
+    } catch (error) {
+      console.error('Erro ao buscar cotação do dólar:', error);
+    }
+  };
 
   const loadGoal = async () => {
     setIsLoading(true);
@@ -262,6 +274,25 @@ export function SalesVelocityKPI({
                     : `Prejuízo projetado de ${formatCurrency(Math.abs(projectedResultado))}`
                   }
                 </span>
+              </div>
+            </div>
+          )}
+
+          {/* Projeção em USD */}
+          {elapsedDays > 0 && dollarRate && (
+            <div className="p-3 bg-background/50 rounded-lg border border-border/50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <DollarSign className={`h-4 w-4 ${isResultadoPositive ? 'text-green-500' : 'text-red-500'}`} />
+                  <span className="text-xs text-muted-foreground">Projeção em USD</span>
+                </div>
+                <span className={`text-lg font-bold ${isResultadoPositive ? 'text-green-500' : 'text-red-500'}`}>
+                  $ {(projectedResultado / dollarRate).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                </span>
+              </div>
+              <div className="flex justify-between text-xs mt-1">
+                <span className="text-muted-foreground">Cotação comercial</span>
+                <span className="text-muted-foreground">R$ {dollarRate.toFixed(2)}</span>
               </div>
             </div>
           )}
