@@ -362,21 +362,24 @@ const Index = () => {
 
   // Fetch monthly goal for daily tracker
   const [monthlyGoal, setMonthlyGoal] = useState<number>(0);
+  const [resultGoal, setResultGoal] = useState<number>(0);
   
   const fetchMonthlyGoal = async () => {
     if (!user?.id) return;
     try {
       const { data } = await supabase
         .from('sales_goals')
-        .select('goal_vendas')
+        .select('goal_vendas, goal_resultado')
         .eq('user_id', user.id)
         .eq('period_month', currentGoalMonth)
         .eq('period_year', currentGoalYear)
         .maybeSingle();
       
       setMonthlyGoal(data?.goal_vendas || 0);
+      setResultGoal((data as any)?.goal_resultado || 0);
     } catch {
       setMonthlyGoal(0);
+      setResultGoal(0);
     }
   };
   
@@ -552,6 +555,7 @@ const Index = () => {
                   totalSalaries={totalSalaries}
                   marketingCosts={marketingCost}
                   operationalCosts={operationalCost}
+                  resultGoal={resultGoal}
                 />
 
                 {/* KPIs Principais - Receitas */}

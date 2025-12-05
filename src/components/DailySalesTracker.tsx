@@ -11,6 +11,7 @@ interface DailySalesTrackerProps {
   totalSalaries?: number;
   marketingCosts?: number;
   operationalCosts?: number;
+  resultGoal?: number;
 }
 
 function getBusinessDaysInMonth(month: number, year: number): number {
@@ -70,7 +71,8 @@ export function DailySalesTracker({
   totalComissaoVendedor = 0,
   totalSalaries = 0,
   marketingCosts = 0,
-  operationalCosts = 0
+  operationalCosts = 0,
+  resultGoal = 0
 }: DailySalesTrackerProps) {
   const [m, y] = currentMonth.split('/').map(Number);
   const now = new Date();
@@ -126,16 +128,10 @@ export function DailySalesTracker({
   // Project monthly result based on daily average (consistent approach)
   const projectedResultado = dailyResultado * totalBusinessDays;
   
-  // Calculate daily result goal based on monthly sales goal
-  // Estimate commission from goal using current average commission rate
-  const avgCommissionRate = monthSales > 0 ? totalComissao / monthSales : 0.1; // fallback 10%
-  const avgVendedorRate = monthSales > 0 ? totalComissaoVendedor / monthSales : 0.05; // fallback 5%
-  const expectedMonthlyComissao = monthlyGoal * avgCommissionRate;
-  const expectedMonthlyComissaoVendedor = monthlyGoal * avgVendedorRate;
-  const expectedImposto = expectedMonthlyComissao * 0.12;
-  const expectedCustoTotal = expectedMonthlyComissaoVendedor + totalSalaries + marketingCosts + operationalCosts + expectedImposto;
-  const expectedMonthlyResultado = expectedMonthlyComissao - expectedCustoTotal;
-  const dailyResultGoal = totalBusinessDays > 0 ? expectedMonthlyResultado / totalBusinessDays : 0;
+  // Daily result goal: use manual goal if provided, otherwise calculate from sales goal
+  const dailyResultGoal = resultGoal > 0 
+    ? resultGoal / totalBusinessDays 
+    : 0;
   
   const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 

@@ -32,6 +32,7 @@ interface SalespersonGoal {
 export function GoalsManagementDialog({ userId, month, year, salesReps, onGoalsSaved }: GoalsManagementDialogProps) {
   const [open, setOpen] = useState(false);
   const [totalGoal, setTotalGoal] = useState<number>(0);
+  const [resultGoal, setResultGoal] = useState<number>(0);
   const [salespersonGoals, setSalespersonGoals] = useState<SalespersonGoal[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -54,8 +55,10 @@ export function GoalsManagementDialog({ userId, month, year, salesReps, onGoalsS
 
       if (totalData) {
         setTotalGoal(totalData.goal_vendas);
+        setResultGoal((totalData as any).goal_resultado || 0);
       } else {
         setTotalGoal(0);
+        setResultGoal(0);
       }
 
       // Load individual salesperson goals
@@ -81,6 +84,7 @@ export function GoalsManagementDialog({ userId, month, year, salesReps, onGoalsS
     } catch (err) {
       console.error('Error loading goals:', err);
       setTotalGoal(0);
+      setResultGoal(0);
       setSalespersonGoals(salesReps.map(rep => ({ name: rep.name, goal: 0 })));
     }
   };
@@ -107,8 +111,9 @@ export function GoalsManagementDialog({ userId, month, year, salesReps, onGoalsS
           period_year: year,
           goal_vendas: totalGoal,
           goal_comissao: 0,
-          goal_negocios: 0
-        }, {
+          goal_negocios: 0,
+          goal_resultado: resultGoal
+        } as any, {
           onConflict: 'user_id,period_month,period_year'
         });
 
@@ -191,6 +196,21 @@ export function GoalsManagementDialog({ userId, month, year, salesReps, onGoalsS
                 />
                 <p className="text-xs text-muted-foreground">
                   Valor total que a equipe deve faturar no mês
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="result-goal">Meta de Resultado (Lucro)</Label>
+                <Input
+                  id="result-goal"
+                  type="number"
+                  value={resultGoal || ''}
+                  onChange={(e) => setResultGoal(Number(e.target.value))}
+                  placeholder="Ex: 50000"
+                  className="text-lg"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Lucro esperado no mês (Receita - Custos)
                 </p>
               </div>
             </div>
