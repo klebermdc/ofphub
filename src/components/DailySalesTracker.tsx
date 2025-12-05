@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Calendar, Target, TrendingUp, Zap, DollarSign } from "lucide-react";
 import { Progress } from "./ui/progress";
 import { cn } from "@/lib/utils";
@@ -74,8 +75,23 @@ export function DailySalesTracker({
   operationalCosts = 0,
   resultGoal = 0
 }: DailySalesTrackerProps) {
+  const [dollarRate, setDollarRate] = useState<number | null>(null);
+  
   const [m, y] = currentMonth.split('/').map(Number);
   const now = new Date();
+
+  useEffect(() => {
+    async function fetchDollarRate() {
+      try {
+        const response = await fetch('https://economia.awesomeapi.com.br/json/last/USD-BRL');
+        const data = await response.json();
+        setDollarRate(parseFloat(data.USDBRL.bid));
+      } catch (error) {
+        console.error('Erro ao buscar cotação do dólar:', error);
+      }
+    }
+    fetchDollarRate();
+  }, []);
   
   const totalBusinessDays = getBusinessDaysInMonth(m, y);
   const businessDaysElapsed = getBusinessDaysElapsed(m, y);
@@ -152,7 +168,7 @@ export function DailySalesTracker({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
         {/* Vendas Hoje */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">
@@ -261,6 +277,42 @@ export function DailySalesTracker({
           </div>
           <p className="text-xs text-muted-foreground">
             Projeção mês: <span className={projectedResultado >= 0 ? "text-emerald-500" : "text-red-500"}>{formatCurrency(projectedResultado)}</span>
+          </p>
+        </div>
+
+        {/* Projeção em Dólar */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <DollarSign className={cn("h-4 w-4", projectedResultado >= 0 ? "text-emerald-500" : "text-red-500")} />
+            <span className="text-sm text-muted-foreground">Projeção em USD</span>
+          </div>
+          <p className={cn(
+            "text-2xl font-bold",
+            projectedResultado >= 0 ? "text-emerald-500" : "text-red-500"
+          )}>
+            {dollarRate 
+              ? `$ ${(projectedResultado / dollarRate).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+              : "Carregando..."
+            }
+          </p>
+          <div className="space-y-1">
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Cotação comercial</span>
+              <span className="text-muted-foreground">
+                {dollarRate ? `R$ ${dollarRate.toFixed(2)}` : "-"}
+              </span>
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Resultado BRL</span>
+              <span className={cn(
+                projectedResultado >= 0 ? "text-emerald-500" : "text-red-500"
+              )}>
+                {formatCurrency(projectedResultado)}
+              </span>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Atualização em tempo real
           </p>
         </div>
       </div>
