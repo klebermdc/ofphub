@@ -18,6 +18,7 @@ import { SalaryManagementDialog } from "@/components/SalaryManagementDialog";
 import { MonthComparisonCard } from "@/components/MonthComparisonCard";
 import { RevenueForecastChart } from "@/components/RevenueForecastChart";
 import { SalespersonROI } from "@/components/SalespersonROI";
+import { DailySalesTracker } from "@/components/DailySalesTracker";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SalesRep, SalesTotals } from "@/types/sales";
@@ -359,6 +360,29 @@ const Index = () => {
     ? parseInt(dashboardMonth.split('/')[1]) 
     : new Date().getFullYear();
 
+  // Fetch monthly goal for daily tracker
+  const [monthlyGoal, setMonthlyGoal] = useState<number>(0);
+  
+  useEffect(() => {
+    const fetchMonthlyGoal = async () => {
+      if (!user?.id) return;
+      try {
+        const { data } = await supabase
+          .from('sales_goals')
+          .select('goal_vendas')
+          .eq('user_id', user.id)
+          .eq('period_month', currentGoalMonth)
+          .eq('period_year', currentGoalYear)
+          .single();
+        
+        setMonthlyGoal(data?.goal_vendas || 0);
+      } catch {
+        setMonthlyGoal(0);
+      }
+    };
+    fetchMonthlyGoal();
+  }, [user?.id, currentGoalMonth, currentGoalYear]);
+
   // Calculate total cost (commissions + fixed salaries + marketing + operational)
   const totalSalaries = dashboardFilteredSalesReps.reduce((sum, rep) => sum + getSalary(rep.name), 0);
   const marketingCost = getTotalForMonth(currentGoalMonth, currentGoalYear);
@@ -516,6 +540,13 @@ const Index = () => {
                     </Button>
                   </div>
                 </div>
+
+                {/* Acompanhamento Diário */}
+                <DailySalesTracker
+                  salesReps={salesReps}
+                  monthlyGoal={monthlyGoal}
+                  currentMonth={dashboardMonth !== 'all' ? dashboardMonth : `${String(new Date().getMonth() + 1).padStart(2, '0')}/${new Date().getFullYear()}`}
+                />
 
                 {/* KPIs Principais - Receitas */}
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
