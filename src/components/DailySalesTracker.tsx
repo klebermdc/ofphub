@@ -247,10 +247,6 @@ export function DailySalesTracker({
           )}>{formatCurrency(Math.abs(dailyResultado))}</p>
           <div className="space-y-1">
             <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Meta resultado</span>
-              <span className="text-muted-foreground">{formatCurrency(resultGoal)}</span>
-            </div>
-            <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">Meta lucro/dia</span>
               <span className="text-muted-foreground">{formatCurrency(dailyResultGoal)}</span>
             </div>
