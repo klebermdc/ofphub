@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getMonthName } from "@/hooks/useCommissionHistory";
 import { SalespersonGoalKPI } from "@/components/SalespersonGoalKPI";
+import { SalespersonVelocityKPI } from "@/components/SalespersonVelocityKPI";
 
 const SalespersonDashboard = () => {
   const { user, loading, signOut } = useAuth();
@@ -193,6 +194,16 @@ const SalespersonDashboard = () => {
         {/* Goal KPI */}
         {selectedMonth !== 'all' && salespersonName && (
           <SalespersonGoalKPI
+            salespersonName={salespersonName}
+            month={parseInt(selectedMonth.split('/')[0])}
+            year={parseInt(selectedMonth.split('/')[1])}
+            currentSales={totals.totalVendas}
+          />
+        )}
+
+        {/* Velocidade e Projeção */}
+        {selectedMonth !== 'all' && salespersonName && (
+          <SalespersonVelocityKPI
             salespersonName={salespersonName}
             month={parseInt(selectedMonth.split('/')[0])}
             year={parseInt(selectedMonth.split('/')[1])}
