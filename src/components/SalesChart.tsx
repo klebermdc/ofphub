@@ -1,70 +1,131 @@
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { SalesRep } from '@/types/sales';
 
 interface SalesChartProps {
   salesReps: SalesRep[];
 }
 
+const COLORS = [
+  'hsl(187, 80%, 55%)',
+  'hsl(262, 80%, 60%)',
+  'hsl(142, 76%, 45%)',
+  'hsl(38, 92%, 55%)',
+  'hsl(0, 84%, 60%)',
+  'hsl(200, 80%, 55%)',
+  'hsl(320, 80%, 60%)',
+  'hsl(60, 80%, 55%)',
+  'hsl(280, 80%, 55%)',
+  'hsl(160, 80%, 45%)',
+  'hsl(20, 90%, 55%)',
+];
+
 export function SalesChart({ salesReps }: SalesChartProps) {
+  const totalSales = salesReps.reduce((sum, rep) => sum + rep.sales, 0);
+  
   const chartData = salesReps.map(rep => ({
-    name: rep.name.split(' ')[0], // Use first name for chart
+    name: rep.name.split(' ')[0],
     vendas: rep.sales,
-    comissao: rep.commission
   }));
 
+  const pieData = salesReps.map((rep, index) => ({
+    name: rep.name.split(' ')[0],
+    value: rep.sales,
+    percentage: totalSales > 0 ? ((rep.sales / totalSales) * 100).toFixed(1) : 0,
+  })).sort((a, b) => b.value - a.value);
+
   return (
-    <div className="glass rounded-xl p-6 animate-slide-up" style={{ animationDelay: '200ms' }}>
-      <h3 className="text-lg font-semibold mb-6">Vendas e Comissões por Vendedor</h3>
-      <div className="h-[300px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={chartData} layout="vertical">
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(222, 30%, 18%)" />
-            <XAxis 
-              type="number"
-              stroke="hsl(215, 20%, 55%)" 
-              fontSize={12}
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={(value) => `R$${(value / 1000).toFixed(0)}k`}
-            />
-            <YAxis 
-              type="category"
-              dataKey="name"
-              stroke="hsl(215, 20%, 55%)" 
-              fontSize={12}
-              tickLine={false}
-              axisLine={false}
-              width={80}
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'hsl(222, 47%, 8%)',
-                border: '1px solid hsl(222, 30%, 18%)',
-                borderRadius: '8px',
-                color: 'hsl(210, 40%, 98%)'
-              }}
-              formatter={(value: number, name: string) => [
-                `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 
-                name === 'vendas' ? 'Vendas' : 'Comissão'
-              ]}
-            />
-            <Legend 
-              formatter={(value) => value === 'vendas' ? 'Vendas' : 'Comissão'}
-            />
-            <Bar
-              dataKey="vendas"
-              fill="hsl(187, 80%, 55%)"
-              radius={[0, 4, 4, 0]}
-              name="vendas"
-            />
-            <Bar
-              dataKey="comissao"
-              fill="hsl(262, 80%, 60%)"
-              radius={[0, 4, 4, 0]}
-              name="comissao"
-            />
-          </BarChart>
-        </ResponsiveContainer>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Bar Chart - Vendas por Vendedor */}
+      <div className="glass rounded-xl p-6 animate-slide-up" style={{ animationDelay: '200ms' }}>
+        <h3 className="text-lg font-semibold mb-6">Vendas por Vendedor</h3>
+        <div className="h-[300px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={chartData} layout="vertical">
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(222, 30%, 18%)" />
+              <XAxis 
+                type="number"
+                stroke="hsl(215, 20%, 55%)" 
+                fontSize={12}
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(value) => `R$${(value / 1000).toFixed(0)}k`}
+              />
+              <YAxis 
+                type="category"
+                dataKey="name"
+                stroke="hsl(215, 20%, 55%)" 
+                fontSize={12}
+                tickLine={false}
+                axisLine={false}
+                width={80}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'hsl(222, 47%, 8%)',
+                  border: '1px solid hsl(222, 30%, 18%)',
+                  borderRadius: '8px',
+                  color: 'hsl(210, 40%, 98%)'
+                }}
+                formatter={(value: number) => [
+                  `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 
+                  'Vendas'
+                ]}
+              />
+              <Bar
+                dataKey="vendas"
+                fill="hsl(187, 80%, 55%)"
+                radius={[0, 4, 4, 0]}
+                name="vendas"
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Pie Chart - Participação no Faturamento */}
+      <div className="glass rounded-xl p-6 animate-slide-up" style={{ animationDelay: '300ms' }}>
+        <h3 className="text-lg font-semibold mb-6">Participação no Faturamento</h3>
+        <div className="h-[300px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={pieData}
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={100}
+                paddingAngle={2}
+                dataKey="value"
+                nameKey="name"
+                label={({ name, percentage }) => `${name}: ${percentage}%`}
+                labelLine={{ stroke: 'hsl(215, 20%, 55%)' }}
+              >
+                {pieData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'hsl(222, 47%, 8%)',
+                  border: '1px solid hsl(222, 30%, 18%)',
+                  borderRadius: '8px',
+                  color: 'hsl(210, 40%, 98%)'
+                }}
+                formatter={(value: number, name: string, props: any) => [
+                  `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} (${props.payload.percentage}%)`,
+                  props.payload.name
+                ]}
+              />
+              <Legend 
+                verticalAlign="bottom"
+                height={36}
+                formatter={(value, entry: any) => (
+                  <span style={{ color: 'hsl(210, 40%, 98%)' }}>{value}</span>
+                )}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
       </div>
     </div>
   );
