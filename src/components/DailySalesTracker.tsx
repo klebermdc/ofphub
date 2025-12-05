@@ -246,24 +246,31 @@ export function DailySalesTracker({
         {/* Resultado Diário */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <DollarSign className="h-4 w-4 text-emerald-500" />
-            <span className="text-sm text-muted-foreground">Resultado Diário</span>
+            <DollarSign className={cn("h-4 w-4", dailyResultado >= 0 ? "text-emerald-500" : "text-red-500")} />
+            <span className="text-sm text-muted-foreground">
+              {dailyResultado >= 0 ? "Lucro Diário" : "Prejuízo Diário"}
+            </span>
           </div>
           <p className={cn(
             "text-2xl font-bold",
             dailyResultado >= 0 ? "text-emerald-500" : "text-red-500"
-          )}>{formatCurrency(dailyResultado)}</p>
+          )}>{formatCurrency(Math.abs(dailyResultado))}</p>
           <div className="space-y-1">
             <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Meta: {formatCurrency(dailyResultGoal)}</span>
-              <span className={cn(
-                dailyResultado >= dailyResultGoal ? "text-emerald-500" : dailyResultado >= dailyResultGoal * 0.8 ? "text-warning" : "text-red-500"
-              )}>{dailyResultGoal > 0 ? ((dailyResultado / dailyResultGoal) * 100).toFixed(0) : 0}%</span>
+              <span className="text-muted-foreground">Meta lucro/dia</span>
+              <span className="text-muted-foreground">{formatCurrency(dailyResultGoal)}</span>
             </div>
-            <Progress value={Math.min(dailyResultGoal > 0 ? (dailyResultado / dailyResultGoal) * 100 : 0, 100)} className="h-2" />
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Diferença</span>
+              <span className={cn(
+                dailyResultado >= dailyResultGoal ? "text-emerald-500" : "text-red-500"
+              )}>
+                {dailyResultado >= dailyResultGoal ? "+" : ""}{formatCurrency(dailyResultado - dailyResultGoal)}
+              </span>
+            </div>
           </div>
           <p className="text-xs text-muted-foreground">
-            Projeção mês: {formatCurrency(projectedResultado)}
+            Projeção mês: <span className={projectedResultado >= 0 ? "text-emerald-500" : "text-red-500"}>{formatCurrency(projectedResultado)}</span>
           </p>
         </div>
       </div>
