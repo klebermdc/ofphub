@@ -350,6 +350,7 @@ export type Database = {
           created_at: string
           goal_comissao: number
           goal_negocios: number
+          goal_resultado: number
           goal_vendas: number
           id: string
           period_month: number
@@ -360,6 +361,7 @@ export type Database = {
           created_at?: string
           goal_comissao?: number
           goal_negocios?: number
+          goal_resultado?: number
           goal_vendas?: number
           id?: string
           period_month: number
@@ -370,6 +372,7 @@ export type Database = {
           created_at?: string
           goal_comissao?: number
           goal_negocios?: number
+          goal_resultado?: number
           goal_vendas?: number
           id?: string
           period_month?: number
