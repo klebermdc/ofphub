@@ -363,23 +363,24 @@ const Index = () => {
   // Fetch monthly goal for daily tracker
   const [monthlyGoal, setMonthlyGoal] = useState<number>(0);
   
+  const fetchMonthlyGoal = async () => {
+    if (!user?.id) return;
+    try {
+      const { data } = await supabase
+        .from('sales_goals')
+        .select('goal_vendas')
+        .eq('user_id', user.id)
+        .eq('period_month', currentGoalMonth)
+        .eq('period_year', currentGoalYear)
+        .maybeSingle();
+      
+      setMonthlyGoal(data?.goal_vendas || 0);
+    } catch {
+      setMonthlyGoal(0);
+    }
+  };
+  
   useEffect(() => {
-    const fetchMonthlyGoal = async () => {
-      if (!user?.id) return;
-      try {
-        const { data } = await supabase
-          .from('sales_goals')
-          .select('goal_vendas')
-          .eq('user_id', user.id)
-          .eq('period_month', currentGoalMonth)
-          .eq('period_year', currentGoalYear)
-          .single();
-        
-        setMonthlyGoal(data?.goal_vendas || 0);
-      } catch {
-        setMonthlyGoal(0);
-      }
-    };
     fetchMonthlyGoal();
   }, [user?.id, currentGoalMonth, currentGoalYear]);
 
@@ -752,6 +753,7 @@ const Index = () => {
                       month={currentGoalMonth}
                       year={currentGoalYear}
                       salesReps={filteredSalesReps}
+                      onGoalsSaved={fetchMonthlyGoal}
                     />
                     <Button 
                       variant="outline" 

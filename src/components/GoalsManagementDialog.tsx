@@ -21,6 +21,7 @@ interface GoalsManagementDialogProps {
   month: number;
   year: number;
   salesReps: SalesRep[];
+  onGoalsSaved?: () => void;
 }
 
 interface SalespersonGoal {
@@ -28,7 +29,7 @@ interface SalespersonGoal {
   goal: number;
 }
 
-export function GoalsManagementDialog({ userId, month, year, salesReps }: GoalsManagementDialogProps) {
+export function GoalsManagementDialog({ userId, month, year, salesReps, onGoalsSaved }: GoalsManagementDialogProps) {
   const [open, setOpen] = useState(false);
   const [totalGoal, setTotalGoal] = useState<number>(0);
   const [salespersonGoals, setSalespersonGoals] = useState<SalespersonGoal[]>([]);
@@ -135,6 +136,7 @@ export function GoalsManagementDialog({ userId, month, year, salesReps }: GoalsM
         description: "As metas foram atualizadas com sucesso.",
       });
       setOpen(false);
+      onGoalsSaved?.();
     } catch (err) {
       console.error('Error saving goals:', err);
       toast({
