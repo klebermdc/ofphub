@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getMonthName } from "@/hooks/useCommissionHistory";
 import { SalespersonGoalKPI } from "@/components/SalespersonGoalKPI";
 import { SalespersonVelocityKPI } from "@/components/SalespersonVelocityKPI";
+import { SalespersonConversionKPI } from "@/components/SalespersonConversionKPI";
 import { CRMTab } from "@/components/crm/CRMTab";
 import { ProposalTab } from "@/components/proposals/ProposalTab";
 const SalespersonDashboard = () => {
@@ -228,6 +229,15 @@ const SalespersonDashboard = () => {
                 month={parseInt(selectedMonth.split('/')[0])}
                 year={parseInt(selectedMonth.split('/')[1])}
                 currentSales={totals.totalVendas}
+              />
+            )}
+
+            {/* Taxa de Conversão CRM */}
+            {selectedMonth !== 'all' && salespersonName && (
+              <SalespersonConversionKPI
+                salespersonName={salespersonName}
+                month={parseInt(selectedMonth.split('/')[0])}
+                year={parseInt(selectedMonth.split('/')[1])}
               />
             )}
 
