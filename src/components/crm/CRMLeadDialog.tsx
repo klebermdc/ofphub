@@ -37,6 +37,7 @@ const leadSchema = z.object({
   product: z.string().max(100).optional(),
   salesperson_name: z.string().max(100).optional(),
   notes: z.string().max(1000).optional(),
+  follow_up_date: z.string().optional(),
 });
 
 type LeadFormData = z.infer<typeof leadSchema>;
@@ -73,6 +74,7 @@ export function CRMLeadDialog({
       product: '',
       salesperson_name: '',
       notes: '',
+      follow_up_date: '',
     },
   });
 
@@ -86,6 +88,7 @@ export function CRMLeadDialog({
         product: lead.product || '',
         salesperson_name: lead.salesperson_name || '',
         notes: lead.notes || '',
+        follow_up_date: (lead as any).follow_up_date || '',
       });
     } else {
       form.reset({
@@ -96,6 +99,7 @@ export function CRMLeadDialog({
         product: '',
         salesperson_name: '',
         notes: '',
+        follow_up_date: '',
       });
     }
   }, [lead, form]);
@@ -112,7 +116,8 @@ export function CRMLeadDialog({
           product: data.product || null,
           salesperson_name: data.salesperson_name || null,
           notes: data.notes || null,
-        });
+          follow_up_date: data.follow_up_date || null,
+        } as any);
       } else {
         await onSave({
           name: data.name,
@@ -236,6 +241,20 @@ export function CRMLeadDialog({
                       ))}
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="follow_up_date"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Próximo Follow-up</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
