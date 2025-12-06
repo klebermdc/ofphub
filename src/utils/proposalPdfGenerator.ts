@@ -11,7 +11,18 @@ const LOCAL_IMAGES = {
     '/images/proposals/parks/disney-5.jpg',
     '/images/proposals/parks/disney-6.jpg',
   ],
-  universal: '/images/proposals/universal-park.jpg',
+  universal: [
+    '/images/proposals/parks/universal-1.jpg',
+    '/images/proposals/parks/universal-2.jpg',
+    '/images/proposals/parks/universal-3.jpg',
+    '/images/proposals/parks/universal-4.jpg',
+    '/images/proposals/parks/universal-5.jpg',
+    '/images/proposals/parks/universal-6.jpg',
+    '/images/proposals/parks/universal-7.jpg',
+    '/images/proposals/parks/universal-8.jpg',
+    '/images/proposals/parks/universal-9.jpg',
+    '/images/proposals/parks/universal-10.jpg',
+  ],
   seaworld: '/images/proposals/seaworld.jpg',
   animal: '/images/proposals/animal-kingdom.jpg',
   hotel: '/images/proposals/hotel-resort.jpg',
@@ -54,6 +65,11 @@ function getDisneyImage(index: number): string {
   return LOCAL_IMAGES.disney[index % LOCAL_IMAGES.disney.length];
 }
 
+// Get Universal image by index
+function getUniversalImage(index: number): string {
+  return LOCAL_IMAGES.universal[index % LOCAL_IMAGES.universal.length];
+}
+
 // Load image as base64
 async function loadLocalImage(path: string): Promise<string | null> {
   try {
@@ -79,8 +95,8 @@ function getImagePathForItem(name: string, type: 'ticket' | 'hotel' | 'car' | 'i
     if (lowerName.includes('disney') || lowerName.includes('magic kingdom') || lowerName.includes('epcot') || lowerName.includes('hollywood') || lowerName.includes('animal')) {
       return getDisneyImage(itemIndex);
     }
-    if (lowerName.includes('universal') || lowerName.includes('islands') || lowerName.includes('epic')) {
-      return LOCAL_IMAGES.universal;
+    if (lowerName.includes('universal') || lowerName.includes('islands') || lowerName.includes('epic') || lowerName.includes('harry potter') || lowerName.includes('mario')) {
+      return getUniversalImage(itemIndex);
     }
     if (lowerName.includes('seaworld') || lowerName.includes('aquatica') || lowerName.includes('busch')) {
       return LOCAL_IMAGES.seaworld;
@@ -174,7 +190,7 @@ export async function generateProposalPDF(cart: ParsedCart): Promise<void> {
   
   allPaths.add(LOCAL_IMAGES.logo);
   LOCAL_IMAGES.disney.forEach(path => allPaths.add(path));
-  allPaths.add(LOCAL_IMAGES.universal);
+  LOCAL_IMAGES.universal.forEach(path => allPaths.add(path));
   allPaths.add(LOCAL_IMAGES.seaworld);
   allPaths.add(LOCAL_IMAGES.animal);
   allPaths.add(LOCAL_IMAGES.hotel);
