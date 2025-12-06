@@ -104,19 +104,37 @@ export async function generateProposalPDF(cart: ParsedCart): Promise<void> {
   // Preload all images
   const imageCache = new Map<string, string>();
   const allPaths = new Set<string>();
+  
+  // Add logo
   allPaths.add(LOCAL_IMAGES.logo);
   
-  cart.tickets?.forEach(t => allPaths.add(getImagePathForItem(t.name, 'ticket')));
-  cart.hotels?.forEach(h => allPaths.add(getImagePathForItem(h.name, 'hotel')));
-  cart.cars?.forEach(c => allPaths.add(getImagePathForItem(c.name, 'car')));
-  cart.insurance?.forEach(i => allPaths.add(getImagePathForItem(i.name, 'insurance')));
+  // Add ALL Disney images to ensure they're available
+  LOCAL_IMAGES.disney.forEach(path => allPaths.add(path));
+  
+  // Add other static images
+  allPaths.add(LOCAL_IMAGES.universal);
+  allPaths.add(LOCAL_IMAGES.seaworld);
+  allPaths.add(LOCAL_IMAGES.animal);
+  allPaths.add(LOCAL_IMAGES.hotel);
+  allPaths.add(LOCAL_IMAGES.hotelLuxury);
+  allPaths.add(LOCAL_IMAGES.car);
+  allPaths.add(LOCAL_IMAGES.insurance);
+  
+  console.log('Loading images from paths:', Array.from(allPaths));
   
   await Promise.all(
     Array.from(allPaths).map(async (path) => {
       const data = await loadLocalImage(path);
-      if (data) imageCache.set(path, data);
+      if (data) {
+        imageCache.set(path, data);
+        console.log('Loaded image:', path);
+      } else {
+        console.error('Failed to load image:', path);
+      }
     })
   );
+  
+  console.log('Image cache size:', imageCache.size);
 
   const getImage = (path: string) => imageCache.get(path) || null;
 
