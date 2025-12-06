@@ -196,9 +196,8 @@ const SalespersonDashboard = () => {
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             {isManagerViewing && (
-              <Button variant="outline" size="sm" onClick={() => navigate("/?tab=vendedores")}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Comercial
+              <Button variant="ghost" size="icon" onClick={() => navigate("/?tab=vendedores")}>
+                <ArrowLeft className="h-5 w-5" />
               </Button>
             )}
             <img 
