@@ -197,7 +197,7 @@ const SalespersonDashboard = () => {
           <div className="flex items-center gap-3">
             {isManagerViewing && (
               <Button variant="ghost" size="icon" onClick={() => navigate("/?tab=vendedores")}>
-                <ArrowLeft className="h-5 w-5" />
+                <ArrowLeft className="h-7 w-7" />
               </Button>
             )}
             <img 
