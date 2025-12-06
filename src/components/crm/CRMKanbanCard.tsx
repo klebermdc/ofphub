@@ -15,9 +15,10 @@ interface CRMKanbanCardProps {
   lead: CRMLead;
   onEdit: (lead: CRMLead) => void;
   onDelete: (id: string) => void;
+  hideDelete?: boolean;
 }
 
-export function CRMKanbanCard({ lead, onEdit, onDelete }: CRMKanbanCardProps) {
+export function CRMKanbanCard({ lead, onEdit, onDelete, hideDelete = false }: CRMKanbanCardProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: lead.id,
     data: { lead },
@@ -66,13 +67,15 @@ export function CRMKanbanCard({ lead, onEdit, onDelete }: CRMKanbanCardProps) {
                 <Pencil className="h-4 w-4 mr-2" />
                 Editar
               </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => onDelete(lead.id)}
-                className="text-destructive focus:text-destructive"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Remover
-              </DropdownMenuItem>
+              {!hideDelete && (
+                <DropdownMenuItem 
+                  onClick={() => onDelete(lead.id)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Remover
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

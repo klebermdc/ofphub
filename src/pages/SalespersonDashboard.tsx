@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { DollarSign, TrendingUp, Package, Calendar, LogOut, User } from "lucide-react";
+import { DollarSign, TrendingUp, Package, Calendar, LogOut, User, Kanban, BarChart3 } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -8,9 +8,11 @@ import { useSheetData } from "@/contexts/SheetDataContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getMonthName } from "@/hooks/useCommissionHistory";
 import { SalespersonGoalKPI } from "@/components/SalespersonGoalKPI";
 import { SalespersonVelocityKPI } from "@/components/SalespersonVelocityKPI";
+import { CRMTab } from "@/components/crm/CRMTab";
 
 const SalespersonDashboard = () => {
   const { user, loading, signOut } = useAuth();
@@ -169,114 +171,138 @@ const SalespersonDashboard = () => {
         </div>
       </header>
       
-      <main className="container mx-auto px-6 py-6 relative space-y-6">
-        {/* Month Filter */}
-        <div className="flex items-center gap-4">
-          <Calendar className="h-4 w-4 text-muted-foreground" />
-          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Todos os meses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os meses</SelectItem>
-              {availableMonths.map(month => {
-                const [m, y] = month.split('/');
-                return (
-                  <SelectItem key={month} value={month}>
-                    {getMonthName(parseInt(m))} {y}
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
-        </div>
+      <main className="container mx-auto px-6 py-6 relative">
+        <Tabs defaultValue="vendas" className="space-y-6">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="vendas" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Minhas Vendas
+            </TabsTrigger>
+            <TabsTrigger value="crm" className="flex items-center gap-2">
+              <Kanban className="h-4 w-4" />
+              CRM
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Goal KPI */}
-        {selectedMonth !== 'all' && salespersonName && (
-          <SalespersonGoalKPI
-            salespersonName={salespersonName}
-            month={parseInt(selectedMonth.split('/')[0])}
-            year={parseInt(selectedMonth.split('/')[1])}
-            currentSales={totals.totalVendas}
-          />
-        )}
-
-        {/* Velocidade e Projeção */}
-        {selectedMonth !== 'all' && salespersonName && (
-          <SalespersonVelocityKPI
-            salespersonName={salespersonName}
-            month={parseInt(selectedMonth.split('/')[0])}
-            year={parseInt(selectedMonth.split('/')[1])}
-            currentSales={totals.totalVendas}
-          />
-        )}
-
-        {/* Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <MetricCard
-            title="Total em Vendas"
-            value={formatCurrency(totals.totalVendas)}
-            icon={DollarSign}
-            variant="success"
-          />
-          <MetricCard
-            title="Comissão a Receber"
-            value={formatCurrency(totals.totalComissao)}
-            icon={TrendingUp}
-            variant="info"
-          />
-          <MetricCard
-            title="Pedidos"
-            value={totals.totalPedidos.toString()}
-            icon={Package}
-            variant="default"
-          />
-        </div>
-
-        {/* Orders Table */}
-        <div className="glass rounded-xl p-6">
-          <h3 className="text-lg font-semibold mb-4">Detalhamento de Vendas</h3>
-          
-          {filteredOrders.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Nenhuma venda encontrada para o período selecionado.</p>
+          {/* Vendas Tab */}
+          <TabsContent value="vendas" className="space-y-6">
+            {/* Month Filter */}
+            <div className="flex items-center gap-4">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Todos os meses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os meses</SelectItem>
+                  {availableMonths.map(month => {
+                    const [m, y] = month.split('/');
+                    return (
+                      <SelectItem key={month} value={month}>
+                        {getMonthName(parseInt(m))} {y}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Pedido</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Produto</TableHead>
-                    <TableHead>Fornecedor</TableHead>
-                    <TableHead className="text-right">Venda</TableHead>
-                    <TableHead className="text-right">Comissão</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredOrders.map((order, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{order.data || '-'}</TableCell>
-                      <TableCell>{order.pedido || '-'}</TableCell>
-                      <TableCell>{order.cliente || '-'}</TableCell>
-                      <TableCell className="max-w-[200px] truncate">{order.produto || '-'}</TableCell>
-                      <TableCell>{order.fornecedor || '-'}</TableCell>
-                      <TableCell className="text-right font-mono">
-                        {formatCurrency(order.venda || 0)}
-                      </TableCell>
-                      <TableCell className="text-right font-mono text-success">
-                        {formatCurrency(order.comissaoVendedor || 0)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+
+            {/* Goal KPI */}
+            {selectedMonth !== 'all' && salespersonName && (
+              <SalespersonGoalKPI
+                salespersonName={salespersonName}
+                month={parseInt(selectedMonth.split('/')[0])}
+                year={parseInt(selectedMonth.split('/')[1])}
+                currentSales={totals.totalVendas}
+              />
+            )}
+
+            {/* Velocidade e Projeção */}
+            {selectedMonth !== 'all' && salespersonName && (
+              <SalespersonVelocityKPI
+                salespersonName={salespersonName}
+                month={parseInt(selectedMonth.split('/')[0])}
+                year={parseInt(selectedMonth.split('/')[1])}
+                currentSales={totals.totalVendas}
+              />
+            )}
+
+            {/* Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <MetricCard
+                title="Total em Vendas"
+                value={formatCurrency(totals.totalVendas)}
+                icon={DollarSign}
+                variant="success"
+              />
+              <MetricCard
+                title="Comissão a Receber"
+                value={formatCurrency(totals.totalComissao)}
+                icon={TrendingUp}
+                variant="info"
+              />
+              <MetricCard
+                title="Pedidos"
+                value={totals.totalPedidos.toString()}
+                icon={Package}
+                variant="default"
+              />
             </div>
-          )}
-        </div>
+
+            {/* Orders Table */}
+            <div className="glass rounded-xl p-6">
+              <h3 className="text-lg font-semibold mb-4">Detalhamento de Vendas</h3>
+              
+              {filteredOrders.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>Nenhuma venda encontrada para o período selecionado.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Data</TableHead>
+                        <TableHead>Pedido</TableHead>
+                        <TableHead>Cliente</TableHead>
+                        <TableHead>Produto</TableHead>
+                        <TableHead>Fornecedor</TableHead>
+                        <TableHead className="text-right">Venda</TableHead>
+                        <TableHead className="text-right">Comissão</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredOrders.map((order, index) => (
+                        <TableRow key={index}>
+                          <TableCell>{order.data || '-'}</TableCell>
+                          <TableCell>{order.pedido || '-'}</TableCell>
+                          <TableCell>{order.cliente || '-'}</TableCell>
+                          <TableCell className="max-w-[200px] truncate">{order.produto || '-'}</TableCell>
+                          <TableCell>{order.fornecedor || '-'}</TableCell>
+                          <TableCell className="text-right font-mono">
+                            {formatCurrency(order.venda || 0)}
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-success">
+                            {formatCurrency(order.comissaoVendedor || 0)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          {/* CRM Tab */}
+          <TabsContent value="crm">
+            <CRMTab 
+              salespersonFilter={salespersonName || undefined}
+              isReadOnly={false}
+            />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
