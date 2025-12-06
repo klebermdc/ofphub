@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { DollarSign, TrendingUp, Users, Target, Package, Building2, FileSpreadsheet, Calendar, Wallet, CircleDollarSign, FileText, Megaphone, UserPlus, Percent, Receipt, ClipboardList, Settings2, Briefcase, Kanban } from "lucide-react";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -30,6 +30,7 @@ import { useSheetSettings } from "@/hooks/useSheetSettings";
 import { useSalespersonSalaries } from "@/hooks/useSalespersonSalaries";
 import { useMarketingCosts } from "@/hooks/useMarketingCosts";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useCRMLeadsCount } from "@/hooks/useCRMLeadsCount";
 import { OperationalCostsDialog } from "@/components/OperationalCostsDialog";
 import { AccountingTab } from "@/components/AccountingTab";
 import { MarketingTab } from "@/components/MarketingTab";
@@ -405,8 +406,19 @@ const Index = () => {
   const nonPartnerSalaries = nonPartnerReps.reduce((sum, rep) => sum + getSalary(rep.name), 0);
   const custoEquipeComercial = nonPartnerCommissions + nonPartnerSalaries;
 
-  // Calculate leads and conversion rate
-  const totalLeads = getLeadsForMonth(currentGoalMonth, currentGoalYear);
+  // Calculate leads from CRM (Notion sync) and conversion rate
+  const { getLeadsCountForMonth } = useCRMLeadsCount();
+  const [totalLeads, setTotalLeads] = useState<number>(0);
+  
+  const fetchCRMLeadsCount = useCallback(async () => {
+    const count = await getLeadsCountForMonth(currentGoalMonth, currentGoalYear);
+    setTotalLeads(count);
+  }, [currentGoalMonth, currentGoalYear, getLeadsCountForMonth]);
+  
+  useEffect(() => {
+    fetchCRMLeadsCount();
+  }, [fetchCRMLeadsCount]);
+  
   const totalOrders = dashboardTotals?.totalNegocios || 0;
   const conversionRate = totalLeads > 0 ? (totalOrders / totalLeads) * 100 : 0;
 
