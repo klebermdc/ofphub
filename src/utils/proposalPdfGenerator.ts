@@ -3,7 +3,15 @@ import { ParsedCart, TicketItem, HotelItem, CarItem, InsuranceItem } from '@/com
 
 // Image paths for local images
 const LOCAL_IMAGES = {
-  disney: '/images/proposals/disney-castle.jpg',
+  // Disney images (6 options for variety)
+  disney: [
+    '/images/proposals/parks/disney-1.jpg', // Parade with castle
+    '/images/proposals/parks/disney-2.jpg', // Minnie Magic Kingdom
+    '/images/proposals/parks/disney-3.jpg', // Hollywood Studios
+    '/images/proposals/parks/disney-4.jpg', // Epcot Frozen
+    '/images/proposals/parks/disney-5.jpg', // Animal Kingdom
+    '/images/proposals/parks/disney-6.jpg', // Mickey & Minnie
+  ],
   universal: '/images/proposals/universal-park.jpg',
   seaworld: '/images/proposals/seaworld.jpg',
   animal: '/images/proposals/animal-kingdom.jpg',
@@ -13,6 +21,12 @@ const LOCAL_IMAGES = {
   insurance: '/images/proposals/travel-insurance.jpg',
   logo: '/images/logo-branco.png',
 };
+
+// Get random Disney image for variety
+function getRandomDisneyImage(): string {
+  const index = Math.floor(Math.random() * LOCAL_IMAGES.disney.length);
+  return LOCAL_IMAGES.disney[index];
+}
 
 // Colors
 const C = {
@@ -51,8 +65,8 @@ function getImagePathForItem(name: string, type: 'ticket' | 'hotel' | 'car' | 'i
   const lowerName = name.toLowerCase();
   
   if (type === 'ticket') {
-    if (lowerName.includes('disney') || lowerName.includes('magic kingdom') || lowerName.includes('epcot')) {
-      return LOCAL_IMAGES.disney;
+    if (lowerName.includes('disney') || lowerName.includes('magic kingdom') || lowerName.includes('epcot') || lowerName.includes('hollywood')) {
+      return getRandomDisneyImage();
     }
     if (lowerName.includes('universal') || lowerName.includes('islands') || lowerName.includes('epic')) {
       return LOCAL_IMAGES.universal;
@@ -61,9 +75,9 @@ function getImagePathForItem(name: string, type: 'ticket' | 'hotel' | 'car' | 'i
       return LOCAL_IMAGES.seaworld;
     }
     if (lowerName.includes('animal')) {
-      return LOCAL_IMAGES.animal;
+      return getRandomDisneyImage(); // Use Disney images for Animal Kingdom too
     }
-    return LOCAL_IMAGES.disney;
+    return getRandomDisneyImage();
   }
   
   if (type === 'hotel') {
@@ -76,7 +90,7 @@ function getImagePathForItem(name: string, type: 'ticket' | 'hotel' | 'car' | 'i
   if (type === 'car') return LOCAL_IMAGES.car;
   if (type === 'insurance') return LOCAL_IMAGES.insurance;
   
-  return LOCAL_IMAGES.disney;
+  return getRandomDisneyImage();
 }
 
 export async function generateProposalPDF(cart: ParsedCart): Promise<void> {
