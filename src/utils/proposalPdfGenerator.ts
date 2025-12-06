@@ -23,7 +23,13 @@ const LOCAL_IMAGES = {
     '/images/proposals/parks/universal-9.jpg',
     '/images/proposals/parks/universal-10.jpg',
   ],
-  seaworld: '/images/proposals/seaworld.jpg',
+  seaworld: [
+    '/images/proposals/parks/seaworld-1.jpg',
+    '/images/proposals/parks/seaworld-2.jpg',
+    '/images/proposals/parks/seaworld-3.jpg',
+    '/images/proposals/parks/seaworld-4.jpg',
+    '/images/proposals/parks/seaworld-5.jpg',
+  ],
   animal: '/images/proposals/animal-kingdom.jpg',
   hotel: '/images/proposals/hotel-resort.jpg',
   hotelLuxury: '/images/proposals/luxury-hotel.jpg',
@@ -70,6 +76,11 @@ function getUniversalImage(index: number): string {
   return LOCAL_IMAGES.universal[index % LOCAL_IMAGES.universal.length];
 }
 
+// Get SeaWorld image by index
+function getSeaworldImage(index: number): string {
+  return LOCAL_IMAGES.seaworld[index % LOCAL_IMAGES.seaworld.length];
+}
+
 // Load image as base64
 async function loadLocalImage(path: string): Promise<string | null> {
   try {
@@ -99,7 +110,7 @@ function getImagePathForItem(name: string, type: 'ticket' | 'hotel' | 'car' | 'i
       return getUniversalImage(itemIndex);
     }
     if (lowerName.includes('seaworld') || lowerName.includes('aquatica') || lowerName.includes('busch')) {
-      return LOCAL_IMAGES.seaworld;
+      return getSeaworldImage(itemIndex);
     }
     return getDisneyImage(itemIndex);
   }
@@ -191,7 +202,7 @@ export async function generateProposalPDF(cart: ParsedCart): Promise<void> {
   allPaths.add(LOCAL_IMAGES.logo);
   LOCAL_IMAGES.disney.forEach(path => allPaths.add(path));
   LOCAL_IMAGES.universal.forEach(path => allPaths.add(path));
-  allPaths.add(LOCAL_IMAGES.seaworld);
+  LOCAL_IMAGES.seaworld.forEach(path => allPaths.add(path));
   allPaths.add(LOCAL_IMAGES.animal);
   allPaths.add(LOCAL_IMAGES.hotel);
   allPaths.add(LOCAL_IMAGES.hotelLuxury);
