@@ -204,6 +204,11 @@ export function CRMTab({ salespeople = [], salespersonFilter, isReadOnly = false
   // Sync from Notion
   const handleNotionSync = async () => {
     setIsSyncing(true);
+    toast({
+      title: 'Sincronizando...',
+      description: 'Buscando leads do Notion (pode demorar alguns segundos)',
+    });
+    
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -226,7 +231,7 @@ export function CRMTab({ salespeople = [], salespersonFilter, isReadOnly = false
       if (data?.success) {
         toast({
           title: 'Sincronização concluída',
-          description: `${data.created} novos leads, ${data.updated} atualizados`,
+          description: `${data.created} novos leads, ${data.updated} atualizados (${data.total} processados)`,
         });
         refetch();
       } else {
@@ -236,7 +241,7 @@ export function CRMTab({ salespeople = [], salespersonFilter, isReadOnly = false
       console.error('Notion sync error:', error);
       toast({
         title: 'Erro na sincronização',
-        description: error instanceof Error ? error.message : 'Erro desconhecido',
+        description: 'A sincronização pode ter demorado muito. Tente novamente.',
         variant: 'destructive',
       });
     } finally {
