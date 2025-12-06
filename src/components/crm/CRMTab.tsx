@@ -9,7 +9,7 @@ import {
   useSensors,
   closestCenter,
 } from '@dnd-kit/core';
-import { Plus, RefreshCw } from 'lucide-react';
+import { Plus, RefreshCw, CloudDownload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CRMKanbanColumn } from './CRMKanbanColumn';
@@ -19,6 +19,8 @@ import { CRMFilters } from './CRMFilters';
 import { useCRMLeads, CRMLead, CRMStage, CreateLeadData } from '@/hooks/useCRMLeads';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const STAGES: { id: CRMStage; title: string; colorClass: string }[] = [
   { id: 'novo_lead', title: 'Novo Lead', colorClass: 'bg-blue-500/10' },
@@ -35,6 +37,7 @@ interface CRMTabProps {
 }
 
 export function CRMTab({ salespeople = [], salespersonFilter, isReadOnly = false }: CRMTabProps) {
+  const { toast } = useToast();
   const {
     leads,
     isLoading,
@@ -45,6 +48,8 @@ export function CRMTab({ salespeople = [], salespersonFilter, isReadOnly = false
     getLeadsByStage,
     refetch,
   } = useCRMLeads();
+
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<CRMLead | null>(null);
@@ -196,6 +201,49 @@ export function CRMTab({ salespeople = [], salespersonFilter, isReadOnly = false
   const vendasConcluidas = filteredLeads.filter((l) => l.stage === 'venda_concluida').length;
   const taxaConversao = totalLeads > 0 ? (vendasConcluidas / totalLeads) * 100 : 0;
 
+  // Sync from Notion
+  const handleNotionSync = async () => {
+    setIsSyncing(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: 'Erro',
+          description: 'Usuário não autenticado',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('notion-crm-sync', {
+        body: { user_id: user.id },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data?.success) {
+        toast({
+          title: 'Sincronização concluída',
+          description: `${data.created} novos leads, ${data.updated} atualizados`,
+        });
+        refetch();
+      } else {
+        throw new Error(data?.error || 'Erro na sincronização');
+      }
+    } catch (error) {
+      console.error('Notion sync error:', error);
+      toast({
+        title: 'Erro na sincronização',
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -210,6 +258,17 @@ export function CRMTab({ salespeople = [], salespersonFilter, isReadOnly = false
           </p>
         </div>
         <div className="flex gap-2">
+          {!salespersonFilter && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleNotionSync} 
+              disabled={isSyncing}
+            >
+              <CloudDownload className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-pulse' : ''}`} />
+              Sync Notion
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={refetch} disabled={isLoading}>
             <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             Atualizar
