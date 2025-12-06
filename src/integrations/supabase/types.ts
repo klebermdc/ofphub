@@ -239,6 +239,7 @@ export type Database = {
           id: string
           name: string
           notes: string | null
+          notion_created_at: string | null
           phone: string | null
           position: number
           product: string | null
@@ -254,6 +255,7 @@ export type Database = {
           id?: string
           name: string
           notes?: string | null
+          notion_created_at?: string | null
           phone?: string | null
           position?: number
           product?: string | null
@@ -269,6 +271,7 @@ export type Database = {
           id?: string
           name?: string
           notes?: string | null
+          notion_created_at?: string | null
           phone?: string | null
           position?: number
           product?: string | null

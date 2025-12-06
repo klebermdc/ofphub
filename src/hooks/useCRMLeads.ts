@@ -19,6 +19,7 @@ export interface CRMLead {
   position: number;
   created_at: string;
   updated_at: string;
+  notion_created_at: string | null;
 }
 
 export interface CreateLeadData {

@@ -128,7 +128,7 @@ serve(async (req) => {
 
     console.log(`Starting Notion sync for user ${user_id}`);
 
-    // Fetch pages from Notion database - only November and December
+    // Fetch pages from Notion database - only December onwards
     const MAX_PAGES = 500;
     let allPages: NotionPage[] = [];
     let hasMore = true;
@@ -140,7 +140,7 @@ serve(async (req) => {
         filter: {
           property: 'Data Geração Lead',
           date: {
-            on_or_after: '2024-11-01'
+            on_or_after: '2024-12-01'
           }
         },
         sorts: [
@@ -228,6 +228,7 @@ serve(async (req) => {
             stage: lead.stage,
             notes: lead.notes,
             product: lead.product,
+            notion_created_at: lead.created_at,
             updated_at: new Date().toISOString(),
           })
           .eq('id', existingId);
@@ -252,6 +253,7 @@ serve(async (req) => {
             stage: lead.stage as any,
             notes: lead.notes,
             product: lead.product,
+            notion_created_at: lead.created_at,
             position: i,
           });
 
