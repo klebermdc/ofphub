@@ -128,41 +128,59 @@ serve(async (req) => {
 
     console.log(`Starting Notion sync for user ${user_id}`);
 
-    // Fetch all pages from Notion database
-    const notionResponse = await fetch(
-      `https://api.notion.com/v1/databases/${database_id}/query`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${notionApiKey}`,
-          'Notion-Version': '2022-06-28',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          page_size: 100,
-          sorts: [
-            {
-              property: 'Data Geração Lead',
-              direction: 'descending',
-            },
-          ],
-        }),
-      }
-    );
+    // Fetch ALL pages from Notion database with pagination
+    let allPages: NotionPage[] = [];
+    let hasMore = true;
+    let startCursor: string | undefined = undefined;
 
-    if (!notionResponse.ok) {
-      const errorText = await notionResponse.text();
-      console.error('Notion API error:', errorText);
-      throw new Error(`Notion API error: ${notionResponse.status}`);
+    while (hasMore) {
+      const requestBody: any = {
+        page_size: 100,
+        sorts: [
+          {
+            property: 'Data Geração Lead',
+            direction: 'descending',
+          },
+        ],
+      };
+
+      if (startCursor) {
+        requestBody.start_cursor = startCursor;
+      }
+
+      const notionResponse = await fetch(
+        `https://api.notion.com/v1/databases/${database_id}/query`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${notionApiKey}`,
+            'Notion-Version': '2022-06-28',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody),
+        }
+      );
+
+      if (!notionResponse.ok) {
+        const errorText = await notionResponse.text();
+        console.error('Notion API error:', errorText);
+        throw new Error(`Notion API error: ${notionResponse.status}`);
+      }
+
+      const notionData = await notionResponse.json();
+      const pages: NotionPage[] = notionData.results;
+      
+      allPages = allPages.concat(pages);
+      hasMore = notionData.has_more;
+      startCursor = notionData.next_cursor;
+
+      console.log(`Fetched ${pages.length} pages (total: ${allPages.length}), has_more: ${hasMore}`);
     }
 
-    const notionData = await notionResponse.json();
-    const pages: NotionPage[] = notionData.results;
-
-    console.log(`Fetched ${pages.length} pages from Notion`);
+    console.log(`Total pages fetched from Notion: ${allPages.length}`);
 
     // Parse all pages
-    const leads = pages.map(parseNotionPage);
+    const leads = allPages.map(parseNotionPage);
 
     // Get existing leads for this user to check for updates
     const { data: existingLeads, error: fetchError } = await supabase
