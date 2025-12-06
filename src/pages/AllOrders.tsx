@@ -117,9 +117,23 @@ const AllOrders = () => {
     return Array.from(fornecedores).sort();
   }, [allOrders]);
 
+  // Parse date string DD/MM/YY or DD/MM/YYYY to Date object
+  const parseOrderDate = (dateStr: string): Date => {
+    if (!dateStr) return new Date(0);
+    const parts = dateStr.split('/');
+    if (parts.length >= 3) {
+      const day = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      let year = parseInt(parts[2], 10);
+      if (year < 100) year += 2000;
+      return new Date(year, month, day);
+    }
+    return new Date(0);
+  };
+
   // Filter orders
   const filteredOrders = useMemo(() => {
-    return allOrders.filter(order => {
+    const filtered = allOrders.filter(order => {
       // Month filter
       if (selectedMonth !== 'all') {
         if (!order.data) return false;
@@ -150,6 +164,13 @@ const AllOrders = () => {
       }
       
       return true;
+    });
+
+    // Sort by date (most recent first)
+    return filtered.sort((a, b) => {
+      const dateA = parseOrderDate(a.data);
+      const dateB = parseOrderDate(b.data);
+      return dateB.getTime() - dateA.getTime();
     });
   }, [allOrders, selectedMonth, selectedVendedor, selectedProduto, selectedFornecedor]);
 
