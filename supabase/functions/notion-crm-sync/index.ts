@@ -128,8 +128,8 @@ serve(async (req) => {
 
     console.log(`Starting Notion sync for user ${user_id}`);
 
-    // Fetch pages from Notion database with pagination (limit to avoid timeout)
-    const MAX_PAGES = 1000; // Limit to prevent timeout
+    // Fetch pages from Notion database - only November and December
+    const MAX_PAGES = 500;
     let allPages: NotionPage[] = [];
     let hasMore = true;
     let startCursor: string | undefined = undefined;
@@ -137,6 +137,12 @@ serve(async (req) => {
     while (hasMore && allPages.length < MAX_PAGES) {
       const requestBody: any = {
         page_size: 100,
+        filter: {
+          property: 'Data Geração Lead',
+          date: {
+            on_or_after: '2024-11-01'
+          }
+        },
         sorts: [
           {
             property: 'Data Geração Lead',
