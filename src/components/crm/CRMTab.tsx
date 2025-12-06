@@ -12,10 +12,12 @@ import {
 import { Plus, RefreshCw, CloudDownload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { CRMKanbanColumn } from './CRMKanbanColumn';
 import { CRMKanbanCard } from './CRMKanbanCard';
 import { CRMLeadDialog } from './CRMLeadDialog';
 import { CRMFilters } from './CRMFilters';
+import { CRMAlerts } from './CRMAlerts';
 import { useCRMLeads, CRMLead, CRMStage, CreateLeadData } from '@/hooks/useCRMLeads';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -253,7 +255,13 @@ export function CRMTab({ salespeople = [], salespersonFilter, isReadOnly = false
   };
 
   return (
+    <TooltipProvider>
     <div className="space-y-6">
+      {/* Alerts Panel - Show leads needing attention */}
+      <CRMAlerts 
+        leads={filteredLeads} 
+        onLeadClick={handleEditLead}
+      />
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -398,5 +406,6 @@ export function CRMTab({ salespeople = [], salespersonFilter, isReadOnly = false
         onUpdate={handleUpdateLead}
       />
     </div>
+    </TooltipProvider>
   );
 }

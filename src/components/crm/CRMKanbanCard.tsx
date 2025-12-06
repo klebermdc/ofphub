@@ -1,5 +1,5 @@
 import { useDraggable } from '@dnd-kit/core';
-import { Phone, Mail, DollarSign, Package, User, GripVertical, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { Phone, Mail, DollarSign, Package, User, GripVertical, MoreHorizontal, Pencil, Trash2, AlertTriangle, Clock } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { CRMLead } from '@/hooks/useCRMLeads';
+import { isLeadOverdue, getLeadOverdueDays } from './CRMAlerts';
 
 interface CRMKanbanCardProps {
   lead: CRMLead;
@@ -24,6 +26,9 @@ export function CRMKanbanCard({ lead, onEdit, onDelete, hideDelete = false }: CR
     data: { lead },
   });
 
+  const isOverdue = isLeadOverdue(lead);
+  const overdueDays = getLeadOverdueDays(lead);
+
   const style = transform
     ? {
         transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
@@ -35,13 +40,21 @@ export function CRMKanbanCard({ lead, onEdit, onDelete, hideDelete = false }: CR
     return `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}`;
   };
 
+  // Urgency styling based on days overdue
+  const getOverdueStyle = () => {
+    if (!isOverdue) return '';
+    if (overdueDays >= 5) return 'ring-2 ring-red-500 border-red-500 shadow-red-500/20 shadow-lg';
+    if (overdueDays >= 3) return 'ring-2 ring-orange-500 border-orange-500 shadow-orange-500/20 shadow-md';
+    return 'ring-1 ring-yellow-500 border-yellow-500';
+  };
+
   return (
     <Card
       ref={setNodeRef}
       style={style}
       className={`cursor-grab active:cursor-grabbing transition-all hover:shadow-md border-border/50 bg-card ${
         isDragging ? 'shadow-lg ring-2 ring-primary/20' : ''
-      }`}
+      } ${getOverdueStyle()}`}
     >
       <CardContent className="p-3 space-y-2">
         <div className="flex items-start justify-between gap-2">
@@ -54,6 +67,27 @@ export function CRMKanbanCard({ lead, onEdit, onDelete, hideDelete = false }: CR
               <GripVertical className="h-4 w-4" />
             </div>
             <h4 className="font-medium text-sm truncate">{lead.name}</h4>
+            
+            {/* Overdue Alert Icon */}
+            {isOverdue && (
+              <Tooltip>
+                <TooltipTrigger>
+                  <div className={`p-1 rounded-full ${
+                    overdueDays >= 5 ? 'bg-red-500/20 text-red-500 animate-pulse' :
+                    overdueDays >= 3 ? 'bg-orange-500/20 text-orange-500' :
+                    'bg-yellow-500/20 text-yellow-500'
+                  }`}>
+                    <AlertTriangle className="h-3 w-3" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="h-3 w-3" />
+                    <span>{overdueDays} dias sem atualização</span>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            )}
           </div>
           
           <DropdownMenu>
