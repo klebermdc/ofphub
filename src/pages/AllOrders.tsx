@@ -27,7 +27,14 @@ interface Order {
 const AllOrders = () => {
   const { user, loading } = useAuth();
   const { role, isLoading: roleLoading } = useUserRole(user?.id);
-  const { salesReps, isLoading: dataLoading, hasData } = useSheetData();
+  const { salesReps, isLoading: dataLoading, hasData, refreshData } = useSheetData();
+
+  // Load data on mount
+  useEffect(() => {
+    if (user && !hasData && !dataLoading) {
+      refreshData();
+    }
+  }, [user, hasData, dataLoading, refreshData]);
   const navigate = useNavigate();
   
   // Filters
