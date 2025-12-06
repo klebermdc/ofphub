@@ -22,13 +22,16 @@ import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-const STAGES: { id: CRMStage; title: string; colorClass: string }[] = [
+const ALL_STAGES: { id: CRMStage; title: string; colorClass: string }[] = [
   { id: 'novo_lead', title: 'Novo Lead', colorClass: 'bg-blue-500/10' },
   { id: 'coletando_informacao', title: 'Coletando Informação', colorClass: 'bg-yellow-500/10' },
   { id: 'proposta_enviada', title: 'Proposta Enviada', colorClass: 'bg-purple-500/10' },
   { id: 'venda_concluida', title: 'Venda Concluída', colorClass: 'bg-green-500/10' },
   { id: 'venda_perdida', title: 'Venda Perdida', colorClass: 'bg-red-500/10' },
 ];
+
+// Stages visible to salespeople (excludes "novo_lead")
+const SALESPERSON_STAGES = ALL_STAGES.filter(s => s.id !== 'novo_lead');
 
 interface CRMTabProps {
   salespeople?: string[];
@@ -357,7 +360,7 @@ export function CRMTab({ salespeople = [], salespersonFilter, isReadOnly = false
         onDragEnd={handleDragEnd}
       >
         <div className="flex gap-4 overflow-x-auto pb-4">
-          {STAGES.map((stage) => (
+          {(salespersonFilter ? SALESPERSON_STAGES : ALL_STAGES).map((stage) => (
             <CRMKanbanColumn
               key={stage.id}
               stage={stage.id}
