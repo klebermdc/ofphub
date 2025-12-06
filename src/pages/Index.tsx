@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { DollarSign, TrendingUp, Users, Target, Package, Building2, FileSpreadsheet, Calendar, Wallet, CircleDollarSign, FileText, Megaphone, UserPlus, Percent, Receipt, ClipboardList, Settings2, Briefcase } from "lucide-react";
+import { DollarSign, TrendingUp, Users, Target, Package, Building2, FileSpreadsheet, Calendar, Wallet, CircleDollarSign, FileText, Megaphone, UserPlus, Percent, Receipt, ClipboardList, Settings2, Briefcase, Kanban } from "lucide-react";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { SheetInput } from "@/components/SheetInput";
 import { MetricCard } from "@/components/MetricCard";
@@ -33,6 +33,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { OperationalCostsDialog } from "@/components/OperationalCostsDialog";
 import { AccountingTab } from "@/components/AccountingTab";
 import { MarketingTab } from "@/components/MarketingTab";
+import { CRMTab } from "@/components/crm/CRMTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -462,8 +463,12 @@ const Index = () => {
       
       <main className="container mx-auto px-6 py-6 relative">
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid w-full max-w-lg grid-cols-4">
+          <TabsList className="grid w-full max-w-2xl grid-cols-5">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+            <TabsTrigger value="crm" className="gap-1">
+              <Kanban className="h-4 w-4" />
+              CRM
+            </TabsTrigger>
             <TabsTrigger value="vendedores">Vendedores</TabsTrigger>
             <TabsTrigger value="marketing" className="gap-1">
               <Megaphone className="h-4 w-4" />
@@ -719,6 +724,10 @@ const Index = () => {
 
               </>
             )}
+          </TabsContent>
+
+          <TabsContent value="crm" className="space-y-6">
+            <CRMTab salespeople={salesReps.map(r => r.name)} />
           </TabsContent>
 
           <TabsContent value="vendedores" className="space-y-6">
