@@ -13,7 +13,7 @@ interface CRMKanbanColumnProps {
   colorClass: string;
   onAddLead: (stage: CRMStage) => void;
   onEditLead: (lead: CRMLead) => void;
-  onDeleteLead: (id: string) => void;
+  onDeleteLead?: (id: string) => void;
 }
 
 export function CRMKanbanColumn({
@@ -72,7 +72,8 @@ export function CRMKanbanColumn({
               key={lead.id}
               lead={lead}
               onEdit={onEditLead}
-              onDelete={onDeleteLead}
+              onDelete={onDeleteLead || (() => {})}
+              hideDelete={!onDeleteLead}
             />
           ))}
           {leads.length === 0 && (
