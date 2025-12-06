@@ -1,5 +1,5 @@
 import { useDraggable } from '@dnd-kit/core';
-import { Phone, Mail, DollarSign, Package, User, GripVertical, MoreHorizontal, Pencil, Trash2, AlertTriangle, Clock } from 'lucide-react';
+import { Phone, Mail, DollarSign, Package, User, GripVertical, MoreHorizontal, Pencil, Trash2, AlertTriangle, Clock, Calendar } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,8 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { CRMLead } from '@/hooks/useCRMLeads';
 import { isLeadOverdue, getLeadOverdueDays } from './CRMAlerts';
+import { format, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface CRMKanbanCardProps {
   lead: CRMLead;
@@ -39,6 +41,19 @@ export function CRMKanbanCard({ lead, onEdit, onDelete, hideDelete = false }: CR
   const formatCurrency = (value: number) => {
     return `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}`;
   };
+
+  const formatLeadDate = (dateStr: string | null) => {
+    if (!dateStr) return null;
+    try {
+      const date = parseISO(dateStr);
+      return format(date, 'dd/MM', { locale: ptBR });
+    } catch {
+      return null;
+    }
+  };
+
+  const leadDate = lead.notion_created_at || lead.created_at;
+  const formattedDate = formatLeadDate(leadDate);
 
   // Urgency styling based on days overdue
   const getOverdueStyle = () => {
@@ -114,11 +129,21 @@ export function CRMKanbanCard({ lead, onEdit, onDelete, hideDelete = false }: CR
           </DropdownMenu>
         </div>
 
-        {lead.estimated_value > 0 && (
-          <Badge variant="secondary" className="text-xs">
-            <DollarSign className="h-3 w-3 mr-1" />
-            {formatCurrency(lead.estimated_value)}
-          </Badge>
+        {(lead.estimated_value > 0 || formattedDate) && (
+          <div className="flex items-center gap-2 flex-wrap">
+            {formattedDate && (
+              <Badge variant="outline" className="text-xs">
+                <Calendar className="h-3 w-3 mr-1" />
+                {formattedDate}
+              </Badge>
+            )}
+            {lead.estimated_value > 0 && (
+              <Badge variant="secondary" className="text-xs">
+                <DollarSign className="h-3 w-3 mr-1" />
+                {formatCurrency(lead.estimated_value)}
+              </Badge>
+            )}
+          </div>
         )}
 
         <div className="space-y-1 text-xs text-muted-foreground">

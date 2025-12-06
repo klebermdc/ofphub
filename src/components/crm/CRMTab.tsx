@@ -85,8 +85,10 @@ export function CRMTab({ salespeople = [], salespersonFilter, isReadOnly = false
     leads.forEach((lead) => {
       if (lead.product) products.add(lead.product);
       if (lead.salesperson_name) spNames.add(lead.salesperson_name);
-      if (lead.created_at) {
-        const date = new Date(lead.created_at);
+      // Use notion_created_at if available, otherwise created_at
+      const leadDate = lead.notion_created_at || lead.created_at;
+      if (leadDate) {
+        const date = new Date(leadDate);
         const monthStr = format(date, 'MMMM yyyy', { locale: ptBR });
         months.add(monthStr);
       }
@@ -134,21 +136,28 @@ export function CRMTab({ salespeople = [], salespersonFilter, isReadOnly = false
         return false;
       }
 
-      // Month filter
-      if (selectedMonth !== 'all' && lead.created_at) {
-        const leadMonth = format(new Date(lead.created_at), 'MMMM yyyy', { locale: ptBR });
-        if (leadMonth !== selectedMonth) return false;
+      // Month filter - use notion_created_at if available
+      if (selectedMonth !== 'all') {
+        const leadDate = lead.notion_created_at || lead.created_at;
+        if (leadDate) {
+          const leadMonth = format(new Date(leadDate), 'MMMM yyyy', { locale: ptBR });
+          if (leadMonth !== selectedMonth) return false;
+        }
       }
 
       return true;
     });
   }, [leads, searchTerm, selectedStage, selectedSalesperson, selectedProduct, selectedMonth, salespersonFilter]);
 
-  // Get filtered leads by stage
+  // Get filtered leads by stage - sorted by date (most recent first)
   const getFilteredLeadsByStage = (stage: CRMStage) => {
     return filteredLeads
       .filter((lead) => lead.stage === stage)
-      .sort((a, b) => a.position - b.position);
+      .sort((a, b) => {
+        const dateA = new Date(a.notion_created_at || a.created_at).getTime();
+        const dateB = new Date(b.notion_created_at || b.created_at).getTime();
+        return dateB - dateA; // Most recent first
+      });
   };
 
   const handleDragStart = (event: DragStartEvent) => {
