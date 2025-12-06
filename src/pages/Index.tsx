@@ -396,8 +396,14 @@ const Index = () => {
   const marketingCost = getTotalForMonth(currentGoalMonth, currentGoalYear);
   const operationalCost = getOperationalCostsForMonth(currentGoalMonth, currentGoalYear);
   
-  // Calculate Custo Equipe Comercial (Comissão Vendedores + Salários)
-  const custoEquipeComercial = (dashboardTotals?.totalComissao || 0) + totalSalaries;
+  // Calculate Custo Equipe Comercial (Comissão Vendedores + Salários) - excluding partners
+  const partnersToExclude = ['kleber', 'renata', 'site'];
+  const nonPartnerReps = dashboardFilteredSalesReps.filter(
+    rep => !partnersToExclude.some(partner => rep.name.toLowerCase().includes(partner))
+  );
+  const nonPartnerCommissions = nonPartnerReps.reduce((sum, rep) => sum + rep.commission, 0);
+  const nonPartnerSalaries = nonPartnerReps.reduce((sum, rep) => sum + getSalary(rep.name), 0);
+  const custoEquipeComercial = nonPartnerCommissions + nonPartnerSalaries;
 
   // Calculate leads and conversion rate
   const totalLeads = getLeadsForMonth(currentGoalMonth, currentGoalYear);
