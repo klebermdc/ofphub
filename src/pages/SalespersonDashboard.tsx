@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { DollarSign, TrendingUp, Package, Calendar, LogOut, User, Kanban, BarChart3 } from "lucide-react";
+import { DollarSign, TrendingUp, Package, Calendar, LogOut, User, Kanban, BarChart3, Sparkles } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -13,7 +13,7 @@ import { getMonthName } from "@/hooks/useCommissionHistory";
 import { SalespersonGoalKPI } from "@/components/SalespersonGoalKPI";
 import { SalespersonVelocityKPI } from "@/components/SalespersonVelocityKPI";
 import { CRMTab } from "@/components/crm/CRMTab";
-
+import { ProposalTab } from "@/components/proposals/ProposalTab";
 const SalespersonDashboard = () => {
   const { user, loading, signOut } = useAuth();
   const { role, salespersonName, isLoading: roleLoading } = useUserRole(user?.id);
@@ -173,7 +173,7 @@ const SalespersonDashboard = () => {
       
       <main className="container mx-auto px-6 py-6 relative">
         <Tabs defaultValue="vendas" className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsList className="grid w-full max-w-lg grid-cols-3">
             <TabsTrigger value="vendas" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               Minhas Vendas
@@ -181,6 +181,10 @@ const SalespersonDashboard = () => {
             <TabsTrigger value="crm" className="flex items-center gap-2">
               <Kanban className="h-4 w-4" />
               CRM
+            </TabsTrigger>
+            <TabsTrigger value="propostas" className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4" />
+              Propostas
             </TabsTrigger>
           </TabsList>
 
@@ -301,6 +305,11 @@ const SalespersonDashboard = () => {
               salespersonFilter={salespersonName || undefined}
               isReadOnly={false}
             />
+          </TabsContent>
+
+          {/* Propostas Tab */}
+          <TabsContent value="propostas">
+            <ProposalTab />
           </TabsContent>
         </Tabs>
       </main>
