@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import { DollarSign, TrendingUp, Package, Calendar, LogOut, User, Kanban, BarChart3, Sparkles } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
+import { DollarSign, TrendingUp, Package, Calendar, LogOut, User, Kanban, BarChart3, Sparkles, ArrowLeft } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -17,11 +17,19 @@ import { SalespersonFollowUpAlerts } from "@/components/SalespersonFollowUpAlert
 import { SalespersonTopItems } from "@/components/SalespersonTopItems";
 import { CRMTab } from "@/components/crm/CRMTab";
 import { ProposalTab } from "@/components/proposals/ProposalTab";
+
 const SalespersonDashboard = () => {
+  const { salespersonName: urlSalespersonName } = useParams<{ salespersonName?: string }>();
   const { user, loading, signOut } = useAuth();
-  const { role, salespersonName, isLoading: roleLoading } = useUserRole(user?.id);
+  const { role, salespersonName: userSalespersonName, isLoading: roleLoading } = useUserRole(user?.id);
   const { salesReps, isLoading: sheetLoading } = useSheetData();
   const navigate = useNavigate();
+  
+  // If manager is viewing a specific salesperson, use URL param; otherwise use user's own name
+  const isManagerViewing = role === 'manager' && urlSalespersonName;
+  const displaySalespersonName = isManagerViewing 
+    ? decodeURIComponent(urlSalespersonName) 
+    : userSalespersonName;
   
   // Get current month in format MM/YYYY
   const getCurrentMonthKey = () => {
@@ -33,39 +41,41 @@ const SalespersonDashboard = () => {
   
   const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonthKey());
 
-  // Redirect if not salesperson
+  // Redirect logic - only for salespeople accessing their own dashboard
   useEffect(() => {
     if (!loading && !roleLoading) {
       if (!user) {
         navigate("/auth");
-      } else if (role === 'manager') {
+      } else if (role === 'manager' && !urlSalespersonName) {
+        // Manager accessing /vendedor without a specific salesperson - redirect to main dashboard
         navigate("/");
       }
+      // Don't redirect if manager is viewing a specific salesperson's dashboard
     }
-  }, [user, loading, role, roleLoading, navigate]);
+  }, [user, loading, role, roleLoading, navigate, urlSalespersonName]);
 
   // Get orders for this salesperson from salesReps
   const salespersonOrders = useMemo(() => {
-    if (!salespersonName || !salesReps.length) {
-      console.log('No salesperson name or no salesReps:', { salespersonName, salesRepsLength: salesReps.length });
+    if (!displaySalespersonName || !salesReps.length) {
+      console.log('No salesperson name or no salesReps:', { displaySalespersonName, salesRepsLength: salesReps.length });
       return [];
     }
     
     // Find the salesperson in salesReps
     const salesRep = salesReps.find(rep => 
-      rep.name.toLowerCase().includes(salespersonName.toLowerCase()) ||
-      salespersonName.toLowerCase().includes(rep.name.toLowerCase())
+      rep.name.toLowerCase().includes(displaySalespersonName.toLowerCase()) ||
+      displaySalespersonName.toLowerCase().includes(rep.name.toLowerCase())
     );
     
     console.log('Matching salesperson:', { 
-      salespersonName, 
+      displaySalespersonName, 
       foundRep: salesRep?.name, 
       ordersCount: salesRep?.orders?.length,
       allReps: salesReps.map(r => r.name)
     });
     
     return salesRep?.orders || [];
-  }, [salesReps, salespersonName]);
+  }, [salesReps, displaySalespersonName]);
 
   // Extract available months
   const availableMonths = useMemo(() => {
@@ -167,20 +177,29 @@ const SalespersonDashboard = () => {
       <header className="sticky top-0 z-50 glass border-b border-border/50">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
+            {isManagerViewing && (
+              <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            )}
             <img 
               src="/images/logo-branco.png" 
               alt="Orlando Fast Pass" 
               className="h-10 w-auto"
             />
             <div>
-              <h1 className="text-xl font-bold">Minhas Vendas</h1>
-              <p className="text-sm text-muted-foreground">{salespersonName}</p>
+              <h1 className="text-xl font-bold">
+                {isManagerViewing ? 'Performance do Vendedor' : 'Minhas Vendas'}
+              </h1>
+              <p className="text-sm text-muted-foreground">{displaySalespersonName}</p>
             </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={handleSignOut}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Sair
-          </Button>
+          {!isManagerViewing && (
+            <Button variant="ghost" size="sm" onClick={handleSignOut}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Sair
+            </Button>
+          )}
         </div>
       </header>
       
@@ -225,14 +244,14 @@ const SalespersonDashboard = () => {
             </div>
 
             {/* Follow-up Alerts - sempre visível */}
-            {salespersonName && (
-              <SalespersonFollowUpAlerts salespersonName={salespersonName} />
+            {displaySalespersonName && (
+              <SalespersonFollowUpAlerts salespersonName={displaySalespersonName} />
             )}
 
             {/* Goal KPI */}
-            {selectedMonth !== 'all' && salespersonName && (
+            {selectedMonth !== 'all' && displaySalespersonName && (
               <SalespersonGoalKPI
-                salespersonName={salespersonName}
+                salespersonName={displaySalespersonName}
                 month={parseInt(selectedMonth.split('/')[0])}
                 year={parseInt(selectedMonth.split('/')[1])}
                 currentSales={totals.totalVendas}
@@ -240,9 +259,9 @@ const SalespersonDashboard = () => {
             )}
 
             {/* Velocidade e Projeção */}
-            {selectedMonth !== 'all' && salespersonName && (
+            {selectedMonth !== 'all' && displaySalespersonName && (
               <SalespersonVelocityKPI
-                salespersonName={salespersonName}
+                salespersonName={displaySalespersonName}
                 month={parseInt(selectedMonth.split('/')[0])}
                 year={parseInt(selectedMonth.split('/')[1])}
                 currentSales={totals.totalVendas}
@@ -250,9 +269,9 @@ const SalespersonDashboard = () => {
             )}
 
             {/* Taxa de Conversão CRM */}
-            {selectedMonth !== 'all' && salespersonName && (
+            {selectedMonth !== 'all' && displaySalespersonName && (
               <SalespersonConversionKPI
-                salespersonName={salespersonName}
+                salespersonName={displaySalespersonName}
                 month={parseInt(selectedMonth.split('/')[0])}
                 year={parseInt(selectedMonth.split('/')[1])}
               />
@@ -332,8 +351,8 @@ const SalespersonDashboard = () => {
           {/* CRM Tab */}
           <TabsContent value="crm">
             <CRMTab 
-              salespersonFilter={salespersonName || undefined}
-              isReadOnly={false}
+              salespersonFilter={displaySalespersonName || undefined}
+              isReadOnly={!!isManagerViewing}
             />
           </TabsContent>
 

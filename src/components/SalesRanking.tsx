@@ -1,11 +1,15 @@
-import { Trophy, Medal, Award } from "lucide-react";
+import { Trophy, Medal, Award, Eye } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { SalesRep } from "@/types/sales";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface SalesRankingProps {
   salesReps: SalesRep[];
 }
 
 export function SalesRanking({ salesReps }: SalesRankingProps) {
+  const navigate = useNavigate();
   const sortedReps = [...salesReps].sort((a, b) => b.sales - a.sales);
 
   const getRankIcon = (index: number) => {
@@ -34,6 +38,10 @@ export function SalesRanking({ salesReps }: SalesRankingProps) {
     }
   };
 
+  const handleViewSalesperson = (name: string) => {
+    navigate(`/vendedor/${encodeURIComponent(name)}`);
+  };
+
   return (
     <div className="glass rounded-xl p-6 animate-slide-up">
       <div className="flex items-center gap-2 mb-4">
@@ -54,7 +62,7 @@ export function SalesRanking({ salesReps }: SalesRankingProps) {
               <p className="font-medium truncate">{rep.name}</p>
               <p className="text-xs text-muted-foreground">{rep.deals} negócios</p>
             </div>
-            <div className="text-right">
+            <div className="text-right mr-2">
               <p className="font-mono font-semibold">
                 R$ {rep.sales.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
               </p>
@@ -62,6 +70,19 @@ export function SalesRanking({ salesReps }: SalesRankingProps) {
                 R$ {rep.commission.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
               </p>
             </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8 shrink-0"
+                  onClick={() => handleViewSalesperson(rep.name)}
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Ver dashboard do vendedor</TooltipContent>
+            </Tooltip>
           </div>
         ))}
       </div>
