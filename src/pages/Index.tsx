@@ -53,6 +53,7 @@ const Index = () => {
   const [currentReportId, setCurrentReportId] = useState<string | undefined>();
   const [currentPeriod, setCurrentPeriod] = useState<string | undefined>();
   const [dataSource, setDataSource] = useState<'sheet' | 'history'>('sheet');
+  const [comercialView, setComercialView] = useState<'equipe' | 'crm'>('equipe');
   
   // Get current month in format MM/YYYY
   const getCurrentMonthKey = () => {
@@ -486,12 +487,8 @@ const Index = () => {
       
       <main className="container mx-auto px-6 py-6 relative">
         <Tabs defaultValue={initialTab} className="space-y-6">
-          <TabsList className="grid w-full max-w-2xl grid-cols-5">
+          <TabsList className="grid w-full max-w-xl grid-cols-4">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="crm" className="gap-1">
-              <Kanban className="h-4 w-4" />
-              CRM
-            </TabsTrigger>
             <TabsTrigger value="vendedores" className="gap-1">
               <Users className="h-4 w-4" />
               Comercial
@@ -763,12 +760,33 @@ const Index = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="crm" className="space-y-6">
-            <CRMTab salespeople={salesReps.map(r => r.name)} />
-          </TabsContent>
 
           <TabsContent value="vendedores" className="space-y-6">
-            {hasData ? (
+            {/* Sub-navigation Comercial */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant={comercialView === 'equipe' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setComercialView('equipe')}
+                className="gap-2"
+              >
+                <Users className="h-4 w-4" />
+                Equipe
+              </Button>
+              <Button
+                variant={comercialView === 'crm' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setComercialView('crm')}
+                className="gap-2"
+              >
+                <Kanban className="h-4 w-4" />
+                CRM
+              </Button>
+            </div>
+
+            {comercialView === 'crm' ? (
+              <CRMTab salespeople={salesReps.map(r => r.name)} />
+            ) : hasData ? (
               <>
                 {/* Ações e Filtros */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
