@@ -20,7 +20,6 @@ import { CRMFilters } from './CRMFilters';
 import { CRMAlerts } from './CRMAlerts';
 import { useCRMLeads, CRMLead, CRMStage, CreateLeadData } from '@/hooks/useCRMLeads';
 import { useLeadScoring, calculateLeadScore } from '@/hooks/useLeadScoring';
-import { useClientHistory, findClientHistory } from '@/hooks/useClientHistory';
 import { useSheetData } from '@/contexts/SheetDataContext';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -61,14 +60,13 @@ export function CRMTab({ salespeople = [], salespersonFilter, isReadOnly = false
   // Lead scoring and client history
   const { scoredLeads, hotLeads, warmLeads, coldLeads } = useLeadScoring(leads);
   
-  // Enrich leads with score and client history
+  // Enrich leads with score
   const enrichedLeads = useMemo(() => {
     return leads.map(lead => ({
       ...lead,
       score: calculateLeadScore(lead),
-      clientHistory: findClientHistory(lead, salesReps),
     }));
-  }, [leads, salesReps]);
+  }, [leads]);
 
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -241,7 +239,6 @@ export function CRMTab({ salespeople = [], salespersonFilter, isReadOnly = false
   const hotCount = filteredLeads.filter(l => l.score?.label === 'hot').length;
   const warmCount = filteredLeads.filter(l => l.score?.label === 'warm').length;
   const coldCount = filteredLeads.filter(l => l.score?.label === 'cold').length;
-  const returningCount = filteredLeads.filter(l => l.clientHistory?.hasHistory).length;
 
   // Sync from Notion
   const handleNotionSync = async () => {
@@ -403,16 +400,6 @@ export function CRMTab({ salespeople = [], salespersonFilter, isReadOnly = false
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-500">{coldCount}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Recorrentes
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-500">{returningCount}</div>
           </CardContent>
         </Card>
         <Card>

@@ -1,5 +1,5 @@
 import { useDraggable } from '@dnd-kit/core';
-import { Phone, Mail, DollarSign, Package, User, GripVertical, MoreHorizontal, Pencil, Trash2, AlertTriangle, Clock, Calendar, Flame, Thermometer, Snowflake, History, CalendarClock } from 'lucide-react';
+import { Phone, Mail, DollarSign, Package, User, GripVertical, MoreHorizontal, Pencil, Trash2, AlertTriangle, Clock, Calendar, Flame, Thermometer, Snowflake, CalendarClock } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,13 +12,12 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { CRMLead } from '@/hooks/useCRMLeads';
 import { LeadScore } from '@/hooks/useLeadScoring';
-import { ClientHistory } from '@/hooks/useClientHistory';
 import { isLeadOverdue, getLeadOverdueDays } from './CRMAlerts';
 import { format, parseISO, isToday, isTomorrow, isPast } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 interface CRMKanbanCardProps {
-  lead: CRMLead & { score?: LeadScore; clientHistory?: ClientHistory };
+  lead: CRMLead & { score?: LeadScore };
   onEdit: (lead: CRMLead) => void;
   onDelete: (id: string) => void;
   hideDelete?: boolean;
@@ -155,25 +154,6 @@ export function CRMKanbanCard({ lead, onEdit, onDelete, hideDelete = false }: CR
               </Tooltip>
             )}
 
-            {/* Returning Client Badge */}
-            {lead.clientHistory?.hasHistory && (
-              <Tooltip>
-                <TooltipTrigger>
-                  <div className="p-1 rounded-full bg-green-500/20 text-green-500">
-                    <History className="h-3 w-3" />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <div className="space-y-1">
-                    <div className="font-medium">🔄 Cliente recorrente!</div>
-                    <div className="text-xs">
-                      {lead.clientHistory.totalPurchases} compra(s) anterior(es)<br/>
-                      Total: R$ {lead.clientHistory.totalSpent.toLocaleString('pt-BR')}
-                    </div>
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            )}
           </div>
           
           <DropdownMenu>
