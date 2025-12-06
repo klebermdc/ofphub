@@ -231,6 +231,54 @@ export type Database = {
           },
         ]
       }
+      crm_leads: {
+        Row: {
+          created_at: string
+          email: string | null
+          estimated_value: number | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          position: number
+          product: string | null
+          salesperson_name: string | null
+          stage: Database["public"]["Enums"]["crm_stage"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          estimated_value?: number | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          position?: number
+          product?: string | null
+          salesperson_name?: string | null
+          stage?: Database["public"]["Enums"]["crm_stage"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          estimated_value?: number | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          position?: number
+          product?: string | null
+          salesperson_name?: string | null
+          stage?: Database["public"]["Enums"]["crm_stage"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       marketing_costs: {
         Row: {
           created_at: string
@@ -512,6 +560,12 @@ export type Database = {
     }
     Enums: {
       app_role: "manager" | "salesperson" | "marketing"
+      crm_stage:
+        | "novo_lead"
+        | "coletando_informacao"
+        | "proposta_enviada"
+        | "venda_concluida"
+        | "venda_perdida"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -640,6 +694,13 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["manager", "salesperson", "marketing"],
+      crm_stage: [
+        "novo_lead",
+        "coletando_informacao",
+        "proposta_enviada",
+        "venda_concluida",
+        "venda_perdida",
+      ],
     },
   },
 } as const
