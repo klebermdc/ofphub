@@ -5,3 +5,6 @@ verify_jwt = true
 
 [functions.parse-leads-sheet]
 verify_jwt = true
+
+[functions.notion-crm-sync]
+verify_jwt = true
