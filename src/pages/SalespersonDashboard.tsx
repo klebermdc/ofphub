@@ -14,6 +14,7 @@ import { SalespersonGoalKPI } from "@/components/SalespersonGoalKPI";
 import { SalespersonVelocityKPI } from "@/components/SalespersonVelocityKPI";
 import { SalespersonConversionKPI } from "@/components/SalespersonConversionKPI";
 import { SalespersonFollowUpAlerts } from "@/components/SalespersonFollowUpAlerts";
+import { SalespersonTopItems } from "@/components/SalespersonTopItems";
 import { CRMTab } from "@/components/crm/CRMTab";
 import { ProposalTab } from "@/components/proposals/ProposalTab";
 const SalespersonDashboard = () => {
@@ -268,6 +269,9 @@ const SalespersonDashboard = () => {
                 variant="default"
               />
             </div>
+
+            {/* Top Products and Suppliers */}
+            <SalespersonTopItems orders={filteredOrders} />
 
             {/* Orders Table */}
             <div className="glass rounded-xl p-6">
