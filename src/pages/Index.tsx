@@ -395,6 +395,9 @@ const Index = () => {
   const totalSalaries = dashboardFilteredSalesReps.reduce((sum, rep) => sum + getSalary(rep.name), 0);
   const marketingCost = getTotalForMonth(currentGoalMonth, currentGoalYear);
   const operationalCost = getOperationalCostsForMonth(currentGoalMonth, currentGoalYear);
+  
+  // Calculate Custo Equipe Comercial (Comissão Vendedores + Salários)
+  const custoEquipeComercial = (dashboardTotals?.totalComissao || 0) + totalSalaries;
 
   // Calculate leads and conversion rate
   const totalLeads = getLeadsForMonth(currentGoalMonth, currentGoalYear);
@@ -591,33 +594,44 @@ const Index = () => {
                 </div>
 
                 {/* KPIs Secundários - Custos e Resultado */}
-                <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <MetricCard
+                    title="Custo Equipe Comercial"
+                    value={formatCurrency(custoEquipeComercial)}
+                    icon={Users}
+                    delay={75}
+                    variant="warning"
+                  />
                   <MetricCard
                     title="Marketing"
                     value={formatCurrency(marketingCost)}
                     icon={Megaphone}
-                    delay={75}
+                    delay={85}
                     variant="warning"
                   />
                   <MetricCard
                     title="Custos Operacionais"
                     value={formatCurrency(operationalCost)}
                     icon={Briefcase}
-                    delay={85}
+                    delay={95}
                     variant="warning"
                   />
                   <MetricCard
                     title="Imposto Estimado (12%)"
                     value={formatCurrency(impostoEstimado)}
                     icon={Receipt}
-                    delay={90}
+                    delay={105}
                     variant="warning"
                   />
+                </div>
+
+                {/* KPIs - Custo Total e Resultado */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <MetricCard
                     title="Custo Total"
                     value={formatCurrency(totalCost)}
                     icon={Wallet}
-                    delay={100}
+                    delay={115}
                     variant="danger"
                   />
                   <MetricCard
@@ -631,7 +645,7 @@ const Index = () => {
                     title="Ticket Médio"
                     value={formatCurrency(ticketMedio)}
                     icon={Target}
-                    delay={150}
+                    delay={135}
                     variant="info"
                   />
                 </div>
