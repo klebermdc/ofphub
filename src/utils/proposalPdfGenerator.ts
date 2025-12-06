@@ -22,10 +22,9 @@ const LOCAL_IMAGES = {
   logo: '/images/logo-branco.png',
 };
 
-// Get random Disney image for variety
-function getRandomDisneyImage(): string {
-  const index = Math.floor(Math.random() * LOCAL_IMAGES.disney.length);
-  return LOCAL_IMAGES.disney[index];
+// Get Disney image by index (for variety across items)
+function getDisneyImage(index: number): string {
+  return LOCAL_IMAGES.disney[index % LOCAL_IMAGES.disney.length];
 }
 
 // Colors
@@ -60,13 +59,13 @@ async function loadLocalImage(path: string): Promise<string | null> {
   }
 }
 
-// Get image for item type
-function getImagePathForItem(name: string, type: 'ticket' | 'hotel' | 'car' | 'insurance'): string {
+// Get image for item type - uses index for deterministic selection
+function getImagePathForItem(name: string, type: 'ticket' | 'hotel' | 'car' | 'insurance', itemIndex: number = 0): string {
   const lowerName = name.toLowerCase();
   
   if (type === 'ticket') {
     if (lowerName.includes('disney') || lowerName.includes('magic kingdom') || lowerName.includes('epcot') || lowerName.includes('hollywood')) {
-      return getRandomDisneyImage();
+      return getDisneyImage(itemIndex);
     }
     if (lowerName.includes('universal') || lowerName.includes('islands') || lowerName.includes('epic')) {
       return LOCAL_IMAGES.universal;
@@ -75,9 +74,9 @@ function getImagePathForItem(name: string, type: 'ticket' | 'hotel' | 'car' | 'i
       return LOCAL_IMAGES.seaworld;
     }
     if (lowerName.includes('animal')) {
-      return getRandomDisneyImage(); // Use Disney images for Animal Kingdom too
+      return getDisneyImage(itemIndex); // Use Disney images for Animal Kingdom too
     }
-    return getRandomDisneyImage();
+    return getDisneyImage(itemIndex);
   }
   
   if (type === 'hotel') {
@@ -90,7 +89,7 @@ function getImagePathForItem(name: string, type: 'ticket' | 'hotel' | 'car' | 'i
   if (type === 'car') return LOCAL_IMAGES.car;
   if (type === 'insurance') return LOCAL_IMAGES.insurance;
   
-  return getRandomDisneyImage();
+  return getDisneyImage(itemIndex);
 }
 
 export async function generateProposalPDF(cart: ParsedCart): Promise<void> {
@@ -381,8 +380,8 @@ export async function generateProposalPDF(cart: ParsedCart): Promise<void> {
   if (cart.tickets && cart.tickets.length > 0) {
     addSection('INGRESSOS PARA PARQUES', C.primary);
     
-    cart.tickets.forEach((ticket: TicketItem) => {
-      const imgPath = getImagePathForItem(ticket.name, 'ticket');
+    cart.tickets.forEach((ticket: TicketItem, index: number) => {
+      const imgPath = getImagePathForItem(ticket.name, 'ticket', index);
       const details: { label: string; value: string }[] = [];
       
       if (ticket.date) details.push({ label: 'Data', value: ticket.date });
