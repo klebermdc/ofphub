@@ -2,13 +2,18 @@ import jsPDF from 'jspdf';
 import { ParsedCart } from '@/components/proposals/ProposalTab';
 
 const COLORS = {
-  primary: [255, 107, 0] as [number, number, number], // Orange
-  secondary: [30, 30, 35] as [number, number, number],
-  accent: [255, 140, 50] as [number, number, number],
-  text: [50, 50, 50] as [number, number, number],
-  lightText: [120, 120, 120] as [number, number, number],
+  primary: [255, 107, 0] as [number, number, number],
+  primaryDark: [220, 80, 0] as [number, number, number],
+  secondary: [25, 25, 30] as [number, number, number],
+  accent: [255, 200, 100] as [number, number, number],
+  gold: [255, 215, 0] as [number, number, number],
+  magicBlue: [30, 60, 120] as [number, number, number],
+  magicPurple: [75, 0, 130] as [number, number, number],
+  text: [40, 40, 45] as [number, number, number],
+  lightText: [100, 100, 110] as [number, number, number],
   white: [255, 255, 255] as [number, number, number],
-  lightBg: [248, 248, 250] as [number, number, number],
+  cream: [255, 250, 245] as [number, number, number],
+  lightGray: [245, 245, 248] as [number, number, number],
 };
 
 async function loadImage(url: string): Promise<string | null> {
@@ -42,278 +47,389 @@ export async function generateProposalPDF(cart: ParsedCart): Promise<void> {
     console.log('Could not load logo');
   }
 
-  // Helper function to add new page
+  // Helper function
   const addNewPageIfNeeded = (requiredSpace: number): boolean => {
-    if (yPosition + requiredSpace > pageHeight - 20) {
+    if (yPosition + requiredSpace > pageHeight - 25) {
       doc.addPage();
       yPosition = margin;
+      addPageDecoration();
       return true;
     }
     return false;
   };
 
-  // ===== COVER PAGE =====
-  
-  // Orange header gradient
-  doc.setFillColor(...COLORS.primary);
-  doc.rect(0, 0, pageWidth, 100, 'F');
-  
-  // Accent line
-  doc.setFillColor(...COLORS.accent);
-  doc.rect(0, 100, pageWidth, 3, 'F');
+  // Page decoration - subtle magical elements
+  const addPageDecoration = () => {
+    // Top accent line
+    doc.setFillColor(...COLORS.primary);
+    doc.rect(0, 0, pageWidth, 4, 'F');
+    
+    // Subtle corner decorations
+    doc.setDrawColor(...COLORS.primary);
+    doc.setLineWidth(0.3);
+    
+    // Top left corner
+    doc.line(margin - 5, margin + 10, margin - 5, margin - 5);
+    doc.line(margin - 5, margin - 5, margin + 10, margin - 5);
+    
+    // Top right corner
+    doc.line(pageWidth - margin + 5, margin + 10, pageWidth - margin + 5, margin - 5);
+    doc.line(pageWidth - margin + 5, margin - 5, pageWidth - margin - 10, margin - 5);
+  };
 
-  // Logo
+  // ==========================================
+  // ===== COVER PAGE - MAGICAL DESIGN =====
+  // ==========================================
+  
+  // Full page gradient background
+  doc.setFillColor(...COLORS.magicBlue);
+  doc.rect(0, 0, pageWidth, pageHeight, 'F');
+  
+  // Add overlay pattern effect - purple bottom
+  doc.setFillColor(75, 0, 130);
+  doc.rect(0, pageHeight * 0.65, pageWidth, pageHeight * 0.35, 'F');
+  
+  // Decorative stars/sparkles effect
+  doc.setFillColor(...COLORS.gold);
+  const stars = [
+    { x: 30, y: 40, size: 2 },
+    { x: 170, y: 35, size: 1.5 },
+    { x: 50, y: 80, size: 1 },
+    { x: 180, y: 90, size: 1.8 },
+    { x: 25, y: 150, size: 1.2 },
+    { x: 185, y: 160, size: 1 },
+    { x: 40, y: 200, size: 1.5 },
+    { x: 165, y: 220, size: 1.3 },
+    { x: 100, y: 250, size: 0.8 },
+    { x: 55, y: 260, size: 1.1 },
+  ];
+  
+  stars.forEach(star => {
+    doc.setFillColor(255, 215, 0);
+    doc.circle(star.x, star.y, star.size, 'F');
+  });
+
+  // Logo centered at top
   if (logoData) {
     try {
-      doc.addImage(logoData, 'PNG', margin, 15, 50, 20);
+      doc.addImage(logoData, 'PNG', pageWidth / 2 - 35, 25, 70, 28);
     } catch {
       doc.setTextColor(...COLORS.white);
-      doc.setFontSize(18);
+      doc.setFontSize(22);
       doc.setFont('helvetica', 'bold');
-      doc.text('ORLANDO FAST PASS', margin, 30);
+      doc.text('ORLANDO FAST PASS', pageWidth / 2, 45, { align: 'center' });
     }
   }
 
-  // Title
+  // Main title with sparkle effect
   doc.setTextColor(...COLORS.white);
-  doc.setFontSize(32);
-  doc.setFont('helvetica', 'bold');
-  doc.text('PROPOSTA DE VIAGEM', margin, 60);
-  
-  // Client name
-  doc.setFontSize(24);
+  doc.setFontSize(14);
   doc.setFont('helvetica', 'normal');
-  doc.text(cart.clientName || 'Cliente', margin, 75);
+  doc.text('Sua viagem dos sonhos comeca aqui', pageWidth / 2, 70, { align: 'center' });
 
-  // Trip period badge
+  // Big title
+  doc.setFontSize(42);
+  doc.setFont('helvetica', 'bold');
+  doc.text('PROPOSTA', pageWidth / 2, 100, { align: 'center' });
+  doc.text('EXCLUSIVA', pageWidth / 2, 115, { align: 'center' });
+
+  // Decorative line under title
+  doc.setDrawColor(...COLORS.gold);
+  doc.setLineWidth(1);
+  doc.line(pageWidth / 2 - 40, 122, pageWidth / 2 + 40, 122);
+  
+  // Golden accent line
+  doc.setFillColor(...COLORS.gold);
+  doc.rect(pageWidth / 2 - 30, 125, 60, 2, 'F');
+
+  // Client name box
+  doc.setFillColor(255, 255, 255);
+  doc.roundedRect(margin + 20, 145, contentWidth - 40, 35, 5, 5, 'F');
+  
+  doc.setTextColor(...COLORS.secondary);
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Preparada especialmente para', pageWidth / 2, 157, { align: 'center' });
+  
+  doc.setFontSize(24);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...COLORS.primary);
+  doc.text((cart.clientName || 'Cliente').toUpperCase(), pageWidth / 2, 172, { align: 'center' });
+
+  // Trip summary box
   if (cart.summary) {
-    doc.setFontSize(12);
-    doc.text(`${cart.summary.tripStart} a ${cart.summary.tripEnd}`, margin, 90);
-  }
-
-  yPosition = 120;
-
-  // Summary box
-  if (cart.summary) {
-    doc.setFillColor(...COLORS.lightBg);
-    doc.roundedRect(margin, yPosition, contentWidth, 35, 3, 3, 'F');
+    doc.setFillColor(...COLORS.gold);
+    doc.roundedRect(margin + 30, 195, contentWidth - 60, 40, 5, 5, 'F');
     
     doc.setTextColor(...COLORS.secondary);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('PERIODO DA VIAGEM', pageWidth / 2, 208, { align: 'center' });
+    
+    doc.setFontSize(16);
+    doc.text(`${cart.summary.tripStart} a ${cart.summary.tripEnd}`, pageWidth / 2, 220, { align: 'center' });
+    
+    if (cart.summary.totalDays) {
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`${cart.summary.totalDays} dias de magia`, pageWidth / 2, 230, { align: 'center' });
+    }
+  }
+
+  // What's included summary
+  const summaryY = 255;
+  doc.setFillColor(255, 255, 255);
+  doc.roundedRect(margin, summaryY, contentWidth, 30, 3, 3, 'F');
+  
+  doc.setTextColor(...COLORS.secondary);
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text('SUA PROPOSTA INCLUI:', pageWidth / 2, summaryY + 12, { align: 'center' });
+  
+  const items = [];
+  if (cart.tickets?.length) items.push(`${cart.tickets.length} Ingresso(s)`);
+  if (cart.hotels?.length) items.push(`${cart.hotels.length} Hospedagem`);
+  if (cart.cars?.length) items.push(`${cart.cars.length} Carro`);
+  if (cart.insurance?.length) items.push(`${cart.insurance.length} Seguro`);
+  
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...COLORS.text);
+  doc.text(items.join('   |   '), pageWidth / 2, summaryY + 23, { align: 'center' });
+
+  // ==========================================
+  // ===== PAGE 2+ - CONTENT PAGES =====
+  // ==========================================
+  
+  doc.addPage();
+  addPageDecoration();
+  yPosition = 20;
+
+  // Section header helper
+  const addSectionHeader = (title: string, emoji: string, color: [number, number, number]) => {
+    addNewPageIfNeeded(25);
+    
+    // Background bar
+    doc.setFillColor(...color);
+    doc.roundedRect(margin, yPosition, contentWidth, 16, 3, 3, 'F');
+    
+    // Title
+    doc.setTextColor(...COLORS.white);
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('✨ Sua viagem dos sonhos inclui:', margin + 5, yPosition + 12);
+    doc.text(`${emoji}  ${title}`, margin + 8, yPosition + 11);
     
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'normal');
+    // Decorative element
+    doc.setFillColor(...COLORS.gold);
+    doc.rect(pageWidth - margin - 50, yPosition + 6, 40, 4, 'F');
+    
+    yPosition += 22;
+  };
+
+  // Item card helper
+  const addItemCard = (
+    title: string,
+    details: string[],
+    accentColor: [number, number, number]
+  ) => {
+    addNewPageIfNeeded(50);
+    
+    // Card background
+    doc.setFillColor(...COLORS.lightGray);
+    doc.roundedRect(margin, yPosition, contentWidth, 42, 4, 4, 'F');
+    
+    // Left accent bar
+    doc.setFillColor(...accentColor);
+    doc.roundedRect(margin, yPosition, 5, 42, 2, 2, 'F');
+    
+    // Icon circle
+    doc.setFillColor(...accentColor);
+    doc.circle(margin + 22, yPosition + 21, 10, 'F');
+    
+    // Star icon in circle
+    doc.setTextColor(...COLORS.white);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('*', margin + 22, yPosition + 25, { align: 'center' });
+    
+    // Title
+    const textX = margin + 40;
+    doc.setTextColor(...COLORS.secondary);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    
+    // Truncate title if too long
+    const maxTitleWidth = contentWidth - 55;
+    let displayTitle = title;
+    while (doc.getTextWidth(displayTitle) > maxTitleWidth && displayTitle.length > 20) {
+      displayTitle = displayTitle.substring(0, displayTitle.length - 4) + '...';
+    }
+    doc.text(displayTitle, textX, yPosition + 14);
+    
+    // Details
     doc.setTextColor(...COLORS.text);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
     
-    const items = [];
-    if (cart.tickets?.length) items.push(`${cart.tickets.length} ingresso(s)`);
-    if (cart.hotels?.length) items.push(`${cart.hotels.length} hospedagem(s)`);
-    if (cart.cars?.length) items.push(`${cart.cars.length} carro(s)`);
-    if (cart.insurance?.length) items.push(`${cart.insurance.length} seguro(s)`);
+    details.forEach((detail, index) => {
+      if (index < 3) {
+        doc.text(detail, textX, yPosition + 23 + (index * 6));
+      }
+    });
     
-    doc.text(items.join(' • '), margin + 5, yPosition + 25);
-    
-    yPosition += 45;
-  }
+    yPosition += 47;
+  };
 
   // ===== TICKETS SECTION =====
   if (cart.tickets && cart.tickets.length > 0) {
-    addNewPageIfNeeded(60);
+    addSectionHeader('INGRESSOS E PARQUES', 'Parques', COLORS.primary);
     
-    // Section header
-    doc.setFillColor(...COLORS.primary);
-    doc.roundedRect(margin, yPosition, contentWidth, 12, 2, 2, 'F');
-    doc.setTextColor(...COLORS.white);
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text('🎢 INGRESSOS E PARQUES', margin + 5, yPosition + 8);
-    yPosition += 18;
-
     for (const ticket of cart.tickets) {
-      addNewPageIfNeeded(50);
-      
-      // Ticket card
-      doc.setFillColor(...COLORS.lightBg);
-      doc.roundedRect(margin, yPosition, contentWidth, 40, 3, 3, 'F');
-      
-      // Orange accent bar
-      doc.setFillColor(...COLORS.primary);
-      doc.rect(margin, yPosition, 4, 40, 'F');
-      
-      // Ticket info
-      doc.setTextColor(...COLORS.secondary);
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.text(ticket.name.substring(0, 60), margin + 10, yPosition + 12);
-      
-      doc.setTextColor(...COLORS.text);
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`📅 ${ticket.date}`, margin + 10, yPosition + 22);
-      doc.text(`⏱️ ${ticket.duration}`, margin + 60, yPosition + 22);
-      doc.text(`👥 ${ticket.guests}`, margin + 10, yPosition + 32);
-      
-      yPosition += 45;
+      addItemCard(
+        ticket.name,
+        [
+          `Data: ${ticket.date}`,
+          `Duracao: ${ticket.duration}`,
+          `Visitantes: ${ticket.guests}`
+        ],
+        COLORS.primary
+      );
     }
+    
+    yPosition += 5;
   }
 
   // ===== HOTELS SECTION =====
   if (cart.hotels && cart.hotels.length > 0) {
-    addNewPageIfNeeded(60);
+    addSectionHeader('HOSPEDAGEM', 'Hotel', [59, 130, 246]);
     
-    // Section header
-    doc.setFillColor(...COLORS.primary);
-    doc.roundedRect(margin, yPosition, contentWidth, 12, 2, 2, 'F');
-    doc.setTextColor(...COLORS.white);
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text('🏨 HOSPEDAGEM', margin + 5, yPosition + 8);
-    yPosition += 18;
-
     for (const hotel of cart.hotels) {
-      addNewPageIfNeeded(55);
-      
-      // Hotel card
-      doc.setFillColor(...COLORS.lightBg);
-      doc.roundedRect(margin, yPosition, contentWidth, 45, 3, 3, 'F');
-      
-      // Blue accent bar for hotels
-      doc.setFillColor(59, 130, 246);
-      doc.rect(margin, yPosition, 4, 45, 'F');
-      
-      // Hotel info
-      doc.setTextColor(...COLORS.secondary);
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.text(hotel.name.substring(0, 50), margin + 10, yPosition + 12);
-      
+      const details = [
+        `Check-in: ${hotel.checkIn} | Check-out: ${hotel.checkOut}`,
+        `${hotel.nights} noites  |  ${hotel.rooms} quarto(s)  |  ${hotel.guests}`,
+      ];
       if (hotel.roomType) {
-        doc.setTextColor(...COLORS.lightText);
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'italic');
-        doc.text(hotel.roomType.substring(0, 60), margin + 10, yPosition + 20);
+        details.unshift(`Tipo: ${hotel.roomType.substring(0, 50)}`);
       }
       
-      doc.setTextColor(...COLORS.text);
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`📅 Check-in: ${hotel.checkIn}`, margin + 10, yPosition + 30);
-      doc.text(`📅 Check-out: ${hotel.checkOut}`, margin + 80, yPosition + 30);
-      doc.text(`🌙 ${hotel.nights} noites • 🚪 ${hotel.rooms} quarto(s) • 👥 ${hotel.guests}`, margin + 10, yPosition + 40);
-      
-      yPosition += 50;
+      addItemCard(hotel.name, details, [59, 130, 246]);
     }
+    
+    yPosition += 5;
   }
 
   // ===== CARS SECTION =====
   if (cart.cars && cart.cars.length > 0) {
-    addNewPageIfNeeded(50);
+    addSectionHeader('ALUGUEL DE CARRO', 'Carro', [34, 197, 94]);
     
-    // Section header
-    doc.setFillColor(...COLORS.primary);
-    doc.roundedRect(margin, yPosition, contentWidth, 12, 2, 2, 'F');
-    doc.setTextColor(...COLORS.white);
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text('🚗 ALUGUEL DE CARRO', margin + 5, yPosition + 8);
-    yPosition += 18;
-
     for (const car of cart.cars) {
-      addNewPageIfNeeded(45);
-      
-      // Car card
-      doc.setFillColor(...COLORS.lightBg);
-      doc.roundedRect(margin, yPosition, contentWidth, 35, 3, 3, 'F');
-      
-      // Green accent bar
-      doc.setFillColor(34, 197, 94);
-      doc.rect(margin, yPosition, 4, 35, 'F');
-      
-      doc.setTextColor(...COLORS.secondary);
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.text(car.name, margin + 10, yPosition + 12);
-      
-      doc.setTextColor(...COLORS.text);
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`📍 Retirada: ${car.pickupLocation} - ${car.pickupDate}`, margin + 10, yPosition + 22);
-      doc.text(`📍 Devolução: ${car.returnLocation || car.pickupLocation} - ${car.returnDate}`, margin + 10, yPosition + 30);
-      
-      yPosition += 40;
+      addItemCard(
+        car.name,
+        [
+          `Retirada: ${car.pickupLocation}`,
+          `Data: ${car.pickupDate}`,
+          `Devolucao: ${car.returnDate}`
+        ],
+        [34, 197, 94]
+      );
     }
+    
+    yPosition += 5;
   }
 
   // ===== INSURANCE SECTION =====
   if (cart.insurance && cart.insurance.length > 0) {
-    addNewPageIfNeeded(50);
+    addSectionHeader('SEGURO VIAGEM', 'Seguro', [147, 51, 234]);
     
-    // Section header
-    doc.setFillColor(...COLORS.primary);
-    doc.roundedRect(margin, yPosition, contentWidth, 12, 2, 2, 'F');
-    doc.setTextColor(...COLORS.white);
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text('🛡️ SEGURO VIAGEM', margin + 5, yPosition + 8);
-    yPosition += 18;
-
     for (const ins of cart.insurance) {
-      addNewPageIfNeeded(40);
-      
-      // Insurance card
-      doc.setFillColor(...COLORS.lightBg);
-      doc.roundedRect(margin, yPosition, contentWidth, 35, 3, 3, 'F');
-      
-      // Purple accent bar
-      doc.setFillColor(147, 51, 234);
-      doc.rect(margin, yPosition, 4, 35, 'F');
-      
-      doc.setTextColor(...COLORS.secondary);
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.text(ins.name.substring(0, 50), margin + 10, yPosition + 12);
-      
-      doc.setTextColor(...COLORS.text);
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`💰 Cobertura: ${ins.coverage}`, margin + 10, yPosition + 22);
-      doc.text(`📅 ${ins.dates} • 👥 ${ins.travelers} segurado(s)`, margin + 10, yPosition + 30);
-      
-      yPosition += 40;
+      addItemCard(
+        ins.name,
+        [
+          `Cobertura: ${ins.coverage}`,
+          `Periodo: ${ins.dates}`,
+          `${ins.travelers} segurado(s)`
+        ],
+        [147, 51, 234]
+      );
     }
+    
+    yPosition += 5;
   }
 
-  // ===== FOOTER =====
-  addNewPageIfNeeded(40);
+  // ===== FOOTER / CTA PAGE =====
+  addNewPageIfNeeded(85);
   
-  // Footer box
-  doc.setFillColor(...COLORS.secondary);
-  doc.roundedRect(margin, yPosition, contentWidth, 35, 3, 3, 'F');
+  // Magical footer box
+  doc.setFillColor(...COLORS.magicBlue);
+  doc.roundedRect(margin, yPosition, contentWidth, 75, 5, 5, 'F');
   
+  // Gold accent at top
+  doc.setFillColor(...COLORS.gold);
+  doc.rect(margin + 20, yPosition, contentWidth - 40, 4, 'F');
+  
+  // Magic stars
+  doc.setFillColor(...COLORS.gold);
+  doc.circle(margin + 15, yPosition + 25, 2, 'F');
+  doc.circle(pageWidth - margin - 15, yPosition + 30, 1.5, 'F');
+  doc.circle(margin + 25, yPosition + 60, 1, 'F');
+  doc.circle(pageWidth - margin - 25, yPosition + 55, 1.3, 'F');
+  
+  // Title
   doc.setTextColor(...COLORS.white);
-  doc.setFontSize(12);
+  doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
-  doc.text('✨ Pronto para realizar o sonho?', margin + 5, yPosition + 12);
+  doc.text('Pronto para realizar seu sonho?', pageWidth / 2, yPosition + 25, { align: 'center' });
   
-  doc.setFontSize(10);
+  // Subtitle
+  doc.setFontSize(12);
   doc.setFont('helvetica', 'normal');
-  doc.text('Entre em contato conosco para fechar sua viagem!', margin + 5, yPosition + 22);
-  doc.text('📱 WhatsApp: (11) 99999-9999 | 📧 contato@orlandofastpass.com.br', margin + 5, yPosition + 30);
+  doc.text('Entre em contato conosco e feche sua viagem magica!', pageWidth / 2, yPosition + 38, { align: 'center' });
+  
+  // Contact info box
+  doc.setFillColor(255, 255, 255);
+  doc.roundedRect(margin + 15, yPosition + 48, contentWidth - 30, 20, 3, 3, 'F');
+  
+  doc.setTextColor(...COLORS.secondary);
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.text('WhatsApp: (11) 99999-9999', pageWidth / 2 - 40, yPosition + 60);
+  doc.text('contato@orlandofastpass.com.br', pageWidth / 2 + 35, yPosition + 60);
 
-  // Add page numbers
+  // Add page numbers with elegant styling
   const totalPages = doc.internal.pages.length - 1;
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
+    
+    // Skip page number on cover
+    if (i === 1) continue;
+    
+    // Footer line
+    doc.setDrawColor(...COLORS.lightText);
+    doc.setLineWidth(0.2);
+    doc.line(margin, pageHeight - 15, pageWidth - margin, pageHeight - 15);
+    
+    // Page number
     doc.setFontSize(8);
     doc.setTextColor(...COLORS.lightText);
+    doc.setFont('helvetica', 'normal');
     doc.text(
-      `Proposta gerada em ${new Date().toLocaleDateString('pt-BR')} • Página ${i} de ${totalPages}`,
+      `Pagina ${i - 1} de ${totalPages - 1}`,
       pageWidth / 2,
       pageHeight - 10,
       { align: 'center' }
     );
+    
+    // Generated date
+    doc.text(
+      `Proposta gerada em ${new Date().toLocaleDateString('pt-BR')}`,
+      pageWidth - margin,
+      pageHeight - 10,
+      { align: 'right' }
+    );
+    
+    // Company name
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...COLORS.primary);
+    doc.text('Orlando Fast Pass', margin, pageHeight - 10);
   }
 
   // Save
