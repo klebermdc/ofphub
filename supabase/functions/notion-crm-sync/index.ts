@@ -128,12 +128,13 @@ serve(async (req) => {
 
     console.log(`Starting Notion sync for user ${user_id}`);
 
-    // Fetch ALL pages from Notion database with pagination
+    // Fetch pages from Notion database with pagination (limit to avoid timeout)
+    const MAX_PAGES = 1000; // Limit to prevent timeout
     let allPages: NotionPage[] = [];
     let hasMore = true;
     let startCursor: string | undefined = undefined;
 
-    while (hasMore) {
+    while (hasMore && allPages.length < MAX_PAGES) {
       const requestBody: any = {
         page_size: 100,
         sorts: [
@@ -171,10 +172,10 @@ serve(async (req) => {
       const pages: NotionPage[] = notionData.results;
       
       allPages = allPages.concat(pages);
-      hasMore = notionData.has_more;
+      hasMore = notionData.has_more && allPages.length < MAX_PAGES;
       startCursor = notionData.next_cursor;
 
-      console.log(`Fetched ${pages.length} pages (total: ${allPages.length}), has_more: ${hasMore}`);
+      console.log(`Fetched ${pages.length} pages (total: ${allPages.length})`);
     }
 
     console.log(`Total pages fetched from Notion: ${allPages.length}`);
