@@ -286,14 +286,19 @@ export async function generateProposalPDF(cart: ParsedCart): Promise<void> {
     let textWidth = contentWidth - 18;
     
     // Image
-    if (hasImage) {
+    if (hasImage && imgData) {
       try {
-        doc.addImage(imgData!, 'JPEG', margin + 6, y + 4, 42, 42);
+        // Detect format from base64 header
+        const format = imgData.includes('image/png') ? 'PNG' : 'JPEG';
+        doc.addImage(imgData, format, margin + 6, y + 4, 42, 42);
         textX = margin + 54;
         textWidth = contentWidth - 62;
+        console.log('Added image to PDF:', imagePath);
       } catch (e) {
-        console.log('Image load failed');
+        console.error('Image add failed:', imagePath, e);
       }
+    } else {
+      console.warn('No image data for:', imagePath);
     }
     
     let cardY = y + 8;
