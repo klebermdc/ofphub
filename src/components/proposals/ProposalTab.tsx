@@ -9,48 +9,106 @@ import { supabase } from "@/integrations/supabase/client";
 import { ProposalPreview } from "./ProposalPreview";
 import { generateProposalPDF } from "@/utils/proposalPdfGenerator";
 
+// Enhanced types for detailed cart data
+export interface TicketItem {
+  name: string;
+  fullDescription?: string;
+  parks?: string[];
+  mainAttractions?: string[];
+  benefits?: string[];
+  validityDays?: string;
+  entryType?: string;
+  date: string;
+  time?: string;
+  guests: string;
+  specialNotes?: string;
+  images?: string[];
+  mainImage?: string;
+  // Legacy compatibility
+  description?: string;
+  duration?: string;
+  park?: string;
+  image?: string;
+}
+
+export interface HotelItem {
+  name: string;
+  category?: string;
+  fullDescription?: string;
+  roomType?: string;
+  roomDescription?: string;
+  amenities?: string[];
+  checkIn: string;
+  checkOut: string;
+  checkInTime?: string;
+  checkOutTime?: string;
+  nights: string;
+  rooms: string;
+  guests: string;
+  mealPlan?: string;
+  specialRequests?: string;
+  images?: string[];
+  mainImage?: string;
+  image?: string;
+}
+
+export interface CarItem {
+  name: string;
+  category?: string;
+  fullDescription?: string;
+  features?: string[];
+  capacity?: string;
+  pickupLocation: string;
+  pickupDate: string;
+  pickupTime?: string;
+  returnLocation?: string;
+  returnDate: string;
+  returnTime?: string;
+  rentalCompany?: string;
+  extras?: string[];
+  images?: string[];
+  mainImage?: string;
+  image?: string;
+}
+
+export interface InsuranceItem {
+  name: string;
+  fullDescription?: string;
+  coverageAmount?: string;
+  coverageDetails?: string[];
+  destination?: string;
+  startDate?: string;
+  endDate?: string;
+  travelers: string;
+  travelerDetails?: string;
+  emergencyContact?: string;
+  images?: string[];
+  mainImage?: string;
+  // Legacy
+  coverage?: string;
+  dates?: string;
+  image?: string;
+}
+
+export interface CartSummary {
+  tripTitle?: string;
+  tripDescription?: string;
+  tripStart: string;
+  tripEnd: string;
+  totalDays: string;
+  totalNights?: string;
+  totalParks?: string;
+  totalExperiences?: string;
+  highlights?: string[];
+  travelGroup?: string;
+}
+
 export interface ParsedCart {
-  tickets?: Array<{
-    name: string;
-    description?: string;
-    date: string;
-    duration: string;
-    guests: string;
-    park?: string;
-    image?: string;
-  }>;
-  hotels?: Array<{
-    name: string;
-    roomType?: string;
-    checkIn: string;
-    checkOut: string;
-    nights: string;
-    rooms: string;
-    guests: string;
-    image?: string;
-  }>;
-  cars?: Array<{
-    name: string;
-    pickupLocation: string;
-    pickupDate: string;
-    returnLocation?: string;
-    returnDate: string;
-    image?: string;
-  }>;
-  insurance?: Array<{
-    name: string;
-    coverage: string;
-    destination?: string;
-    dates: string;
-    travelers: string;
-    image?: string;
-  }>;
-  summary?: {
-    tripStart: string;
-    tripEnd: string;
-    totalDays: string;
-    highlights: string[];
-  };
+  tickets?: TicketItem[];
+  hotels?: HotelItem[];
+  cars?: CarItem[];
+  insurance?: InsuranceItem[];
+  summary?: CartSummary;
   clientName?: string;
   generatedAt?: string;
 }
@@ -158,24 +216,12 @@ export const ProposalTab = () => {
                 Texto do Carrinho
               </label>
               <Textarea
-                placeholder={`Cole aqui o texto do carrinho de compras...
+                placeholder={`Cole aqui o texto COMPLETO do carrinho de compras...
 
-Exemplo:
-Ingressos:
-UNIVERSAL ORLANDO RESORT - UNIVERSAL ORLANDO INGRESSO EPIC UNIVERSE 1 DIA
-03/01/2026
-4 Adultos
+A IA irá extrair TODAS as informações detalhadas: parques, atrações, 
+tipos de quarto, comodidades, características do carro, coberturas do seguro, etc.
 
-Hotéis:
-Disney's Animal Kingdom Lodge
-Check-in 05/01/2026
-Check-out 10/01/2026
-5 Noites
-
-Carro:
-CHEVROLET MALIBU OU SIMILAR
-Retirada - Orlando 24/12/2025 04:00
-Devolução - Orlando 31/12/2025 04:30`}
+Quanto mais detalhes no texto, mais rica será a proposta!`}
                 value={cartText}
                 onChange={(e) => setCartText(e.target.value)}
                 className="min-h-[300px] font-mono text-sm"
