@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { DollarSign, TrendingUp, Users, Target, Package, Building2, FileSpreadsheet, Calendar, Wallet, CircleDollarSign, FileText, Megaphone, UserPlus, Percent, Receipt, ClipboardList, Settings2, Briefcase, Kanban } from "lucide-react";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { SheetInput } from "@/components/SheetInput";
@@ -43,6 +43,8 @@ import { Button } from "@/components/ui/button";
 const Index = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab') || 'dashboard';
   
   const [isLoading, setIsLoading] = useState(false);
   const [hasData, setHasData] = useState(false);
@@ -483,7 +485,7 @@ const Index = () => {
       <DashboardHeader availableSalespeople={salesReps.map(r => r.name)} />
       
       <main className="container mx-auto px-6 py-6 relative">
-        <Tabs defaultValue="dashboard" className="space-y-6">
+        <Tabs defaultValue={initialTab} className="space-y-6">
           <TabsList className="grid w-full max-w-2xl grid-cols-5">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="crm" className="gap-1">
