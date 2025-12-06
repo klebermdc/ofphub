@@ -54,6 +54,7 @@ export function CRMKanbanCard({ lead, onEdit, onDelete, hideDelete = false }: CR
 
   const leadDate = lead.notion_created_at || lead.created_at;
   const formattedDate = formatLeadDate(leadDate);
+  const formattedUpdatedDate = formatLeadDate(lead.updated_at);
 
   // Urgency styling based on days overdue
   const getOverdueStyle = () => {
@@ -129,22 +130,36 @@ export function CRMKanbanCard({ lead, onEdit, onDelete, hideDelete = false }: CR
           </DropdownMenu>
         </div>
 
-        {(lead.estimated_value > 0 || formattedDate) && (
-          <div className="flex items-center gap-2 flex-wrap">
-            {formattedDate && (
-              <Badge variant="outline" className="text-xs">
-                <Calendar className="h-3 w-3 mr-1" />
-                {formattedDate}
-              </Badge>
-            )}
-            {lead.estimated_value > 0 && (
-              <Badge variant="secondary" className="text-xs">
-                <DollarSign className="h-3 w-3 mr-1" />
-                {formatCurrency(lead.estimated_value)}
-              </Badge>
-            )}
-          </div>
-        )}
+        <div className="flex items-center gap-2 flex-wrap">
+          {formattedDate && (
+            <Tooltip>
+              <TooltipTrigger>
+                <Badge variant="outline" className="text-xs">
+                  <Calendar className="h-3 w-3 mr-1" />
+                  {formattedDate}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>Data de entrada</TooltipContent>
+            </Tooltip>
+          )}
+          {formattedUpdatedDate && formattedUpdatedDate !== formattedDate && (
+            <Tooltip>
+              <TooltipTrigger>
+                <Badge variant="outline" className="text-xs bg-muted">
+                  <Clock className="h-3 w-3 mr-1" />
+                  {formattedUpdatedDate}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>Última movimentação</TooltipContent>
+            </Tooltip>
+          )}
+          {lead.estimated_value > 0 && (
+            <Badge variant="secondary" className="text-xs">
+              <DollarSign className="h-3 w-3 mr-1" />
+              {formatCurrency(lead.estimated_value)}
+            </Badge>
+          )}
+        </div>
 
         <div className="space-y-1 text-xs text-muted-foreground">
           {lead.phone && (
