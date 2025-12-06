@@ -13,6 +13,7 @@ import { getMonthName } from "@/hooks/useCommissionHistory";
 import { SalespersonGoalKPI } from "@/components/SalespersonGoalKPI";
 import { SalespersonVelocityKPI } from "@/components/SalespersonVelocityKPI";
 import { SalespersonConversionKPI } from "@/components/SalespersonConversionKPI";
+import { SalespersonFollowUpAlerts } from "@/components/SalespersonFollowUpAlerts";
 import { CRMTab } from "@/components/crm/CRMTab";
 import { ProposalTab } from "@/components/proposals/ProposalTab";
 const SalespersonDashboard = () => {
@@ -211,6 +212,11 @@ const SalespersonDashboard = () => {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Follow-up Alerts - sempre visível */}
+            {salespersonName && (
+              <SalespersonFollowUpAlerts salespersonName={salespersonName} />
+            )}
 
             {/* Goal KPI */}
             {selectedMonth !== 'all' && salespersonName && (
