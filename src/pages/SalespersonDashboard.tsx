@@ -46,13 +46,23 @@ const SalespersonDashboard = () => {
 
   // Get orders for this salesperson from salesReps
   const salespersonOrders = useMemo(() => {
-    if (!salespersonName || !salesReps.length) return [];
+    if (!salespersonName || !salesReps.length) {
+      console.log('No salesperson name or no salesReps:', { salespersonName, salesRepsLength: salesReps.length });
+      return [];
+    }
     
     // Find the salesperson in salesReps
     const salesRep = salesReps.find(rep => 
       rep.name.toLowerCase().includes(salespersonName.toLowerCase()) ||
       salespersonName.toLowerCase().includes(rep.name.toLowerCase())
     );
+    
+    console.log('Matching salesperson:', { 
+      salespersonName, 
+      foundRep: salesRep?.name, 
+      ordersCount: salesRep?.orders?.length,
+      allReps: salesReps.map(r => r.name)
+    });
     
     return salesRep?.orders || [];
   }, [salesReps, salespersonName]);
