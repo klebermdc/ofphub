@@ -231,7 +231,8 @@ const AllOrders = () => {
               <img 
                 src="/images/logo-branco.png" 
                 alt="Orlando Fast Pass" 
-                className="h-10 w-auto"
+                className="h-10 w-auto cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => navigate("/")}
               />
               <div>
                 <h1 className="text-xl font-bold">Todos os Pedidos</h1>

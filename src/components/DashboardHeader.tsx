@@ -33,7 +33,8 @@ export function DashboardHeader({ availableSalespeople = [] }: DashboardHeaderPr
           <img 
             src="/images/logo-branco.png" 
             alt="Orlando Fast Pass" 
-            className="h-10 w-auto"
+            className="h-10 w-auto cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => navigate("/")}
           />
           <div className="hidden md:block">
             <h1 className="font-semibold text-lg">Hub de Gestão</h1>
