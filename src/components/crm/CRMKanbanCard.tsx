@@ -1,5 +1,5 @@
 import { useDraggable } from '@dnd-kit/core';
-import { Phone, Mail, DollarSign, Package, User, GripVertical, MoreHorizontal, Pencil, Trash2, AlertTriangle, Clock, Calendar } from 'lucide-react';
+import { Phone, Mail, DollarSign, Package, User, GripVertical, MoreHorizontal, Pencil, Trash2, AlertTriangle, Clock, Calendar, Flame, Thermometer, Snowflake, History, CalendarClock } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,12 +11,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { CRMLead } from '@/hooks/useCRMLeads';
+import { LeadScore } from '@/hooks/useLeadScoring';
+import { ClientHistory } from '@/hooks/useClientHistory';
 import { isLeadOverdue, getLeadOverdueDays } from './CRMAlerts';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, isToday, isTomorrow, isPast } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 interface CRMKanbanCardProps {
-  lead: CRMLead;
+  lead: CRMLead & { score?: LeadScore; clientHistory?: ClientHistory };
   onEdit: (lead: CRMLead) => void;
   onDelete: (id: string) => void;
   hideDelete?: boolean;
@@ -55,6 +57,33 @@ export function CRMKanbanCard({ lead, onEdit, onDelete, hideDelete = false }: CR
   const leadDate = lead.notion_created_at || lead.created_at;
   const formattedDate = formatLeadDate(leadDate);
   const formattedUpdatedDate = formatLeadDate(lead.updated_at);
+
+  // Lead score display
+  const getScoreIcon = () => {
+    if (!lead.score) return null;
+    switch (lead.score.label) {
+      case 'hot': return <Flame className="h-3 w-3" />;
+      case 'warm': return <Thermometer className="h-3 w-3" />;
+      case 'cold': return <Snowflake className="h-3 w-3" />;
+    }
+  };
+
+  // Follow-up date formatting
+  const formatFollowUpDate = () => {
+    const followUp = (lead as any).follow_up_date;
+    if (!followUp) return null;
+    try {
+      const date = parseISO(followUp);
+      if (isToday(date)) return { text: 'Hoje', urgent: true };
+      if (isTomorrow(date)) return { text: 'Amanhã', urgent: false };
+      if (isPast(date)) return { text: format(date, 'dd/MM', { locale: ptBR }), overdue: true };
+      return { text: format(date, 'dd/MM', { locale: ptBR }), urgent: false };
+    } catch {
+      return null;
+    }
+  };
+
+  const followUpInfo = formatFollowUpDate();
 
   // Urgency styling based on days overdue
   const getOverdueStyle = () => {
@@ -100,6 +129,47 @@ export function CRMKanbanCard({ lead, onEdit, onDelete, hideDelete = false }: CR
                   <div className="flex items-center gap-1.5">
                     <Clock className="h-3 w-3" />
                     <span>{overdueDays} dias sem atualização</span>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            )}
+            
+            {/* Lead Score Badge */}
+            {lead.score && (
+              <Tooltip>
+                <TooltipTrigger>
+                  <div className={`p-1 rounded-full ${lead.score.color}`}>
+                    {getScoreIcon()}
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <div className="space-y-1">
+                    <div className="font-medium">Score: {lead.score.total}/100</div>
+                    <div className="text-xs opacity-80">
+                      {lead.score.label === 'hot' && '🔥 Lead quente - Alta prioridade'}
+                      {lead.score.label === 'warm' && '🌡️ Lead morno - Médio potencial'}
+                      {lead.score.label === 'cold' && '❄️ Lead frio - Baixo potencial'}
+                    </div>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            )}
+
+            {/* Returning Client Badge */}
+            {lead.clientHistory?.hasHistory && (
+              <Tooltip>
+                <TooltipTrigger>
+                  <div className="p-1 rounded-full bg-green-500/20 text-green-500">
+                    <History className="h-3 w-3" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <div className="space-y-1">
+                    <div className="font-medium">🔄 Cliente recorrente!</div>
+                    <div className="text-xs">
+                      {lead.clientHistory.totalPurchases} compra(s) anterior(es)<br/>
+                      Total: R$ {lead.clientHistory.totalSpent.toLocaleString('pt-BR')}
+                    </div>
                   </div>
                 </TooltipContent>
               </Tooltip>
@@ -158,6 +228,26 @@ export function CRMKanbanCard({ lead, onEdit, onDelete, hideDelete = false }: CR
               <DollarSign className="h-3 w-3 mr-1" />
               {formatCurrency(lead.estimated_value)}
             </Badge>
+          )}
+          {followUpInfo && (
+            <Tooltip>
+              <TooltipTrigger>
+                <Badge 
+                  variant="outline" 
+                  className={`text-xs ${
+                    followUpInfo.overdue ? 'bg-red-500/20 text-red-500 border-red-500' :
+                    followUpInfo.urgent ? 'bg-yellow-500/20 text-yellow-500 border-yellow-500' :
+                    'bg-blue-500/20 text-blue-500 border-blue-500'
+                  }`}
+                >
+                  <CalendarClock className="h-3 w-3 mr-1" />
+                  {followUpInfo.text}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>
+                {followUpInfo.overdue ? 'Follow-up atrasado!' : 'Próximo follow-up'}
+              </TooltipContent>
+            </Tooltip>
           )}
         </div>
 

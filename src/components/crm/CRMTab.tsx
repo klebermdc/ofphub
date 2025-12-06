@@ -9,7 +9,7 @@ import {
   useSensors,
   closestCenter,
 } from '@dnd-kit/core';
-import { Plus, RefreshCw, CloudDownload } from 'lucide-react';
+import { Plus, RefreshCw, CloudDownload, Flame, Thermometer, Snowflake } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -19,6 +19,9 @@ import { CRMLeadDialog } from './CRMLeadDialog';
 import { CRMFilters } from './CRMFilters';
 import { CRMAlerts } from './CRMAlerts';
 import { useCRMLeads, CRMLead, CRMStage, CreateLeadData } from '@/hooks/useCRMLeads';
+import { useLeadScoring, calculateLeadScore } from '@/hooks/useLeadScoring';
+import { useClientHistory, findClientHistory } from '@/hooks/useClientHistory';
+import { useSheetData } from '@/contexts/SheetDataContext';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
@@ -43,6 +46,7 @@ interface CRMTabProps {
 
 export function CRMTab({ salespeople = [], salespersonFilter, isReadOnly = false }: CRMTabProps) {
   const { toast } = useToast();
+  const { salesReps } = useSheetData();
   const {
     leads,
     isLoading,
@@ -53,6 +57,18 @@ export function CRMTab({ salespeople = [], salespersonFilter, isReadOnly = false
     getLeadsByStage,
     refetch,
   } = useCRMLeads();
+
+  // Lead scoring and client history
+  const { scoredLeads, hotLeads, warmLeads, coldLeads } = useLeadScoring(leads);
+  
+  // Enrich leads with score and client history
+  const enrichedLeads = useMemo(() => {
+    return leads.map(lead => ({
+      ...lead,
+      score: calculateLeadScore(lead),
+      clientHistory: findClientHistory(lead, salesReps),
+    }));
+  }, [leads, salesReps]);
 
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -101,9 +117,9 @@ export function CRMTab({ salespeople = [], salespersonFilter, isReadOnly = false
     };
   }, [leads, salespeople]);
 
-  // Apply filters to leads
+  // Apply filters to enriched leads
   const filteredLeads = useMemo(() => {
-    return leads.filter((lead) => {
+    return enrichedLeads.filter((lead) => {
       // Salesperson filter (for salesperson view)
       if (salespersonFilter && lead.salesperson_name !== salespersonFilter) {
         return false;
@@ -147,16 +163,22 @@ export function CRMTab({ salespeople = [], salespersonFilter, isReadOnly = false
 
       return true;
     });
-  }, [leads, searchTerm, selectedStage, selectedSalesperson, selectedProduct, selectedMonth, salespersonFilter]);
+  }, [enrichedLeads, searchTerm, selectedStage, selectedSalesperson, selectedProduct, selectedMonth, salespersonFilter]);
 
-  // Get filtered leads by stage - sorted by date (most recent first)
+  // Get filtered leads by stage - sorted by score (hot first) then by date
   const getFilteredLeadsByStage = (stage: CRMStage) => {
     return filteredLeads
       .filter((lead) => lead.stage === stage)
       .sort((a, b) => {
+        // First sort by score (higher score first)
+        const scoreA = a.score?.total || 0;
+        const scoreB = b.score?.total || 0;
+        if (scoreB !== scoreA) return scoreB - scoreA;
+        
+        // Then by date (most recent first)
         const dateA = new Date(a.notion_created_at || a.created_at).getTime();
         const dateB = new Date(b.notion_created_at || b.created_at).getTime();
-        return dateB - dateA; // Most recent first
+        return dateB - dateA;
       });
   };
 
@@ -214,6 +236,12 @@ export function CRMTab({ salespeople = [], salespersonFilter, isReadOnly = false
   const totalValue = filteredLeads.reduce((sum, lead) => sum + (lead.estimated_value || 0), 0);
   const vendasConcluidas = filteredLeads.filter((l) => l.stage === 'venda_concluida').length;
   const taxaConversao = totalLeads > 0 ? (vendasConcluidas / totalLeads) * 100 : 0;
+  
+  // Lead scoring summary
+  const hotCount = filteredLeads.filter(l => l.score?.label === 'hot').length;
+  const warmCount = filteredLeads.filter(l => l.score?.label === 'warm').length;
+  const coldCount = filteredLeads.filter(l => l.score?.label === 'cold').length;
+  const returningCount = filteredLeads.filter(l => l.clientHistory?.hasHistory).length;
 
   // Sync from Notion
   const handleNotionSync = async () => {
@@ -324,7 +352,7 @@ export function CRMTab({ salespeople = [], salespersonFilter, isReadOnly = false
       />
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -338,19 +366,59 @@ export function CRMTab({ salespeople = [], salespersonFilter, isReadOnly = false
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Valor Total Estimado
+              Valor Estimado
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              R$ {totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}
+              R$ {(totalValue / 1000).toFixed(0)}k
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+              <Flame className="h-3 w-3 text-red-500" /> Quentes
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-500">{hotCount}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+              <Thermometer className="h-3 w-3 text-orange-500" /> Mornos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-500">{warmCount}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+              <Snowflake className="h-3 w-3 text-blue-500" /> Frios
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-500">{coldCount}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Vendas Concluídas
+              Recorrentes
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-500">{returningCount}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Vendas
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -360,7 +428,7 @@ export function CRMTab({ salespeople = [], salespersonFilter, isReadOnly = false
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Taxa de Conversão
+              Conversão
             </CardTitle>
           </CardHeader>
           <CardContent>
