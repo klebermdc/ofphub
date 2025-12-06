@@ -41,6 +41,8 @@ const vendedorMapping: Record<string, string> = {
 
 interface NotionPage {
   id: string;
+  created_time: string;
+  last_edited_time: string;
   properties: {
     Nome?: { title: Array<{ plain_text: string }> };
     Telefone?: { phone_number: string };
@@ -84,8 +86,13 @@ function parseNotionPage(page: NotionPage) {
   // Extract first product
   const product = props.Produtos?.multi_select?.[0]?.name || null;
   
-  // Extract creation date
-  const createdAt = props['Data Geração Lead']?.date?.start || null;
+  // Use 'Data Geração Lead' if available, otherwise use Notion's created_time
+  const createdAt = props['Data Geração Lead']?.date?.start || page.created_time;
+  
+  // Use Notion's last_edited_time for tracking stage changes
+  const lastEditedAt = page.last_edited_time;
+
+  console.log(`Lead: ${name}, Created: ${createdAt}, Last Edited: ${lastEditedAt}`);
 
   return {
     notion_id: page.id,
@@ -98,6 +105,7 @@ function parseNotionPage(page: NotionPage) {
     notes,
     product,
     created_at: createdAt,
+    last_edited_at: lastEditedAt,
   };
 }
 
@@ -229,7 +237,7 @@ serve(async (req) => {
             notes: lead.notes,
             product: lead.product,
             notion_created_at: lead.created_at,
-            updated_at: new Date().toISOString(),
+            updated_at: lead.last_edited_at, // Use Notion's last edited time
           })
           .eq('id', existingId);
 
@@ -254,6 +262,7 @@ serve(async (req) => {
             notes: lead.notes,
             product: lead.product,
             notion_created_at: lead.created_at,
+            updated_at: lead.last_edited_at, // Use Notion's last edited time
             position: i,
           });
 
