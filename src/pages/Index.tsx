@@ -490,7 +490,10 @@ const Index = () => {
               <Kanban className="h-4 w-4" />
               CRM
             </TabsTrigger>
-            <TabsTrigger value="vendedores">Comercial</TabsTrigger>
+            <TabsTrigger value="vendedores" className="gap-1">
+              <Users className="h-4 w-4" />
+              Comercial
+            </TabsTrigger>
             <TabsTrigger value="marketing" className="gap-1">
               <Megaphone className="h-4 w-4" />
               Marketing
