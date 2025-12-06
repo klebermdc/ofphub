@@ -101,23 +101,41 @@ const SalespersonDashboard = () => {
     });
   }, [salespersonOrders]);
 
-  // Filter orders by month
+  // Filter orders by month and sort by date (most recent first)
   const filteredOrders = useMemo(() => {
-    if (selectedMonth === 'all') return salespersonOrders;
-    
-    return salespersonOrders.filter(order => {
-      const data = order.data || '';
-      if (!data) return false;
-      const parts = data.split('/');
-      if (parts.length >= 2) {
-        const month = parts[1].padStart(2, '0');
-        let year = parts[2] || new Date().getFullYear().toString();
-        if (year.length === 2) {
-          year = `20${year}`;
-        }
-        return `${month}/${year}` === selectedMonth;
+    const parseDate = (dateStr: string) => {
+      if (!dateStr) return new Date(0);
+      const parts = dateStr.split('/');
+      if (parts.length >= 3) {
+        let year = parts[2];
+        if (year.length === 2) year = `20${year}`;
+        return new Date(parseInt(year), parseInt(parts[1]) - 1, parseInt(parts[0]));
       }
-      return false;
+      return new Date(0);
+    };
+
+    let orders = salespersonOrders;
+    
+    if (selectedMonth !== 'all') {
+      orders = salespersonOrders.filter(order => {
+        const data = order.data || '';
+        if (!data) return false;
+        const parts = data.split('/');
+        if (parts.length >= 2) {
+          const month = parts[1].padStart(2, '0');
+          let year = parts[2] || new Date().getFullYear().toString();
+          if (year.length === 2) {
+            year = `20${year}`;
+          }
+          return `${month}/${year}` === selectedMonth;
+        }
+        return false;
+      });
+    }
+    
+    // Sort by date descending (most recent first)
+    return [...orders].sort((a, b) => {
+      return parseDate(b.data || '').getTime() - parseDate(a.data || '').getTime();
     });
   }, [salespersonOrders, selectedMonth]);
 
