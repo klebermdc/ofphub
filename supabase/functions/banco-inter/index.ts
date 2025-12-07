@@ -7,17 +7,51 @@ const corsHeaders = {
 
 const INTER_API_URL = 'https://cdpj.partners.bancointer.com.br';
 
+// Normalize PEM format - restore newlines that may have been lost
+function normalizePem(pem: string): string {
+  // If already has proper newlines, return as is
+  if (pem.includes('\n')) {
+    return pem;
+  }
+  
+  // Replace literal \n with actual newlines
+  let normalized = pem.replace(/\\n/g, '\n');
+  
+  // If still no newlines, try to format the PEM properly
+  if (!normalized.includes('\n')) {
+    // Match the header, content, and footer
+    const match = normalized.match(/(-----BEGIN [A-Z ]+-----)(.*)(-----END [A-Z ]+-----)/);
+    if (match) {
+      const header = match[1];
+      const content = match[2];
+      const footer = match[3];
+      
+      // Split content into 64-character lines
+      const lines = content.match(/.{1,64}/g) || [];
+      normalized = header + '\n' + lines.join('\n') + '\n' + footer + '\n';
+    }
+  }
+  
+  return normalized;
+}
+
 async function getAccessToken(): Promise<string> {
   const clientId = Deno.env.get('INTER_CLIENT_ID');
   const clientSecret = Deno.env.get('INTER_CLIENT_SECRET');
-  const certificate = Deno.env.get('INTER_CERTIFICATE');
-  const certificateKey = Deno.env.get('INTER_CERTIFICATE_KEY');
+  const rawCertificate = Deno.env.get('INTER_CERTIFICATE');
+  const rawCertificateKey = Deno.env.get('INTER_CERTIFICATE_KEY');
 
-  if (!clientId || !clientSecret || !certificate || !certificateKey) {
+  if (!clientId || !clientSecret || !rawCertificate || !rawCertificateKey) {
     throw new Error('Credenciais do Banco Inter não configuradas');
   }
 
+  // Normalize certificates to ensure proper PEM format
+  const certificate = normalizePem(rawCertificate);
+  const certificateKey = normalizePem(rawCertificateKey);
+
   console.log('Obtendo token de acesso do Banco Inter...');
+  console.log('Certificate starts with:', certificate.substring(0, 50));
+  console.log('Certificate has newlines:', certificate.includes('\n'));
 
   // Create HTTP client with mTLS
   const client = Deno.createHttpClient({
@@ -55,12 +89,15 @@ async function getAccessToken(): Promise<string> {
 }
 
 async function getSaldo(accessToken: string): Promise<unknown> {
-  const certificate = Deno.env.get('INTER_CERTIFICATE');
-  const certificateKey = Deno.env.get('INTER_CERTIFICATE_KEY');
+  const rawCertificate = Deno.env.get('INTER_CERTIFICATE');
+  const rawCertificateKey = Deno.env.get('INTER_CERTIFICATE_KEY');
+
+  const certificate = normalizePem(rawCertificate!);
+  const certificateKey = normalizePem(rawCertificateKey!);
 
   const client = Deno.createHttpClient({
-    cert: certificate!,
-    key: certificateKey!,
+    cert: certificate,
+    key: certificateKey,
   });
 
   const today = new Date().toISOString().split('T')[0];
@@ -89,12 +126,15 @@ async function getSaldo(accessToken: string): Promise<unknown> {
 }
 
 async function getExtrato(accessToken: string, dataInicio: string, dataFim: string): Promise<unknown> {
-  const certificate = Deno.env.get('INTER_CERTIFICATE');
-  const certificateKey = Deno.env.get('INTER_CERTIFICATE_KEY');
+  const rawCertificate = Deno.env.get('INTER_CERTIFICATE');
+  const rawCertificateKey = Deno.env.get('INTER_CERTIFICATE_KEY');
+
+  const certificate = normalizePem(rawCertificate!);
+  const certificateKey = normalizePem(rawCertificateKey!);
 
   const client = Deno.createHttpClient({
-    cert: certificate!,
-    key: certificateKey!,
+    cert: certificate,
+    key: certificateKey,
   });
 
   const url = `${INTER_API_URL}/banking/v2/extrato?dataInicio=${dataInicio}&dataFim=${dataFim}`;
