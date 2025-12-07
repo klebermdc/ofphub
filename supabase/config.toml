@@ -11,3 +11,6 @@ verify_jwt = true
 
 [functions.parse-proposal-cart]
 verify_jwt = true
+
+[functions.banco-inter]
+verify_jwt = true
