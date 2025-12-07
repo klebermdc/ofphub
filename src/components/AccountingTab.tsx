@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef } from "react";
 import { Plus, Trash2, Edit2, Save, X, Download, Upload, FileText, File } from "lucide-react";
+import { InterBankBalance } from "@/components/InterBankBalance";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -333,6 +334,9 @@ export function AccountingTab({ userId }: AccountingTabProps) {
 
   return (
     <div className="space-y-6">
+      {/* Banco Inter Balance */}
+      <InterBankBalance />
+
       {/* Filters and Actions */}
       <div className="glass rounded-lg p-4">
         <div className="flex flex-wrap items-center gap-4">
