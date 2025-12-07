@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Megaphone, DollarSign, TrendingUp, Calendar, LogOut, UserPlus, Target, User, Settings, Upload, FileText, Download, Trash2, File, Banknote, Percent, Users } from "lucide-react";
+import { Megaphone, DollarSign, TrendingUp, Calendar, LogOut, UserPlus, Target, User, Settings, Upload, FileText, Download, Trash2, File, Banknote, Percent, Users, RefreshCw } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,10 +8,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useMarketingCosts } from "@/hooks/useMarketingCosts";
 import { useMarketingFiles } from "@/hooks/useMarketingFiles";
-import { useLeadsData } from "@/hooks/useLeadsData";
+import { useCRMLeadsCount } from "@/hooks/useCRMLeadsCount";
 import { MarketingCostsDialog } from "@/components/MarketingCostsDialog";
-import { LeadsSheetDialog } from "@/components/LeadsSheetDialog";
-import { LeadsBySourceChart } from "@/components/LeadsBySourceChart";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -67,7 +65,7 @@ const MarketingDashboard = () => {
   const { salesReps, isLoading: sheetLoading } = useSheetData();
   const { costs, isLoading: costsLoading, saveCost, getCostForMonth } = useMarketingCosts(user?.id, true);
   const { files, isLoading: filesLoading, uploadFile, deleteFile, downloadFile } = useMarketingFiles(user?.id);
-  const { leadsData, isLoading: leadsLoading, sheetUrl: leadsSheetUrl, fetchLeadsData, clearUrl: clearLeadsUrl } = useLeadsData();
+  const { leadsData, isLoading: leadsLoading, fetchLeadsData, getLeadsCountForMonth } = useCRMLeadsCount();
   
   // Get current month in format MM/YYYY
   const getCurrentMonthKey = () => {
@@ -216,7 +214,7 @@ const MarketingDashboard = () => {
     }
   }, [salesReps, selectedYear, selectedMonth]);
 
-  // Chart data
+  // Chart data - using CRM leads
   const chartData = useMemo(() => {
     const yearCosts = costs.filter(cost => cost.period_year.toString() === selectedYear)
       .sort((a, b) => a.period_month - b.period_month);
@@ -235,34 +233,48 @@ const MarketingDashboard = () => {
         }).reduce((s, o) => s + o.venda, 0) || 0;
         return sum + sales;
       }, 0);
+
+      // Get leads from CRM for this month
+      const monthLeads = getLeadsCountForMonth(cost.period_month, cost.period_year);
       
       return {
         month: getMonthName(cost.period_month).substring(0, 3),
         fullMonth: getMonthName(cost.period_month),
         investment: total,
-        leads: cost.leads,
+        leads: monthLeads,
         google_ads: cost.google_ads,
         meta_ads: cost.meta_ads,
         other: cost.other_marketing,
-        cpl: cost.leads > 0 ? total / cost.leads : 0,
+        cpl: monthLeads > 0 ? total / monthLeads : 0,
         revenue: monthRevenue,
       };
     });
-  }, [costs, salesReps, selectedYear]);
+  }, [costs, salesReps, selectedYear, getLeadsCountForMonth]);
 
-  // Calculate totals
+  // Calculate totals - using CRM leads from Notion
   const totals = useMemo(() => {
     const totalGoogleAds = filteredCosts.reduce((sum, c) => sum + c.google_ads, 0);
     const totalMetaAds = filteredCosts.reduce((sum, c) => sum + c.meta_ads, 0);
     const totalOther = filteredCosts.reduce((sum, c) => sum + c.other_marketing, 0);
-    const totalLeads = filteredCosts.reduce((sum, c) => sum + c.leads, 0);
     const totalInvestment = totalGoogleAds + totalMetaAds + totalOther;
+    
+    // Get leads from CRM (Notion) for selected period
+    let totalLeads = 0;
+    if (selectedMonth === 'all') {
+      totalLeads = leadsData?.monthBreakdown
+        .filter(m => m.year === parseInt(selectedYear))
+        .reduce((sum, m) => sum + m.total, 0) || 0;
+    } else {
+      const [month] = selectedMonth.split('/');
+      totalLeads = getLeadsCountForMonth(parseInt(month), parseInt(selectedYear));
+    }
+    
     const costPerLead = totalLeads > 0 ? totalInvestment / totalLeads : 0;
     const conversionRate = totalLeads > 0 ? (ordersCount / totalLeads) * 100 : 0;
     const roi = totalInvestment > 0 ? ((revenue - totalInvestment) / totalInvestment) * 100 : 0;
     
     return { totalGoogleAds, totalMetaAds, totalOther, totalLeads, totalInvestment, costPerLead, conversionRate, roi };
-  }, [filteredCosts, ordersCount, revenue]);
+  }, [filteredCosts, ordersCount, revenue, leadsData, selectedMonth, selectedYear, getLeadsCountForMonth]);
 
   const formatCurrency = (value: number) => {
     return `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -423,12 +435,16 @@ const MarketingDashboard = () => {
             </Select>
           </div>
           <div className="flex gap-2">
-            <LeadsSheetDialog
-              onConnect={fetchLeadsData}
-              currentUrl={leadsSheetUrl}
-              onDisconnect={clearLeadsUrl}
-              isLoading={leadsLoading}
-            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fetchLeadsData()}
+              disabled={leadsLoading}
+              className="gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${leadsLoading ? 'animate-spin' : ''}`} />
+              Sync Notion
+            </Button>
             <MarketingCostsDialog 
               onSave={saveCost}
               getCostForMonth={getCostForMonth}
@@ -623,65 +639,33 @@ const MarketingDashboard = () => {
           </div>
         </div>
 
-        {/* Leads by Source Section */}
-        {leadsData && leadsData.sourceBreakdown.length > 0 && (
+        {/* Leads by Salesperson Section */}
+        {leadsData && leadsData.totals.total > 0 && (
           <>
             <div className="flex items-center gap-2 mt-6">
               <Users className="h-5 w-5 text-info" />
-              <h2 className="text-xl font-semibold">Leads por Canal</h2>
-              <span className="text-sm text-muted-foreground">({leadsData.totals.total} total)</span>
+              <h2 className="text-xl font-semibold">Leads por Vendedor</h2>
+              <span className="text-sm text-muted-foreground">({leadsData.totals.total} total do Notion)</span>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Pie Chart */}
-              <div className="glass rounded-xl p-6">
-                <h3 className="text-lg font-semibold mb-4">Distribuição por Fonte</h3>
-                <LeadsBySourceChart data={leadsData.sourceBreakdown} />
-              </div>
-
-              {/* Leads Breakdown Cards */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="glass rounded-xl p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-3 h-3 rounded-full" style={{ background: "hsl(217, 91%, 60%)" }}></div>
-                    <span className="text-sm font-medium">Google Ads</span>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {Object.entries(leadsData.totals.bySalesperson)
+                .sort(([, a], [, b]) => b - a)
+                .map(([salesperson, count], index) => (
+                  <div key={salesperson} className="glass rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div 
+                        className="w-3 h-3 rounded-full" 
+                        style={{ background: `hsl(${(index * 60) % 360}, 70%, 50%)` }}
+                      />
+                      <span className="text-sm font-medium truncate">{salesperson}</span>
+                    </div>
+                    <p className="text-2xl font-bold">{count}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {leadsData.totals.total > 0 ? ((count / leadsData.totals.total) * 100).toFixed(1) : 0}% dos leads
+                    </p>
                   </div>
-                  <p className="text-2xl font-bold">{leadsData.totals.googleAds}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {leadsData.totals.total > 0 ? ((leadsData.totals.googleAds / leadsData.totals.total) * 100).toFixed(1) : 0}% dos leads
-                  </p>
-                </div>
-                <div className="glass rounded-xl p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-3 h-3 rounded-full" style={{ background: "hsl(270, 70%, 60%)" }}></div>
-                    <span className="text-sm font-medium">Meta Ads</span>
-                  </div>
-                  <p className="text-2xl font-bold">{leadsData.totals.metaAds}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {leadsData.totals.total > 0 ? ((leadsData.totals.metaAds / leadsData.totals.total) * 100).toFixed(1) : 0}% dos leads
-                  </p>
-                </div>
-                <div className="glass rounded-xl p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-3 h-3 rounded-full" style={{ background: "hsl(142, 71%, 45%)" }}></div>
-                    <span className="text-sm font-medium">Orgânico</span>
-                  </div>
-                  <p className="text-2xl font-bold">{leadsData.totals.organic}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {leadsData.totals.total > 0 ? ((leadsData.totals.organic / leadsData.totals.total) * 100).toFixed(1) : 0}% dos leads
-                  </p>
-                </div>
-                <div className="glass rounded-xl p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-3 h-3 rounded-full" style={{ background: "hsl(45, 93%, 47%)" }}></div>
-                    <span className="text-sm font-medium">Direto</span>
-                  </div>
-                  <p className="text-2xl font-bold">{leadsData.totals.direct}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {leadsData.totals.total > 0 ? ((leadsData.totals.direct / leadsData.totals.total) * 100).toFixed(1) : 0}% dos leads
-                  </p>
-                </div>
-              </div>
+                ))}
             </div>
           </>
         )}
