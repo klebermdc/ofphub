@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { DollarSign, TrendingUp, Users, Target, Package, Building2, FileSpreadsheet, Calendar, Wallet, CircleDollarSign, FileText, Megaphone, UserPlus, Percent, Receipt, ClipboardList, Settings2, Briefcase, Kanban } from "lucide-react";
+import { DollarSign, TrendingUp, Users, Target, Package, Building2, FileSpreadsheet, Calendar, Wallet, CircleDollarSign, FileText, Megaphone, UserPlus, Percent, Receipt, ClipboardList, Settings2, Briefcase, Kanban, FileCheck } from "lucide-react";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { SheetInput } from "@/components/SheetInput";
 import { MetricCard } from "@/components/MetricCard";
@@ -35,6 +35,7 @@ import { OperationalCostsDialog } from "@/components/OperationalCostsDialog";
 import { AccountingTab } from "@/components/AccountingTab";
 import { MarketingTab } from "@/components/MarketingTab";
 import { CRMTab } from "@/components/crm/CRMTab";
+import { NFSeTab } from "@/components/nfse/NFSeTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -487,7 +488,7 @@ const Index = () => {
       
       <main className="container mx-auto px-6 py-6 relative">
         <Tabs defaultValue={initialTab} className="space-y-6">
-          <TabsList className="grid w-full max-w-xl grid-cols-4">
+          <TabsList className="grid w-full max-w-2xl grid-cols-5">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="vendedores" className="gap-1">
               <Users className="h-4 w-4" />
@@ -500,6 +501,10 @@ const Index = () => {
             <TabsTrigger value="contabilidade" className="gap-1">
               <Receipt className="h-4 w-4" />
               Contabilidade
+            </TabsTrigger>
+            <TabsTrigger value="nfse" className="gap-1">
+              <FileCheck className="h-4 w-4" />
+              NFS-e
             </TabsTrigger>
           </TabsList>
 
@@ -867,6 +872,10 @@ const Index = () => {
 
           <TabsContent value="contabilidade" className="space-y-6">
             <AccountingTab userId={user?.id} />
+          </TabsContent>
+
+          <TabsContent value="nfse" className="space-y-6">
+            <NFSeTab />
           </TabsContent>
 
         </Tabs>
