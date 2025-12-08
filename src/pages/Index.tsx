@@ -734,9 +734,9 @@ const Index = () => {
                   <SupplierChart salesReps={dashboardFilteredSalesReps} />
                 </div>
 
-                {/* Projeção */}
+                {/* Tendência do Mês */}
                 <div className="grid grid-cols-1 gap-6">
-                  <RevenueForecastChart salesReps={salesReps} availableMonths={availableMonths} monthlyGoal={monthlyGoal} />
+                  <RevenueForecastChart salesReps={salesReps} currentMonth={selectedMonth} monthlyGoal={monthlyGoal} />
                 </div>
 
                 {/* Metas */}

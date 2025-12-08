@@ -5,7 +5,7 @@ import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger }
 
 interface RevenueForecastChartProps {
   salesReps: SalesRep[];
-  availableMonths: string[];
+  currentMonth: string;
   monthlyGoal?: number;
 }
 
@@ -13,138 +13,104 @@ function formatCurrency(value: number): string {
   return `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 }
 
-function getMonthLabel(monthStr: string): string {
-  const [m, y] = monthStr.split('/');
-  const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-  return `${monthNames[parseInt(m) - 1]}/${y.slice(-2)}`;
+function getDaysInMonth(month: number, year: number): number {
+  return new Date(year, month, 0).getDate();
 }
 
-export function RevenueForecastChart({ salesReps, availableMonths, monthlyGoal = 0 }: RevenueForecastChartProps) {
-  // Get current month to exclude from regression (incomplete data)
+export function RevenueForecastChart({ salesReps, currentMonth, monthlyGoal = 0 }: RevenueForecastChartProps) {
+  const [m, y] = currentMonth.split('/').map(Number);
   const now = new Date();
-  const currentMonthStr = `${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
-
-  // Sort months chronologically
-  const sortedMonths = [...availableMonths].sort((a, b) => {
-    const [mA, yA] = a.split('/').map(Number);
-    const [mB, yB] = b.split('/').map(Number);
-    return yA - yB || mA - mB;
-  });
-
-  // Calculate revenue per month
-  const monthlyData = sortedMonths.map(month => {
-    let revenue = 0;
-    salesReps.forEach(rep => {
-      rep.orders?.forEach(order => {
-        if (!order.data) return;
-        const parts = order.data.split('/');
-        if (parts.length >= 2) {
-          const m = parts[1].padStart(2, '0');
-          let y = parts[2] || new Date().getFullYear().toString();
-          if (y.length === 2) y = `20${y}`;
-          if (`${m}/${y}` === month) {
-            revenue += order.venda;
-          }
+  const today = now.getMonth() + 1 === m && now.getFullYear() === y ? now.getDate() : getDaysInMonth(m, y);
+  const totalDays = getDaysInMonth(m, y);
+  
+  // Calculate daily sales for the current month
+  const dailySales: { [day: number]: number } = {};
+  
+  salesReps.forEach(rep => {
+    rep.orders?.forEach(order => {
+      if (!order.data) return;
+      const parts = order.data.split('/');
+      if (parts.length >= 3) {
+        const orderDay = parseInt(parts[0]);
+        const orderMonth = parseInt(parts[1]);
+        let orderYear = parseInt(parts[2]);
+        if (orderYear < 100) orderYear += 2000;
+        
+        if (orderMonth === m && orderYear === y) {
+          dailySales[orderDay] = (dailySales[orderDay] || 0) + order.venda;
         }
-      });
+      }
     });
-    return { month, label: getMonthLabel(month), revenue, isCurrentMonth: month === currentMonthStr };
   });
 
-  // Filter only completed months for regression calculation
-  const completedMonthsData = monthlyData.filter(d => !d.isCurrentMonth);
-  const n = completedMonthsData.length;
+  // Build cumulative data up to today
+  let cumulative = 0;
+  const chartData: { day: number; label: string; realizado: number; meta: number; projecao?: number }[] = [];
   
-  if (n < 2) {
-    return (
-      <div className="glass rounded-xl p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <TrendingUp className="h-5 w-5 text-primary" />
-          <h3 className="font-semibold">Projeção de Faturamento</h3>
-        </div>
-        <p className="text-muted-foreground text-sm">Dados insuficientes para projeção (mínimo 2 meses completos).</p>
-      </div>
-    );
-  }
-
-  // Calculate linear regression using only completed months
-  const xValues = completedMonthsData.map((_, i) => i);
-  const yValues = completedMonthsData.map(d => d.revenue);
-  const xMean = xValues.reduce((a, b) => a + b, 0) / n;
-  const yMean = yValues.reduce((a, b) => a + b, 0) / n;
-  
-  let numerator = 0;
-  let denominator = 0;
-  for (let i = 0; i < n; i++) {
-    numerator += (xValues[i] - xMean) * (yValues[i] - yMean);
-    denominator += (xValues[i] - xMean) ** 2;
-  }
-  
-  const slope = denominator !== 0 ? numerator / denominator : 0;
-  const intercept = yMean - slope * xMean;
-
-  // Build chart data with completed months first
-  const chartData = completedMonthsData.map((d, i) => ({
-    ...d,
-    trend: intercept + slope * i,
-    meta: monthlyGoal,
-    isForecast: false
-  }));
-
-  // Generate forecast for current month + next 3 months
-  const forecastMonths = 4;
-  const lastCompletedMonth = completedMonthsData[completedMonthsData.length - 1];
-  const [lastM, lastY] = lastCompletedMonth.month.split('/').map(Number);
-  
-  for (let i = 1; i <= forecastMonths; i++) {
-    let newMonth = lastM + i;
-    let newYear = lastY;
-    while (newMonth > 12) {
-      newMonth -= 12;
-      newYear += 1;
+  for (let day = 1; day <= totalDays; day++) {
+    if (day <= today) {
+      cumulative += dailySales[day] || 0;
+      chartData.push({
+        day,
+        label: `${day}`,
+        realizado: cumulative,
+        meta: (monthlyGoal / totalDays) * day,
+        projecao: undefined
+      });
+    } else {
+      chartData.push({
+        day,
+        label: `${day}`,
+        realizado: 0,
+        meta: (monthlyGoal / totalDays) * day,
+        projecao: undefined
+      });
     }
-    const monthStr = `${String(newMonth).padStart(2, '0')}/${newYear}`;
-    const forecastValue = intercept + slope * (n - 1 + i);
-    
-    const currentMonthData = monthlyData.find(d => d.month === monthStr && d.isCurrentMonth);
-    
-    chartData.push({
-      month: monthStr,
-      label: getMonthLabel(monthStr),
-      revenue: currentMonthData?.revenue || 0,
-      trend: Math.max(0, forecastValue),
-      meta: monthlyGoal,
-      isForecast: true,
-      isCurrentMonth: monthStr === currentMonthStr
-    });
   }
 
-  // Calculate projected growth based on completed months only
-  const lastRealRevenue = completedMonthsData[completedMonthsData.length - 1].revenue;
-  const projectedRevenue = chartData[chartData.length - 1].trend;
-  const projectedGrowth = lastRealRevenue > 0 ? ((projectedRevenue - lastRealRevenue) / lastRealRevenue) * 100 : 0;
+  // Calculate projection based on current pace
+  const dailyAverage = today > 0 ? cumulative / today : 0;
+  
+  // Add projection line from today to end of month
+  for (let i = 0; i < chartData.length; i++) {
+    const day = chartData[i].day;
+    if (day >= today) {
+      chartData[i].projecao = dailyAverage * day;
+    }
+  }
+  // Also set projection at today
+  if (today > 0 && today <= totalDays) {
+    const todayIndex = today - 1;
+    chartData[todayIndex].projecao = cumulative;
+  }
+
+  // Calculate projected end of month
+  const projectedTotal = dailyAverage * totalDays;
+  const projectedVsGoal = monthlyGoal > 0 ? ((projectedTotal - monthlyGoal) / monthlyGoal) * 100 : 0;
+
+  const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
   return (
     <div className="glass rounded-xl p-6 animate-slide-up">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <TrendingUp className="h-5 w-5 text-primary" />
-          <h3 className="font-semibold">Projeção de Faturamento</h3>
+          <h3 className="font-semibold">Tendência do Mês - {monthNames[m - 1]}</h3>
           <TooltipProvider>
             <UITooltip>
               <TooltipTrigger>
                 <Info className="h-4 w-4 text-muted-foreground" />
               </TooltipTrigger>
               <TooltipContent>
-                <p>Projeção baseada em regressão linear dos últimos {n} meses completos</p>
+                <p>Projeção baseada na média diária atual ({formatCurrency(dailyAverage)}/dia)</p>
               </TooltipContent>
             </UITooltip>
           </TooltipProvider>
         </div>
         <div className="text-right">
-          <p className="text-sm text-muted-foreground">Projeção 3 meses</p>
-          <p className={`text-lg font-bold ${projectedGrowth >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-            {projectedGrowth >= 0 ? '+' : ''}{projectedGrowth.toFixed(1)}%
+          <p className="text-sm text-muted-foreground">Projeção vs Meta</p>
+          <p className={`text-lg font-bold ${projectedVsGoal >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+            {projectedVsGoal >= 0 ? '+' : ''}{projectedVsGoal.toFixed(1)}%
           </p>
         </div>
       </div>
@@ -155,8 +121,9 @@ export function RevenueForecastChart({ salesReps, availableMonths, monthlyGoal =
             <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
             <XAxis 
               dataKey="label" 
-              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
               axisLine={{ stroke: 'hsl(var(--border))' }}
+              interval={4}
             />
             <YAxis 
               tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
@@ -171,27 +138,30 @@ export function RevenueForecastChart({ salesReps, availableMonths, monthlyGoal =
               }}
               formatter={(value: number, name: string) => [
                 formatCurrency(value),
-                name === 'revenue' ? 'Realizado' : name === 'trend' ? 'Projeção' : 'Meta'
+                name === 'realizado' ? 'Realizado' : name === 'projecao' ? 'Projeção' : 'Meta'
               ]}
+              labelFormatter={(label) => `Dia ${label}`}
             />
             {/* Linha Vermelha - Realizado */}
             <Line
               type="monotone"
-              dataKey="revenue"
+              dataKey="realizado"
               stroke="#ef4444"
               strokeWidth={2}
-              dot={{ fill: '#ef4444', r: 4 }}
-              name="revenue"
+              dot={false}
+              name="realizado"
+              connectNulls={false}
             />
             {/* Linha Verde - Projeção */}
             <Line
               type="monotone"
-              dataKey="trend"
+              dataKey="projecao"
               stroke="#22c55e"
               strokeWidth={2}
               strokeDasharray="5 5"
-              dot={{ fill: '#22c55e', r: 3 }}
-              name="trend"
+              dot={false}
+              name="projecao"
+              connectNulls
             />
             {/* Linha Amarela - Meta */}
             <Line
@@ -206,18 +176,23 @@ export function RevenueForecastChart({ salesReps, availableMonths, monthlyGoal =
         </ResponsiveContainer>
       </div>
 
-      <div className="flex items-center gap-6 mt-4 text-xs text-muted-foreground">
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-0.5 bg-red-500 rounded" />
-          <span>Realizado</span>
+      <div className="flex items-center justify-between mt-4">
+        <div className="flex items-center gap-6 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-0.5 bg-red-500 rounded" />
+            <span>Realizado</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-0.5 bg-emerald-500 rounded" style={{ background: 'repeating-linear-gradient(90deg, #22c55e, #22c55e 3px, transparent 3px, transparent 6px)' }} />
+            <span>Projeção</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-0.5 bg-yellow-500 rounded" />
+            <span>Meta</span>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-0.5 bg-emerald-500 rounded" style={{ background: 'repeating-linear-gradient(90deg, #22c55e, #22c55e 3px, transparent 3px, transparent 6px)' }} />
-          <span>Projeção</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-0.5 bg-yellow-500 rounded" />
-          <span>Meta</span>
+        <div className="text-xs text-muted-foreground">
+          Projeção: {formatCurrency(projectedTotal)} | Meta: {formatCurrency(monthlyGoal)}
         </div>
       </div>
     </div>
