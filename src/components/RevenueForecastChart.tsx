@@ -19,6 +19,10 @@ function getMonthLabel(monthStr: string): string {
 }
 
 export function RevenueForecastChart({ salesReps, availableMonths }: RevenueForecastChartProps) {
+  // Get current month to exclude from regression (incomplete data)
+  const now = new Date();
+  const currentMonthStr = `${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
+
   // Sort months chronologically
   const sortedMonths = [...availableMonths].sort((a, b) => {
     const [mA, yA] = a.split('/').map(Number);
@@ -43,11 +47,13 @@ export function RevenueForecastChart({ salesReps, availableMonths }: RevenueFore
         }
       });
     });
-    return { month, label: getMonthLabel(month), revenue };
+    return { month, label: getMonthLabel(month), revenue, isCurrentMonth: month === currentMonthStr };
   });
 
-  // Simple linear regression for forecast
-  const n = monthlyData.length;
+  // Filter only completed months for regression calculation
+  const completedMonthsData = monthlyData.filter(d => !d.isCurrentMonth);
+  const n = completedMonthsData.length;
+  
   if (n < 2) {
     return (
       <div className="glass rounded-xl p-6">
@@ -55,14 +61,14 @@ export function RevenueForecastChart({ salesReps, availableMonths }: RevenueFore
           <TrendingUp className="h-5 w-5 text-primary" />
           <h3 className="font-semibold">Projeção de Faturamento</h3>
         </div>
-        <p className="text-muted-foreground text-sm">Dados insuficientes para projeção (mínimo 2 meses).</p>
+        <p className="text-muted-foreground text-sm">Dados insuficientes para projeção (mínimo 2 meses completos).</p>
       </div>
     );
   }
 
-  // Calculate linear regression
-  const xValues = monthlyData.map((_, i) => i);
-  const yValues = monthlyData.map(d => d.revenue);
+  // Calculate linear regression using only completed months
+  const xValues = completedMonthsData.map((_, i) => i);
+  const yValues = completedMonthsData.map(d => d.revenue);
   const xMean = xValues.reduce((a, b) => a + b, 0) / n;
   const yMean = yValues.reduce((a, b) => a + b, 0) / n;
   
@@ -76,17 +82,18 @@ export function RevenueForecastChart({ salesReps, availableMonths }: RevenueFore
   const slope = denominator !== 0 ? numerator / denominator : 0;
   const intercept = yMean - slope * xMean;
 
-  // Generate forecast for next 3 months
-  const forecastMonths = 3;
-  const lastMonth = sortedMonths[sortedMonths.length - 1];
-  const [lastM, lastY] = lastMonth.split('/').map(Number);
-  
-  const chartData = [...monthlyData.map((d, i) => ({
+  // Build chart data with completed months first
+  const chartData = completedMonthsData.map((d, i) => ({
     ...d,
     trend: intercept + slope * i,
     isForecast: false
-  }))];
+  }));
 
+  // Generate forecast for current month + next 3 months
+  const forecastMonths = 4; // current + 3 future
+  const lastCompletedMonth = completedMonthsData[completedMonthsData.length - 1];
+  const [lastM, lastY] = lastCompletedMonth.month.split('/').map(Number);
+  
   for (let i = 1; i <= forecastMonths; i++) {
     let newMonth = lastM + i;
     let newYear = lastY;
@@ -96,17 +103,22 @@ export function RevenueForecastChart({ salesReps, availableMonths }: RevenueFore
     }
     const monthStr = `${String(newMonth).padStart(2, '0')}/${newYear}`;
     const forecastValue = intercept + slope * (n - 1 + i);
+    
+    // Check if this is the current month (show partial real data)
+    const currentMonthData = monthlyData.find(d => d.month === monthStr && d.isCurrentMonth);
+    
     chartData.push({
       month: monthStr,
       label: getMonthLabel(monthStr),
-      revenue: 0,
+      revenue: currentMonthData?.revenue || 0,
       trend: Math.max(0, forecastValue),
-      isForecast: true
+      isForecast: true,
+      isCurrentMonth: monthStr === currentMonthStr
     });
   }
 
-  // Calculate projected growth
-  const lastRealRevenue = monthlyData[monthlyData.length - 1].revenue;
+  // Calculate projected growth based on completed months only
+  const lastRealRevenue = completedMonthsData[completedMonthsData.length - 1].revenue;
   const projectedRevenue = chartData[chartData.length - 1].trend;
   const projectedGrowth = lastRealRevenue > 0 ? ((projectedRevenue - lastRealRevenue) / lastRealRevenue) * 100 : 0;
 
