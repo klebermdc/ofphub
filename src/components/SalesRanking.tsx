@@ -43,30 +43,30 @@ export function SalesRanking({ salesReps }: SalesRankingProps) {
   };
 
   return (
-    <div className="glass rounded-xl p-6 animate-slide-up">
-      <div className="flex items-center gap-2 mb-4">
-        <Trophy className="h-5 w-5 text-primary" />
-        <h3 className="text-lg font-semibold">Ranking de Vendedores</h3>
+    <div className="glass rounded-xl p-4 sm:p-6 animate-slide-up">
+      <div className="flex items-center gap-2 mb-3 sm:mb-4">
+        <Trophy className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+        <h3 className="text-base sm:text-lg font-semibold">Ranking de Vendedores</h3>
       </div>
 
-      <div className="space-y-2 max-h-[300px] overflow-y-auto">
+      <div className="space-y-2 max-h-[250px] sm:max-h-[300px] overflow-y-auto">
         {sortedReps.map((rep, index) => (
           <div
             key={rep.id}
-            className={`flex items-center gap-3 p-3 rounded-lg border ${getRankBg(index)} transition-all hover:scale-[1.01]`}
+            className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg border ${getRankBg(index)} transition-all hover:scale-[1.01]`}
           >
-            <div className="flex items-center justify-center w-8">
+            <div className="flex items-center justify-center w-6 sm:w-8">
               {getRankIcon(index)}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-medium truncate">{rep.name}</p>
-              <p className="text-xs text-muted-foreground">{rep.deals} negócios</p>
+              <p className="font-medium truncate text-sm sm:text-base">{rep.name}</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">{rep.deals} negócios</p>
             </div>
-            <div className="text-right mr-2">
-              <p className="font-mono font-semibold">
+            <div className="text-right mr-1 sm:mr-2">
+              <p className="font-mono font-semibold text-xs sm:text-base">
                 R$ {rep.sales.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
               </p>
-              <p className="text-xs text-success">
+              <p className="text-[10px] sm:text-xs text-success">
                 R$ {rep.commission.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
               </p>
             </div>
@@ -75,10 +75,10 @@ export function SalesRanking({ salesReps }: SalesRankingProps) {
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="h-8 w-8 shrink-0"
+                  className="h-7 w-7 sm:h-8 sm:w-8 shrink-0"
                   onClick={() => handleViewSalesperson(rep.name)}
                 >
-                  <Eye className="h-4 w-4" />
+                  <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Ver dashboard do vendedor</TooltipContent>

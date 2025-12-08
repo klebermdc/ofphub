@@ -222,33 +222,33 @@ const AllOrders = () => {
       
       {/* Header */}
       <header className="sticky top-0 z-50 glass border-b border-border/50">
-        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
-              <ArrowLeft className="h-5 w-5" />
+        <div className="container mx-auto px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="h-8 w-8 sm:h-10 sm:w-10">
+              <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <img 
                 src="/images/logo-branco.png" 
                 alt="Orlando Fast Pass" 
-                className="h-10 w-auto cursor-pointer hover:opacity-80 transition-opacity"
+                className="h-8 sm:h-10 w-auto cursor-pointer hover:opacity-80 transition-opacity hidden sm:block"
                 onClick={() => navigate("/")}
               />
               <div>
-                <h1 className="text-xl font-bold">Todos os Pedidos</h1>
-                <p className="text-sm text-muted-foreground">Dados da planilha em tempo real</p>
+                <h1 className="text-base sm:text-xl font-bold">Todos os Pedidos</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Dados da planilha em tempo real</p>
               </div>
             </div>
           </div>
         </div>
       </header>
       
-      <main className="container mx-auto px-6 py-6 relative space-y-6">
+      <main className="container mx-auto px-3 sm:px-6 py-4 sm:py-6 relative space-y-4 sm:space-y-6">
         {!hasData ? (
-          <div className="text-center py-16">
-            <Package className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-            <p className="text-lg text-muted-foreground">Nenhum dado carregado.</p>
-            <p className="text-sm text-muted-foreground mt-2">Carregue uma planilha no Dashboard primeiro.</p>
+          <div className="text-center py-12 sm:py-16">
+            <Package className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-3 sm:mb-4 text-muted-foreground opacity-50" />
+            <p className="text-base sm:text-lg text-muted-foreground">Nenhum dado carregado.</p>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-2">Carregue uma planilha no Dashboard primeiro.</p>
             <Button className="mt-4" onClick={() => navigate("/")}>
               Ir para Dashboard
             </Button>
@@ -256,10 +256,10 @@ const AllOrders = () => {
         ) : (
           <>
             {/* Filters */}
-            <div className="glass rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-4">
-                <Filter className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium">Filtros</span>
+            <div className="glass rounded-xl p-3 sm:p-4">
+              <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                <Filter className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
+                <span className="font-medium text-sm sm:text-base">Filtros</span>
                 {hasActiveFilters && (
                   <Button variant="ghost" size="sm" onClick={clearFilters} className="ml-auto text-xs">
                     Limpar filtros
@@ -267,15 +267,15 @@ const AllOrders = () => {
                 )}
               </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 {/* Month Filter */}
-                <div className="space-y-1.5">
-                  <label className="text-sm text-muted-foreground flex items-center gap-1.5">
-                    <Calendar className="h-3.5 w-3.5" />
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                    <Calendar className="h-3 w-3" />
                     Mês
                   </label>
                   <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-9 text-xs sm:text-sm">
                       <SelectValue placeholder="Todos os meses" />
                     </SelectTrigger>
                     <SelectContent>
@@ -293,17 +293,17 @@ const AllOrders = () => {
                 </div>
 
                 {/* Vendedor Filter */}
-                <div className="space-y-1.5">
-                  <label className="text-sm text-muted-foreground flex items-center gap-1.5">
-                    <Users className="h-3.5 w-3.5" />
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                    <Users className="h-3 w-3" />
                     Vendedor
                   </label>
                   <Select value={selectedVendedor} onValueChange={setSelectedVendedor}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Todos os vendedores" />
+                    <SelectTrigger className="h-9 text-xs sm:text-sm">
+                      <SelectValue placeholder="Todos" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Todos os vendedores</SelectItem>
+                      <SelectItem value="all">Todos</SelectItem>
                       {availableVendedores.map(vendedor => (
                         <SelectItem key={vendedor} value={vendedor}>
                           {vendedor}
@@ -314,17 +314,17 @@ const AllOrders = () => {
                 </div>
 
                 {/* Produto Filter */}
-                <div className="space-y-1.5">
-                  <label className="text-sm text-muted-foreground flex items-center gap-1.5">
-                    <ShoppingBag className="h-3.5 w-3.5" />
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                    <ShoppingBag className="h-3 w-3" />
                     Produto
                   </label>
                   <Select value={selectedProduto} onValueChange={setSelectedProduto}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Todos os produtos" />
+                    <SelectTrigger className="h-9 text-xs sm:text-sm">
+                      <SelectValue placeholder="Todos" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Todos os produtos</SelectItem>
+                      <SelectItem value="all">Todos</SelectItem>
                       {availableProdutos.map(produto => (
                         <SelectItem key={produto} value={produto}>
                           {produto}
@@ -335,17 +335,17 @@ const AllOrders = () => {
                 </div>
 
                 {/* Fornecedor Filter */}
-                <div className="space-y-1.5">
-                  <label className="text-sm text-muted-foreground flex items-center gap-1.5">
-                    <Building className="h-3.5 w-3.5" />
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                    <Building className="h-3 w-3" />
                     Fornecedor
                   </label>
                   <Select value={selectedFornecedor} onValueChange={setSelectedFornecedor}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Todos os fornecedores" />
+                    <SelectTrigger className="h-9 text-xs sm:text-sm">
+                      <SelectValue placeholder="Todos" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Todos os fornecedores</SelectItem>
+                      <SelectItem value="all">Todos</SelectItem>
                       {availableFornecedores.map(fornecedor => (
                         <SelectItem key={fornecedor} value={fornecedor}>
                           {fornecedor}
@@ -358,7 +358,7 @@ const AllOrders = () => {
             </div>
 
             {/* Metrics */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               <MetricCard
                 title="Total em Vendas"
                 value={formatCurrency(totals.totalVendas)}
@@ -386,53 +386,55 @@ const AllOrders = () => {
             </div>
 
             {/* Orders Table */}
-            <div className="glass rounded-xl p-6">
-              <h3 className="text-lg font-semibold mb-4">
+            <div className="glass rounded-xl p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
                 Detalhamento de Pedidos
-                <span className="text-sm font-normal text-muted-foreground ml-2">
+                <span className="text-xs sm:text-sm font-normal text-muted-foreground ml-2">
                   ({filteredOrders.length} {filteredOrders.length === 1 ? 'pedido' : 'pedidos'})
                 </span>
               </h3>
               
               {filteredOrders.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Nenhum pedido encontrado com os filtros selecionados.</p>
+                <div className="text-center py-6 sm:py-8 text-muted-foreground">
+                  <Package className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 opacity-50" />
+                  <p className="text-sm sm:text-base">Nenhum pedido encontrado com os filtros selecionados.</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Data</TableHead>
-                        <TableHead>Pedido</TableHead>
-                        <TableHead>Vendedor</TableHead>
-                        <TableHead>Cliente</TableHead>
-                        <TableHead>Produto</TableHead>
-                        <TableHead>Fornecedor</TableHead>
-                        <TableHead className="text-right">Venda</TableHead>
-                        <TableHead className="text-right">Comissão</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredOrders.map((order, index) => (
-                        <TableRow key={`${order.pedido}-${index}`}>
-                          <TableCell>{order.data || '-'}</TableCell>
-                          <TableCell>{order.pedido || '-'}</TableCell>
-                          <TableCell className="font-medium">{order.salesperson_name || '-'}</TableCell>
-                          <TableCell>{order.cliente || '-'}</TableCell>
-                          <TableCell className="max-w-[200px] truncate">{order.produto || '-'}</TableCell>
-                          <TableCell>{order.fornecedor || '-'}</TableCell>
-                          <TableCell className="text-right font-mono">
-                            {formatCurrency(order.venda)}
-                          </TableCell>
-                          <TableCell className="text-right font-mono text-success">
-                            {formatCurrency(order.comissaoVendedor)}
-                          </TableCell>
+                <div className="overflow-x-auto -mx-4 sm:mx-0">
+                  <div className="min-w-[700px] px-4 sm:px-0">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="text-xs sm:text-sm">Data</TableHead>
+                          <TableHead className="text-xs sm:text-sm">Pedido</TableHead>
+                          <TableHead className="text-xs sm:text-sm">Vendedor</TableHead>
+                          <TableHead className="text-xs sm:text-sm">Cliente</TableHead>
+                          <TableHead className="text-xs sm:text-sm">Produto</TableHead>
+                          <TableHead className="text-xs sm:text-sm">Fornecedor</TableHead>
+                          <TableHead className="text-right text-xs sm:text-sm">Venda</TableHead>
+                          <TableHead className="text-right text-xs sm:text-sm">Comissão</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredOrders.map((order, index) => (
+                          <TableRow key={`${order.pedido}-${index}`}>
+                            <TableCell className="text-xs sm:text-sm">{order.data || '-'}</TableCell>
+                            <TableCell className="text-xs sm:text-sm">{order.pedido || '-'}</TableCell>
+                            <TableCell className="font-medium text-xs sm:text-sm">{order.salesperson_name || '-'}</TableCell>
+                            <TableCell className="text-xs sm:text-sm">{order.cliente || '-'}</TableCell>
+                            <TableCell className="max-w-[150px] sm:max-w-[200px] truncate text-xs sm:text-sm">{order.produto || '-'}</TableCell>
+                            <TableCell className="text-xs sm:text-sm">{order.fornecedor || '-'}</TableCell>
+                            <TableCell className="text-right font-mono text-xs sm:text-sm">
+                              {formatCurrency(order.venda)}
+                            </TableCell>
+                            <TableCell className="text-right font-mono text-success text-xs sm:text-sm">
+                              {formatCurrency(order.comissaoVendedor)}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </div>
               )}
             </div>

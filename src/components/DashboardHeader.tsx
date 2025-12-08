@@ -28,26 +28,26 @@ export function DashboardHeader({ availableSalespeople = [] }: DashboardHeaderPr
 
   return (
     <header className="border-b border-border bg-background/80 backdrop-blur-md sticky top-0 z-50">
-      <div className="container mx-auto px-6 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className="container mx-auto px-3 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
+        <div className="flex items-center gap-2 sm:gap-3">
           <img 
             src="/images/logo-branco.png" 
             alt="Orlando Fast Pass" 
-            className="h-10 w-auto cursor-pointer hover:opacity-80 transition-opacity"
+            className="h-8 sm:h-10 w-auto cursor-pointer hover:opacity-80 transition-opacity"
             onClick={() => navigate("/")}
           />
-          <div className="hidden md:block">
-            <h1 className="font-semibold text-lg">Hub de Gestão</h1>
+          <div className="hidden sm:block">
+            <h1 className="font-semibold text-base sm:text-lg">Hub de Gestão</h1>
             <p className="text-xs text-muted-foreground">Orlando Fast Pass</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="gap-2">
-                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <User className="h-4 w-4 text-primary" />
+              <Button variant="ghost" size="sm" className="gap-1 sm:gap-2 px-2 sm:px-3">
+                <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
                 </div>
                 <span className="hidden md:inline text-sm">
                   {user?.email?.split('@')[0]}
@@ -82,15 +82,6 @@ export function DashboardHeader({ availableSalespeople = [] }: DashboardHeaderPr
           </DropdownMenu>
         </div>
       </div>
-
-      {/* Dialog de Usuários */}
-      <SalespersonAccountsDialog 
-        userId={user?.id} 
-        availableSalespeople={availableSalespeople}
-        open={usersDialogOpen}
-        onOpenChange={setUsersDialogOpen}
-        showTrigger={false}
-      />
     </header>
   );
 }
