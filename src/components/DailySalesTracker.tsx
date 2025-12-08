@@ -108,9 +108,9 @@ export function DailySalesTracker({
   return (
     <div className="glass rounded-xl p-4 sm:p-6 animate-slide-up">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 mb-4 sm:mb-6">
-        <div className="flex items-center gap-2">
-          <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-warning" />
-          <h3 className="font-semibold text-sm sm:text-base">Acompanhamento Diário</h3>
+        <div className="flex items-center gap-3">
+          <div className="h-8 w-1 bg-primary rounded-full" />
+          <h3 className="text-lg sm:text-xl font-semibold text-foreground">Acompanhamento Diário</h3>
         </div>
         <div className="text-left sm:text-right">
           <span className="text-xs sm:text-sm font-medium">
