@@ -806,7 +806,7 @@ const Index = () => {
 
                 {/* Tendência do Mês */}
                 <div className="grid grid-cols-1 gap-6">
-                  <RevenueForecastChart salesReps={salesReps} currentMonth={selectedMonth} monthlyGoal={monthlyGoal} />
+                  <RevenueForecastChart salesReps={dashboardFilteredSalesReps} currentMonth={dashboardMonth} monthlyGoal={monthlyGoal} />
                 </div>
 
                 {/* Metas */}
