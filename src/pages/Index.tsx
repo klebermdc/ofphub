@@ -632,106 +632,114 @@ const Index = () => {
                   operationalCosts={operationalCost}
                 />
 
-                {/* KPIs Principais - Receitas */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <MetricCard
-                    title="Faturamento"
-                    value={dashboardTotals ? formatCurrency(dashboardTotals.totalVendas) : "R$ 0"}
-                    icon={DollarSign}
-                    delay={0}
-                    variant="success"
-                  />
-                  <MetricCard
-                    title="Comissão Total"
-                    value={formatCurrency(totalComissaoTotal)}
-                    icon={TrendingUp}
-                    delay={50}
-                    variant="warning"
-                  />
-                  <MetricCard
-                    title="Comissão Vendedor"
-                    value={dashboardTotals ? formatCurrency(dashboardTotals.totalComissao) : "R$ 0"}
-                    icon={TrendingUp}
-                    delay={75}
-                  />
-                  <MetricCard
-                    title="Ganho Bruto"
-                    value={formatCurrency(ganhoBruto)}
-                    icon={TrendingUp}
-                    delay={85}
-                    variant="success"
-                  />
-                  <MetricCard
-                    title="Resultado Parcial"
-                    value={formatCurrency(resultadoParcial)}
-                    icon={TrendingUp}
-                    delay={90}
-                    variant={resultadoParcial >= 0 ? "success" : "danger"}
+                {/* ACOMPANHAMENTO MENSAL */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-1 bg-primary rounded-full" />
+                    <h2 className="text-lg sm:text-xl font-semibold text-foreground">Acompanhamento Mensal</h2>
+                  </div>
+
+                  {/* Receitas */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+                    <MetricCard
+                      title="Faturamento"
+                      value={dashboardTotals ? formatCurrency(dashboardTotals.totalVendas) : "R$ 0"}
+                      icon={DollarSign}
+                      delay={0}
+                      variant="success"
+                    />
+                    <MetricCard
+                      title="Comissão Total"
+                      value={formatCurrency(totalComissaoTotal)}
+                      icon={TrendingUp}
+                      delay={50}
+                      variant="warning"
+                    />
+                    <MetricCard
+                      title="Comissão Vendedor"
+                      value={dashboardTotals ? formatCurrency(dashboardTotals.totalComissao) : "R$ 0"}
+                      icon={TrendingUp}
+                      delay={75}
+                    />
+                    <MetricCard
+                      title="Ganho Bruto"
+                      value={formatCurrency(ganhoBruto)}
+                      icon={TrendingUp}
+                      delay={85}
+                      variant="success"
+                    />
+                  </div>
+
+                  {/* Custos */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+                    <MetricCard
+                      title="Custo Equipe Comercial"
+                      value={formatCurrency(custoEquipeComercial)}
+                      icon={Users}
+                      delay={75}
+                      variant="warning"
+                    />
+                    <MetricCard
+                      title="Marketing"
+                      value={formatCurrency(marketingCost)}
+                      icon={Megaphone}
+                      delay={85}
+                      variant="warning"
+                    />
+                    <MetricCard
+                      title="Custos Operacionais"
+                      value={formatCurrency(operationalCost)}
+                      icon={Briefcase}
+                      delay={95}
+                      variant="warning"
+                    />
+                    <MetricCard
+                      title="Imposto Estimado (12%)"
+                      value={formatCurrency(impostoEstimado)}
+                      icon={Receipt}
+                      delay={105}
+                      variant="warning"
+                    />
+                  </div>
+
+                  {/* Totais e Métricas */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+                    <MetricCard
+                      title="Custo Total"
+                      value={formatCurrency(totalCost)}
+                      icon={Wallet}
+                      delay={115}
+                      variant="danger"
+                    />
+                    <MetricCard
+                      title="Ticket Médio"
+                      value={formatCurrency(ticketMedio)}
+                      icon={Target}
+                      delay={120}
+                      variant="info"
+                    />
+                    <MetricCard
+                      title="Resultado Parcial"
+                      value={formatCurrency(resultadoParcial)}
+                      icon={TrendingUp}
+                      delay={125}
+                      variant={resultadoParcial >= 0 ? "success" : "danger"}
+                    />
+                    <MetricCard
+                      title="Resultado Final"
+                      value={formatCurrency(resultado)}
+                      icon={CircleDollarSign}
+                      delay={130}
+                      variant={resultado >= 0 ? "success" : "danger"}
+                    />
+                  </div>
+
+                  {/* EBITDA */}
+                  <EBITDACard
+                    receita={totalComissaoTotal}
+                    custoOperacional={(dashboardTotals?.totalComissao || 0) + totalSalaries + marketingCost + operationalCost}
                   />
                 </div>
-
-                {/* KPIs Secundários - Custos e Resultado */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <MetricCard
-                    title="Custo Equipe Comercial"
-                    value={formatCurrency(custoEquipeComercial)}
-                    icon={Users}
-                    delay={75}
-                    variant="warning"
-                  />
-                  <MetricCard
-                    title="Marketing"
-                    value={formatCurrency(marketingCost)}
-                    icon={Megaphone}
-                    delay={85}
-                    variant="warning"
-                  />
-                  <MetricCard
-                    title="Custos Operacionais"
-                    value={formatCurrency(operationalCost)}
-                    icon={Briefcase}
-                    delay={95}
-                    variant="warning"
-                  />
-                  <MetricCard
-                    title="Imposto Estimado (12%)"
-                    value={formatCurrency(impostoEstimado)}
-                    icon={Receipt}
-                    delay={105}
-                    variant="warning"
-                  />
-                </div>
-
-                {/* KPIs - Custo Total e Ticket Médio */}
-                <div className="grid grid-cols-2 gap-4">
-                  <MetricCard
-                    title="Custo Total"
-                    value={formatCurrency(totalCost)}
-                    icon={Wallet}
-                    delay={115}
-                    variant="danger"
-                  />
-                  <MetricCard
-                    title="Ticket Médio"
-                    value={formatCurrency(ticketMedio)}
-                    icon={Target}
-                    delay={135}
-                    variant="info"
-                  />
-                </div>
-
-                {/* Resultado e EBITDA - Um abaixo do outro */}
-                <MetricCard
-                  title="Resultado"
-                  value={formatCurrency(resultado)}
-                  icon={CircleDollarSign}
-                  delay={125}
-                  variant={resultado >= 0 ? "success" : "danger"}
-                />
-                <EBITDACard
-                  receita={totalComissaoTotal}
-                  custoOperacional={(dashboardTotals?.totalComissao || 0) + totalSalaries + marketingCost + operationalCost}
-                />
 
                 {/* KPIs por Quinzena */}
                 <div className="grid grid-cols-2 gap-4">
