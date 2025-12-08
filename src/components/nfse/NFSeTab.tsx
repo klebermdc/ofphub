@@ -53,10 +53,10 @@ export function NFSeTab() {
   });
   
   const [servico, setServico] = useState<ServicoData>({
-    discriminacao: "",
+    discriminacao: "Comissão",
     valorServico: 0,
-    codigoServico: "17.12", // Agenciamento de viagens
-    aliquota: 5
+    codigoServico: "07109", // Agenciamento de turismo (conforme modelo)
+    aliquota: 0 // Simples Nacional - sem alíquota destacada
   });
   
   // Consulta
@@ -381,10 +381,9 @@ export function NFSeTab() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="17.12">17.12 - Agenciamento de viagens</SelectItem>
-                      <SelectItem value="17.11">17.11 - Organização de eventos</SelectItem>
-                      <SelectItem value="17.09">17.09 - Turismo</SelectItem>
-                      <SelectItem value="17.08">17.08 - Passeios turísticos</SelectItem>
+                      <SelectItem value="07109">07109 - Agenciamento de turismo, viagens, excursões, hospedagens</SelectItem>
+                      <SelectItem value="07108">07108 - Passeios turísticos</SelectItem>
+                      <SelectItem value="09902">09902 - Intermediação de programas de turismo</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
