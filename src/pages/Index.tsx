@@ -19,6 +19,7 @@ import { SalaryManagementDialog } from "@/components/SalaryManagementDialog";
 import { RevenueForecastChart } from "@/components/RevenueForecastChart";
 import { SalespersonROI } from "@/components/SalespersonROI";
 import { DailySalesTracker } from "@/components/DailySalesTracker";
+import { EBITDACard } from "@/components/EBITDACard";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SalesRep, SalesTotals } from "@/types/sales";
@@ -686,6 +687,12 @@ const Index = () => {
                     variant="info"
                   />
                 </div>
+
+                {/* EBITDA Card */}
+                <EBITDACard
+                  receita={totalComissaoTotal}
+                  custoOperacional={(dashboardTotals?.totalComissao || 0) + totalSalaries + marketingCost + operationalCost}
+                />
 
                 {/* KPIs por Quinzena */}
                 <div className="grid grid-cols-2 gap-4">
