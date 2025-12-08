@@ -435,6 +435,60 @@ export type Database = {
         }
         Relationships: []
       }
+      orders: {
+        Row: {
+          cliente: string | null
+          comissao: number
+          comissao_total: number
+          comissao_vendedor: number
+          created_at: string
+          data: string
+          fornecedor: string | null
+          id: string
+          pedido: string | null
+          porcentagem_vendedor: number
+          produto: string | null
+          updated_at: string
+          user_id: string
+          venda: number
+          vendedor: string
+        }
+        Insert: {
+          cliente?: string | null
+          comissao?: number
+          comissao_total?: number
+          comissao_vendedor?: number
+          created_at?: string
+          data: string
+          fornecedor?: string | null
+          id?: string
+          pedido?: string | null
+          porcentagem_vendedor?: number
+          produto?: string | null
+          updated_at?: string
+          user_id: string
+          venda?: number
+          vendedor: string
+        }
+        Update: {
+          cliente?: string | null
+          comissao?: number
+          comissao_total?: number
+          comissao_vendedor?: number
+          created_at?: string
+          data?: string
+          fornecedor?: string | null
+          id?: string
+          pedido?: string | null
+          porcentagem_vendedor?: number
+          produto?: string | null
+          updated_at?: string
+          user_id?: string
+          venda?: number
+          vendedor?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

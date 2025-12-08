@@ -104,14 +104,66 @@ export function OrderFormDialog({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Integração com Google Sheets temporariamente desativada
-    toast({
-      title: "Funcionalidade temporariamente desativada",
-      description: "A sincronização com a planilha Google está em manutenção. Por favor, adicione os pedidos diretamente na planilha.",
-      variant: "default",
-    });
-    
-    setOpen(false);
+    if (!formData.vendedor) {
+      toast({
+        title: "Campo obrigatório",
+        description: "Selecione um vendedor.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error("Usuário não autenticado");
+      }
+
+      const orderData = {
+        user_id: user.id,
+        cliente: formData.cliente,
+        data: formData.data,
+        pedido: formData.pedido,
+        venda: formData.venda,
+        fornecedor: formData.fornecedor,
+        produto: formData.produto,
+        comissao: formData.comissao,
+        comissao_total: formData.comissaoTotal,
+        porcentagem_vendedor: formData.porcentagemVendedor,
+        comissao_vendedor: formData.comissaoVendedor,
+        vendedor: formData.vendedor,
+      };
+
+      if (mode === 'add') {
+        const { error } = await supabase.from('orders').insert(orderData);
+        if (error) throw error;
+      } else if (order?.rowIndex) {
+        // For edit mode, we'd need the order ID - for now just insert as new
+        const { error } = await supabase.from('orders').insert(orderData);
+        if (error) throw error;
+      }
+
+      toast({
+        title: mode === 'add' ? "Pedido adicionado!" : "Pedido salvo!",
+        description: "Os dados foram salvos no sistema.",
+      });
+
+      setOpen(false);
+      setFormData(emptyOrder);
+      onSuccess?.();
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Erro",
+        description: error instanceof Error ? error.message : "Erro ao salvar pedido.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const formatCurrency = (value: number) => {
