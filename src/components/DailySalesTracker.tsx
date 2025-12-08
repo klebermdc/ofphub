@@ -94,34 +94,12 @@ export function DailySalesTracker({
   // Ganho do Dia = Comissão Total - Comissão Vendedores
   const ganhoDia = todayComissaoTotal - todayComissaoVendedor;
   
-  // Custos proporcionais aos dias decorridos
+  // Custo diário proporcional (custos mensais / dias úteis)
   const totalMonthlyCosts = totalSalaries + marketingCosts + operationalCosts;
-  const proportionalCosts = totalBusinessDays > 0 
-    ? (totalMonthlyCosts / totalBusinessDays) * businessDaysElapsed 
-    : 0;
+  const dailyCost = totalBusinessDays > 0 ? totalMonthlyCosts / totalBusinessDays : 0;
   
-  // Ganho Resultado = Comissão Total acumulada - Comissão Vendedores acumulada - Custos proporcionais
-  let monthComissaoTotal = 0;
-  let monthComissaoVendedor = 0;
-  
-  salesReps.forEach(rep => {
-    rep.orders?.forEach(order => {
-      if (!order.data) return;
-      const parts = order.data.split('/');
-      if (parts.length >= 3) {
-        const orderMonth = parts[1].padStart(2, '0');
-        let orderYear = parts[2];
-        if (orderYear.length === 2) orderYear = `20${orderYear}`;
-        
-        if (`${orderMonth}/${orderYear}` === currentMonth) {
-          monthComissaoTotal += order.comissao || 0;
-          monthComissaoVendedor += order.comissaoVendedor || 0;
-        }
-      }
-    });
-  });
-  
-  const ganhoResultado = monthComissaoTotal - monthComissaoVendedor - proportionalCosts;
+  // Resultado do Dia = Ganho do Dia - Custo diário proporcional
+  const resultadoDia = ganhoDia - dailyCost;
   
   const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
@@ -173,16 +151,16 @@ export function DailySalesTracker({
           <p className="text-[10px] text-muted-foreground">Comissão - Vendedores</p>
         </div>
 
-        {/* Ganho Resultado */}
+        {/* Resultado do Dia */}
         <div className="bg-card/50 rounded-lg p-4 space-y-2">
           <div className="flex items-center gap-2">
-            <TrendingUp className={cn("h-4 w-4", ganhoResultado >= 0 ? "text-emerald-500" : "text-red-500")} />
-            <span className="text-xs text-muted-foreground">Resultado Acumulado</span>
+            <TrendingUp className={cn("h-4 w-4", resultadoDia >= 0 ? "text-emerald-500" : "text-red-500")} />
+            <span className="text-xs text-muted-foreground">Resultado do Dia</span>
           </div>
-          <p className={cn("text-xl font-bold", ganhoResultado >= 0 ? "text-emerald-500" : "text-red-500")}>
-            {formatCurrency(ganhoResultado)}
+          <p className={cn("text-xl font-bold", resultadoDia >= 0 ? "text-emerald-500" : "text-red-500")}>
+            {formatCurrency(resultadoDia)}
           </p>
-          <p className="text-[10px] text-muted-foreground">- custos proporcionais</p>
+          <p className="text-[10px] text-muted-foreground">Ganho - {formatCurrency(dailyCost)}/dia</p>
         </div>
       </div>
     </div>
