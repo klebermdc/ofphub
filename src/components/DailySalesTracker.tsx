@@ -122,52 +122,62 @@ export function DailySalesTracker({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {/* Venda Total do Dia */}
-        <div className="bg-card/50 rounded-xl p-8 space-y-4">
-          <div className="flex items-center gap-3">
-            <DollarSign className="h-6 w-6 text-primary" />
-            <span className="text-base text-muted-foreground">Venda do Dia</span>
+        <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-xl p-5 flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4 text-primary" />
+            <span className="text-xs font-medium text-muted-foreground">Venda do Dia</span>
           </div>
-          <p className="text-4xl font-bold">{formatCurrency(todaySales)}</p>
+          <p className="text-2xl font-bold text-foreground">{formatCurrency(todaySales)}</p>
         </div>
 
         {/* Comissão Total do Dia */}
-        <div className="bg-card/50 rounded-xl p-8 space-y-4">
-          <div className="flex items-center gap-3">
-            <TrendingUp className="h-6 w-6 text-info" />
-            <span className="text-base text-muted-foreground">Comissão do Dia</span>
+        <div className="bg-gradient-to-br from-info/10 to-info/5 border border-info/20 rounded-xl p-5 flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-info" />
+            <span className="text-xs font-medium text-muted-foreground">Comissão do Dia</span>
           </div>
-          <p className="text-4xl font-bold">{formatCurrency(todayComissaoTotal)}</p>
+          <p className="text-2xl font-bold text-foreground">{formatCurrency(todayComissaoTotal)}</p>
         </div>
 
         {/* Comissão Vendedores do Dia */}
-        <div className="bg-card/50 rounded-xl p-8 space-y-4">
-          <div className="flex items-center gap-3">
-            <Wallet className="h-6 w-6 text-warning" />
-            <span className="text-base text-muted-foreground">Comissão Vendedores</span>
+        <div className="bg-gradient-to-br from-warning/10 to-warning/5 border border-warning/20 rounded-xl p-5 flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <Wallet className="h-4 w-4 text-warning" />
+            <span className="text-xs font-medium text-muted-foreground">Comissão Vendedores</span>
           </div>
-          <p className="text-4xl font-bold text-warning">{formatCurrency(todayComissaoVendedor)}</p>
+          <p className="text-2xl font-bold text-warning">{formatCurrency(todayComissaoVendedor)}</p>
         </div>
 
         {/* Ganho do Dia */}
-        <div className="bg-card/50 rounded-xl p-8 space-y-4">
-          <div className="flex items-center gap-3">
-            <TrendingUp className={cn("h-6 w-6", ganhoDia >= 0 ? "text-emerald-500" : "text-red-500")} />
-            <span className="text-base text-muted-foreground">Ganho do Dia</span>
+        <div className={cn(
+          "bg-gradient-to-br rounded-xl p-5 flex flex-col gap-2 border",
+          ganhoDia >= 0 
+            ? "from-emerald-500/10 to-emerald-500/5 border-emerald-500/20" 
+            : "from-red-500/10 to-red-500/5 border-red-500/20"
+        )}>
+          <div className="flex items-center gap-2">
+            <TrendingUp className={cn("h-4 w-4", ganhoDia >= 0 ? "text-emerald-500" : "text-red-500")} />
+            <span className="text-xs font-medium text-muted-foreground">Ganho do Dia</span>
           </div>
-          <p className={cn("text-4xl font-bold", ganhoDia >= 0 ? "text-emerald-500" : "text-red-500")}>
+          <p className={cn("text-2xl font-bold", ganhoDia >= 0 ? "text-emerald-500" : "text-red-500")}>
             {formatCurrency(ganhoDia)}
           </p>
         </div>
 
         {/* Resultado do Dia */}
-        <div className="bg-card/50 rounded-xl p-8 space-y-4">
-          <div className="flex items-center gap-3">
-            <TrendingUp className={cn("h-6 w-6", resultadoDia >= 0 ? "text-emerald-500" : "text-red-500")} />
-            <span className="text-base text-muted-foreground">Resultado do Dia</span>
+        <div className={cn(
+          "bg-gradient-to-br rounded-xl p-5 flex flex-col gap-2 border",
+          resultadoDia >= 0 
+            ? "from-emerald-500/10 to-emerald-500/5 border-emerald-500/20" 
+            : "from-red-500/10 to-red-500/5 border-red-500/20"
+        )}>
+          <div className="flex items-center gap-2">
+            <TrendingUp className={cn("h-4 w-4", resultadoDia >= 0 ? "text-emerald-500" : "text-red-500")} />
+            <span className="text-xs font-medium text-muted-foreground">Resultado do Dia</span>
           </div>
-          <p className={cn("text-4xl font-bold", resultadoDia >= 0 ? "text-emerald-500" : "text-red-500")}>
+          <p className={cn("text-2xl font-bold", resultadoDia >= 0 ? "text-emerald-500" : "text-red-500")}>
             {formatCurrency(resultadoDia)}
           </p>
         </div>
