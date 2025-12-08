@@ -14,3 +14,6 @@ verify_jwt = true
 
 [functions.banco-inter]
 verify_jwt = true
+
+[functions.nfse-sp]
+verify_jwt = true
