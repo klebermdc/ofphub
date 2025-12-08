@@ -681,20 +681,18 @@ const Index = () => {
                   />
                 </div>
 
-                {/* Resultado e EBITDA - Lado a lado */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  <MetricCard
-                    title="Resultado"
-                    value={formatCurrency(resultado)}
-                    icon={CircleDollarSign}
-                    delay={125}
-                    variant={resultado >= 0 ? "success" : "danger"}
-                  />
-                  <EBITDACard
-                    receita={totalComissaoTotal}
-                    custoOperacional={(dashboardTotals?.totalComissao || 0) + totalSalaries + marketingCost + operationalCost}
-                  />
-                </div>
+                {/* Resultado e EBITDA - Um abaixo do outro */}
+                <MetricCard
+                  title="Resultado"
+                  value={formatCurrency(resultado)}
+                  icon={CircleDollarSign}
+                  delay={125}
+                  variant={resultado >= 0 ? "success" : "danger"}
+                />
+                <EBITDACard
+                  receita={totalComissaoTotal}
+                  custoOperacional={(dashboardTotals?.totalComissao || 0) + totalSalaries + marketingCost + operationalCost}
+                />
 
                 {/* KPIs por Quinzena */}
                 <div className="grid grid-cols-2 gap-4">
