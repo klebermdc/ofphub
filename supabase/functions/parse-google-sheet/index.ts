@@ -40,6 +40,10 @@ function parseCSV(csv: string): string[][] {
   
   console.log('Total lines in CSV:', lines.length);
   
+  // Log last 3 lines for debugging
+  const lastLines = lines.slice(-3);
+  console.log('Last 3 lines of CSV:', lastLines);
+  
   return lines.map(line => {
     const result: string[] = [];
     let current = '';
@@ -262,7 +266,14 @@ serve(async (req) => {
       pedidos: data.pedidos
     }));
 
-    console.log('Parsed sales data:', salesData.length, 'vendedores');
+    // Calculate total orders
+    const totalPedidos = salesData.reduce((sum, d) => sum + d.pedidos.length, 0);
+    console.log('Parsed sales data:', salesData.length, 'vendedores,', totalPedidos, 'pedidos total');
+    
+    // Log pedidos per salesperson for debug
+    salesData.forEach(s => {
+      console.log(`  ${s.vendedor}: ${s.pedidos.length} pedidos`);
+    });
 
     if (salesData.length === 0) {
       return new Response(
