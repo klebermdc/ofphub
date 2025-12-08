@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { DollarSign, TrendingUp, Package, Calendar, Filter, ArrowLeft, Users, ShoppingBag, Building, RefreshCw } from "lucide-react";
+import { DollarSign, TrendingUp, Package, Calendar, Filter, ArrowLeft, Users, ShoppingBag, Building, RefreshCw, Edit2 } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
 import { OrderFormDialog } from "@/components/OrderFormDialog";
 import { useAuth } from "@/hooks/useAuth";
@@ -24,6 +24,7 @@ interface Order {
   porcentagemVendedor: number;
   comissaoVendedor: number;
   salesperson_name: string;
+  rowIndex?: number;
 }
 
 const AllOrders = () => {
@@ -433,6 +434,7 @@ const AllOrders = () => {
                     <Table>
                       <TableHeader>
                         <TableRow>
+                          <TableHead className="text-xs sm:text-sm w-10"></TableHead>
                           <TableHead className="text-xs sm:text-sm">Data</TableHead>
                           <TableHead className="text-xs sm:text-sm">Pedido</TableHead>
                           <TableHead className="text-xs sm:text-sm">Vendedor</TableHead>
@@ -446,6 +448,35 @@ const AllOrders = () => {
                       <TableBody>
                         {filteredOrders.map((order, index) => (
                           <TableRow key={`${order.pedido}-${index}`}>
+                            <TableCell className="text-xs sm:text-sm p-1">
+                              <OrderFormDialog
+                                mode="edit"
+                                order={{
+                                  cliente: order.cliente,
+                                  data: order.data,
+                                  pedido: order.pedido,
+                                  venda: order.venda,
+                                  fornecedor: order.fornecedor,
+                                  produto: order.produto,
+                                  comissao: order.comissao,
+                                  comissaoTotal: order.comissaoTotal,
+                                  porcentagemVendedor: order.porcentagemVendedor,
+                                  comissaoVendedor: order.comissaoVendedor,
+                                  vendedor: order.salesperson_name,
+                                  rowIndex: order.rowIndex
+                                }}
+                                sheetUrl={savedUrl}
+                                availableVendedores={availableVendedores}
+                                availableProdutos={availableProdutos}
+                                availableFornecedores={availableFornecedores}
+                                onSuccess={refreshData}
+                                trigger={
+                                  <Button variant="ghost" size="icon" className="h-7 w-7">
+                                    <Edit2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                }
+                              />
+                            </TableCell>
                             <TableCell className="text-xs sm:text-sm">{order.data || '-'}</TableCell>
                             <TableCell className="text-xs sm:text-sm">{order.pedido || '-'}</TableCell>
                             <TableCell className="font-medium text-xs sm:text-sm">{order.salesperson_name || '-'}</TableCell>
