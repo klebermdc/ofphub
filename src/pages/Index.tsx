@@ -741,22 +741,29 @@ const Index = () => {
                   />
                 </div>
 
-                {/* KPIs por Quinzena */}
-                <div className="grid grid-cols-2 gap-4">
-                  <MetricCard
-                    title="1ª Quinzena (1-15)"
-                    value={formatCurrency(primeiraQuinzena)}
-                    icon={Calendar}
-                    delay={175}
-                    variant={primeiraQuinzena >= 0 ? "success" : "danger"}
-                  />
-                  <MetricCard
-                    title="2ª Quinzena (16-31)"
-                    value={formatCurrency(segundaQuinzena)}
-                    icon={Calendar}
-                    delay={200}
-                    variant={segundaQuinzena >= 0 ? "success" : "danger"}
-                  />
+                {/* ACOMPANHAMENTO POR QUINZENA */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-1 bg-primary rounded-full" />
+                    <h2 className="text-lg sm:text-xl font-semibold text-foreground">Acompanhamento por Quinzena</h2>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                    <MetricCard
+                      title="1ª Quinzena (1-15)"
+                      value={formatCurrency(primeiraQuinzena)}
+                      icon={Calendar}
+                      delay={175}
+                      variant={primeiraQuinzena >= 0 ? "success" : "danger"}
+                    />
+                    <MetricCard
+                      title="2ª Quinzena (16-31)"
+                      value={formatCurrency(segundaQuinzena)}
+                      icon={Calendar}
+                      delay={200}
+                      variant={segundaQuinzena >= 0 ? "success" : "danger"}
+                    />
+                  </div>
                 </div>
 
                 {/* KPIs Terciários - Operacionais */}
