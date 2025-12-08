@@ -1,17 +1,12 @@
-import { Target, TrendingUp, Zap } from "lucide-react";
-import { Progress } from "./ui/progress";
+import { DollarSign, TrendingUp, Zap, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface DailySalesTrackerProps {
   salesReps: { orders?: { data?: string; venda: number; comissao?: number; comissaoVendedor?: number }[] }[];
-  monthlyGoal: number;
   currentMonth: string;
-  totalComissao?: number;
-  totalComissaoVendedor?: number;
   totalSalaries?: number;
   marketingCosts?: number;
   operationalCosts?: number;
-  resultGoal?: number;
 }
 
 function getBusinessDaysInMonth(month: number, year: number): number {
@@ -57,17 +52,57 @@ function formatCurrency(value: number): string {
 
 export function DailySalesTracker({ 
   salesReps, 
-  monthlyGoal, 
   currentMonth,
+  totalSalaries = 0,
+  marketingCosts = 0,
+  operationalCosts = 0,
 }: DailySalesTrackerProps) {
   const [m, y] = currentMonth.split('/').map(Number);
   const now = new Date();
+  const today = now.getDate();
+  const todayFormatted = `${today.toString().padStart(2, '0')}/${m.toString().padStart(2, '0')}/${y}`;
   
   const totalBusinessDays = getBusinessDaysInMonth(m, y);
   const businessDaysElapsed = getBusinessDaysElapsed(m, y);
-  const remainingDays = totalBusinessDays - businessDaysElapsed;
   
-  let monthSales = 0;
+  let todaySales = 0;
+  let todayComissaoTotal = 0;
+  let todayComissaoVendedor = 0;
+  
+  // Calculate today's metrics
+  salesReps.forEach(rep => {
+    rep.orders?.forEach(order => {
+      if (!order.data) return;
+      const parts = order.data.split('/');
+      if (parts.length >= 3) {
+        const orderDay = parts[0].padStart(2, '0');
+        const orderMonth = parts[1].padStart(2, '0');
+        let orderYear = parts[2];
+        if (orderYear.length === 2) orderYear = `20${orderYear}`;
+        
+        const orderDate = `${orderDay}/${orderMonth}/${orderYear}`;
+        
+        if (orderDate === todayFormatted) {
+          todaySales += order.venda;
+          todayComissaoTotal += order.comissao || 0;
+          todayComissaoVendedor += order.comissaoVendedor || 0;
+        }
+      }
+    });
+  });
+  
+  // Ganho do Dia = Comissão Total - Comissão Vendedores
+  const ganhoDia = todayComissaoTotal - todayComissaoVendedor;
+  
+  // Custos proporcionais aos dias decorridos
+  const totalMonthlyCosts = totalSalaries + marketingCosts + operationalCosts;
+  const proportionalCosts = totalBusinessDays > 0 
+    ? (totalMonthlyCosts / totalBusinessDays) * businessDaysElapsed 
+    : 0;
+  
+  // Ganho Resultado = Comissão Total acumulada - Comissão Vendedores acumulada - Custos proporcionais
+  let monthComissaoTotal = 0;
+  let monthComissaoVendedor = 0;
   
   salesReps.forEach(rep => {
     rep.orders?.forEach(order => {
@@ -79,17 +114,14 @@ export function DailySalesTracker({
         if (orderYear.length === 2) orderYear = `20${orderYear}`;
         
         if (`${orderMonth}/${orderYear}` === currentMonth) {
-          monthSales += order.venda;
+          monthComissaoTotal += order.comissao || 0;
+          monthComissaoVendedor += order.comissaoVendedor || 0;
         }
       }
     });
   });
   
-  const dailyAverage = businessDaysElapsed > 0 ? monthSales / businessDaysElapsed : 0;
-  const projectedMonthSales = dailyAverage * totalBusinessDays;
-  const progressPercent = monthlyGoal > 0 ? (monthSales / monthlyGoal) * 100 : 0;
-  const projectionPercent = monthlyGoal > 0 ? (projectedMonthSales / monthlyGoal) * 100 : 0;
-  const isOnTrack = projectedMonthSales >= monthlyGoal;
+  const ganhoResultado = monthComissaoTotal - monthComissaoVendedor - proportionalCosts;
   
   const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
@@ -98,66 +130,59 @@ export function DailySalesTracker({
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <Zap className="h-5 w-5 text-warning" />
-          <h3 className="font-semibold">Acompanhamento do Mês</h3>
+          <h3 className="font-semibold">Acompanhamento Diário</h3>
         </div>
         <div className="text-right">
           <span className="text-sm font-medium">
-            {monthNames[m - 1]} {y}
+            Dia {today} • {monthNames[m - 1]} {y}
           </span>
           <p className="text-xs text-muted-foreground">
-            {businessDaysElapsed} de {totalBusinessDays} dias úteis • Faltam {remainingDays}
+            {businessDaysElapsed} de {totalBusinessDays} dias úteis
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Vendas do Mês */}
-        <div className="space-y-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {/* Venda Total do Dia */}
+        <div className="bg-card/50 rounded-lg p-4 space-y-2">
           <div className="flex items-center gap-2">
-            <Target className="h-4 w-4 text-primary" />
-            <span className="text-sm text-muted-foreground">Vendas do Mês</span>
+            <DollarSign className="h-4 w-4 text-primary" />
+            <span className="text-xs text-muted-foreground">Venda do Dia</span>
           </div>
-          <p className="text-2xl font-bold">{formatCurrency(monthSales)}</p>
-          <div className="space-y-1">
-            <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">de {formatCurrency(monthlyGoal)}</span>
-              <span className={cn(
-                progressPercent >= 100 ? "text-emerald-500" : progressPercent >= 80 ? "text-warning" : "text-muted-foreground"
-              )}>{progressPercent.toFixed(0)}%</span>
-            </div>
-            <Progress value={Math.min(progressPercent, 100)} className="h-2" />
-          </div>
+          <p className="text-xl font-bold">{formatCurrency(todaySales)}</p>
         </div>
 
-        {/* Média Diária */}
-        <div className="space-y-3">
+        {/* Comissão Total do Dia */}
+        <div className="bg-card/50 rounded-lg p-4 space-y-2">
           <div className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-info" />
-            <span className="text-sm text-muted-foreground">Média Diária</span>
+            <span className="text-xs text-muted-foreground">Comissão do Dia</span>
           </div>
-          <p className="text-2xl font-bold">{formatCurrency(dailyAverage)}</p>
-          <p className="text-xs text-muted-foreground">
-            Necessário: {formatCurrency(remainingDays > 0 ? (monthlyGoal - monthSales) / remainingDays : 0)}/dia
-          </p>
+          <p className="text-xl font-bold">{formatCurrency(todayComissaoTotal)}</p>
         </div>
 
-        {/* Projeção */}
-        <div className="space-y-3">
+        {/* Ganho do Dia */}
+        <div className="bg-card/50 rounded-lg p-4 space-y-2">
           <div className="flex items-center gap-2">
-            <Target className={cn("h-4 w-4", isOnTrack ? "text-emerald-500" : "text-red-500")} />
-            <span className="text-sm text-muted-foreground">Projeção do Mês</span>
+            <Wallet className={cn("h-4 w-4", ganhoDia >= 0 ? "text-emerald-500" : "text-red-500")} />
+            <span className="text-xs text-muted-foreground">Ganho do Dia</span>
           </div>
-          <p className={cn(
-            "text-2xl font-bold",
-            isOnTrack ? "text-emerald-500" : "text-red-500"
-          )}>{formatCurrency(projectedMonthSales)}</p>
-          <p className="text-xs">
-            <span className={cn(
-              isOnTrack ? "text-emerald-500" : "text-red-500"
-            )}>
-              {isOnTrack ? "✓ Meta será atingida" : `Faltam ${formatCurrency(monthlyGoal - projectedMonthSales)}`}
-            </span>
+          <p className={cn("text-xl font-bold", ganhoDia >= 0 ? "text-emerald-500" : "text-red-500")}>
+            {formatCurrency(ganhoDia)}
           </p>
+          <p className="text-[10px] text-muted-foreground">Comissão - Vendedores</p>
+        </div>
+
+        {/* Ganho Resultado */}
+        <div className="bg-card/50 rounded-lg p-4 space-y-2">
+          <div className="flex items-center gap-2">
+            <TrendingUp className={cn("h-4 w-4", ganhoResultado >= 0 ? "text-emerald-500" : "text-red-500")} />
+            <span className="text-xs text-muted-foreground">Resultado Acumulado</span>
+          </div>
+          <p className={cn("text-xl font-bold", ganhoResultado >= 0 ? "text-emerald-500" : "text-red-500")}>
+            {formatCurrency(ganhoResultado)}
+          </p>
+          <p className="text-[10px] text-muted-foreground">- custos proporcionais</p>
         </div>
       </div>
     </div>
