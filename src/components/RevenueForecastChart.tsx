@@ -1,4 +1,4 @@
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { TrendingUp, Info } from "lucide-react";
 import { SalesRep } from "@/types/sales";
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -6,6 +6,7 @@ import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger }
 interface RevenueForecastChartProps {
   salesReps: SalesRep[];
   availableMonths: string[];
+  monthlyGoal?: number;
 }
 
 function formatCurrency(value: number): string {
@@ -18,7 +19,7 @@ function getMonthLabel(monthStr: string): string {
   return `${monthNames[parseInt(m) - 1]}/${y.slice(-2)}`;
 }
 
-export function RevenueForecastChart({ salesReps, availableMonths }: RevenueForecastChartProps) {
+export function RevenueForecastChart({ salesReps, availableMonths, monthlyGoal = 0 }: RevenueForecastChartProps) {
   // Get current month to exclude from regression (incomplete data)
   const now = new Date();
   const currentMonthStr = `${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
@@ -86,11 +87,12 @@ export function RevenueForecastChart({ salesReps, availableMonths }: RevenueFore
   const chartData = completedMonthsData.map((d, i) => ({
     ...d,
     trend: intercept + slope * i,
+    meta: monthlyGoal,
     isForecast: false
   }));
 
   // Generate forecast for current month + next 3 months
-  const forecastMonths = 4; // current + 3 future
+  const forecastMonths = 4;
   const lastCompletedMonth = completedMonthsData[completedMonthsData.length - 1];
   const [lastM, lastY] = lastCompletedMonth.month.split('/').map(Number);
   
@@ -104,7 +106,6 @@ export function RevenueForecastChart({ salesReps, availableMonths }: RevenueFore
     const monthStr = `${String(newMonth).padStart(2, '0')}/${newYear}`;
     const forecastValue = intercept + slope * (n - 1 + i);
     
-    // Check if this is the current month (show partial real data)
     const currentMonthData = monthlyData.find(d => d.month === monthStr && d.isCurrentMonth);
     
     chartData.push({
@@ -112,6 +113,7 @@ export function RevenueForecastChart({ salesReps, availableMonths }: RevenueFore
       label: getMonthLabel(monthStr),
       revenue: currentMonthData?.revenue || 0,
       trend: Math.max(0, forecastValue),
+      meta: monthlyGoal,
       isForecast: true,
       isCurrentMonth: monthStr === currentMonthStr
     });
@@ -134,7 +136,7 @@ export function RevenueForecastChart({ salesReps, availableMonths }: RevenueFore
                 <Info className="h-4 w-4 text-muted-foreground" />
               </TooltipTrigger>
               <TooltipContent>
-                <p>Projeção baseada em regressão linear dos últimos {n} meses</p>
+                <p>Projeção baseada em regressão linear dos últimos {n} meses completos</p>
               </TooltipContent>
             </UITooltip>
           </TooltipProvider>
@@ -169,39 +171,53 @@ export function RevenueForecastChart({ salesReps, availableMonths }: RevenueFore
               }}
               formatter={(value: number, name: string) => [
                 formatCurrency(value),
-                name === 'revenue' ? 'Faturamento Real' : 'Tendência'
+                name === 'revenue' ? 'Realizado' : name === 'trend' ? 'Projeção' : 'Meta'
               ]}
             />
-            <ReferenceLine x={monthlyData[monthlyData.length - 1].label} stroke="hsl(var(--muted-foreground))" strokeDasharray="5 5" />
+            {/* Linha Vermelha - Realizado */}
             <Line
               type="monotone"
               dataKey="revenue"
-              stroke="hsl(var(--primary))"
+              stroke="#ef4444"
               strokeWidth={2}
-              dot={{ fill: 'hsl(var(--primary))', r: 4 }}
+              dot={{ fill: '#ef4444', r: 4 }}
               name="revenue"
             />
+            {/* Linha Verde - Projeção */}
             <Line
               type="monotone"
               dataKey="trend"
-              stroke="hsl(var(--chart-2))"
+              stroke="#22c55e"
               strokeWidth={2}
               strokeDasharray="5 5"
-              dot={false}
+              dot={{ fill: '#22c55e', r: 3 }}
               name="trend"
+            />
+            {/* Linha Amarela - Meta */}
+            <Line
+              type="monotone"
+              dataKey="meta"
+              stroke="#eab308"
+              strokeWidth={2}
+              dot={false}
+              name="meta"
             />
           </LineChart>
         </ResponsiveContainer>
       </div>
 
-      <div className="flex items-center gap-4 mt-4 text-xs text-muted-foreground">
+      <div className="flex items-center gap-6 mt-4 text-xs text-muted-foreground">
         <div className="flex items-center gap-2">
-          <div className="w-3 h-0.5 bg-primary rounded" />
-          <span>Faturamento Real</span>
+          <div className="w-4 h-0.5 bg-red-500 rounded" />
+          <span>Realizado</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-0.5 bg-emerald-500 rounded" style={{ background: 'repeating-linear-gradient(90deg, hsl(var(--chart-2)), hsl(var(--chart-2)) 2px, transparent 2px, transparent 4px)' }} />
-          <span>Projeção (Tendência)</span>
+          <div className="w-4 h-0.5 bg-emerald-500 rounded" style={{ background: 'repeating-linear-gradient(90deg, #22c55e, #22c55e 3px, transparent 3px, transparent 6px)' }} />
+          <span>Projeção</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-0.5 bg-yellow-500 rounded" />
+          <span>Meta</span>
         </div>
       </div>
     </div>
