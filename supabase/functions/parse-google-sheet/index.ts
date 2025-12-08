@@ -17,6 +17,7 @@ interface OrderDetail {
   comissaoTotal: number;
   porcentagemVendedor: number;
   comissaoVendedor: number;
+  rowIndex: number;
 }
 
 interface SalesData {
@@ -219,7 +220,7 @@ serve(async (req) => {
       const comissao = comissaoIdx >= 0 ? parsePercentage(row[comissaoIdx]) : 0;
       const porcentagemVendedor = porcentagemIdx >= 0 ? parsePercentage(row[porcentagemIdx]) : 0;
 
-      // Create order detail with all columns
+      // Create order detail with all columns (i + 1 because row index in sheet is 1-based and header is row 1)
       const orderDetail: OrderDetail = {
         cliente: clienteIdx >= 0 ? row[clienteIdx]?.trim() || '' : '',
         data: dataIdx >= 0 ? row[dataIdx]?.trim() || '' : '',
@@ -230,7 +231,8 @@ serve(async (req) => {
         comissao: comissao,
         comissaoTotal: comissaoTotal,
         porcentagemVendedor: porcentagemVendedor,
-        comissaoVendedor: comissaoVendedor
+        comissaoVendedor: comissaoVendedor,
+        rowIndex: i + 1 // Sheet row index (1-based, accounting for header)
       };
       
       // Aggregate by salesperson

@@ -9,6 +9,7 @@ export interface OrderDetail {
   comissaoTotal: number;
   porcentagemVendedor: number;
   comissaoVendedor: number;
+  rowIndex?: number;
 }
 
 export interface SalesRep {
