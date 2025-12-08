@@ -34,7 +34,12 @@ function extractSheetId(url: string): string | null {
 }
 
 function parseCSV(csv: string): string[][] {
-  const lines = csv.split('\n');
+  // Normalize line endings to handle both \r\n and \n
+  const normalizedCsv = csv.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const lines = normalizedCsv.split('\n');
+  
+  console.log('Total lines in CSV:', lines.length);
+  
   return lines.map(line => {
     const result: string[] = [];
     let current = '';
