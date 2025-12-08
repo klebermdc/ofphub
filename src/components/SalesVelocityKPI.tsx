@@ -67,39 +67,77 @@ export function SalesVelocityKPI({
     return `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
   };
 
-  // Get days in the selected month
-  const daysInMonth = new Date(year, month, 0).getDate();
+  // Helper function to count business days in a month
+  const getBusinessDaysInMonth = (m: number, y: number): number => {
+    let businessDays = 0;
+    const daysInMonth = new Date(y, m, 0).getDate();
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(y, m - 1, day);
+      const dayOfWeek = date.getDay();
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+        businessDays++;
+      }
+    }
+    return businessDays;
+  };
+
+  // Helper function to count business days elapsed up to today
+  const getBusinessDaysElapsed = (m: number, y: number): number => {
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
+    const today = now.getDate();
+    
+    let businessDays = 0;
+    
+    if (m === currentMonth && y === currentYear) {
+      for (let day = 1; day <= today; day++) {
+        const date = new Date(y, m - 1, day);
+        const dayOfWeek = date.getDay();
+        if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+          businessDays++;
+        }
+      }
+      return businessDays;
+    }
+    
+    // If past month, return all business days
+    return getBusinessDaysInMonth(m, y);
+  };
+
+  // Get total business days in the selected month
+  const totalBusinessDays = getBusinessDaysInMonth(month, year);
   
   // Get current date info
   const now = new Date();
   const currentMonth = now.getMonth() + 1;
   const currentYear = now.getFullYear();
-  const currentDay = now.getDate();
   
-  // Determine elapsed days based on if viewing current month or past/future
+  // Determine elapsed business days based on if viewing current month or past/future
   let elapsedDays: number;
   let remainingDays: number;
   
   if (year === currentYear && month === currentMonth) {
-    elapsedDays = currentDay;
-    remainingDays = daysInMonth - currentDay;
+    elapsedDays = getBusinessDaysElapsed(month, year);
+    remainingDays = totalBusinessDays - elapsedDays;
   } else if (year < currentYear || (year === currentYear && month < currentMonth)) {
-    elapsedDays = daysInMonth;
+    elapsedDays = totalBusinessDays;
     remainingDays = 0;
   } else {
     elapsedDays = 0;
-    remainingDays = daysInMonth;
+    remainingDays = totalBusinessDays;
   }
 
-  // Calculate velocities for sales
+  // Calculate velocities for sales using business days
   const currentDailyRate = elapsedDays > 0 ? totalSales / elapsedDays : 0;
   const requiredDailyRate = remainingDays > 0 && goalValue > totalSales 
     ? (goalValue - totalSales) / remainingDays 
     : 0;
 
-  // Project end-of-month sales based on current pace
+  // Project end-of-month sales based on current pace (using business days)
   const projectedTotal = elapsedDays > 0 
-    ? currentDailyRate * daysInMonth 
+    ? currentDailyRate * totalBusinessDays 
     : 0;
 
   // Calculate if on track for sales goal
@@ -111,13 +149,13 @@ export function SalesVelocityKPI({
     (goalValue > 0 && totalSales >= goalValue ? 999 : 0);
 
   // === RESULTADO PROJECTION ===
-  // Daily rates for comissões
+  // Daily rates for comissões (using business days)
   const dailyComissaoTotal = elapsedDays > 0 ? currentComissaoTotal / elapsedDays : 0;
   const dailyComissaoVendedor = elapsedDays > 0 ? currentComissaoVendedor / elapsedDays : 0;
 
-  // Projected values
-  const projectedComissaoTotal = dailyComissaoTotal * daysInMonth;
-  const projectedComissaoVendedor = dailyComissaoVendedor * daysInMonth;
+  // Projected values (using business days)
+  const projectedComissaoTotal = dailyComissaoTotal * totalBusinessDays;
+  const projectedComissaoVendedor = dailyComissaoVendedor * totalBusinessDays;
   const projectedImposto = projectedComissaoTotal * 0.12;
 
   // Custo Total projetado = Comissão Vendedor projetada + Custos Fixos + Imposto projetado
@@ -175,7 +213,7 @@ export function SalesVelocityKPI({
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">
-                {elapsedDays} dias passados • {remainingDays} restantes
+                {elapsedDays} dias úteis • {remainingDays} restantes
               </span>
             </div>
             {velocityRatio > 0 && velocityRatio < 999 && (
