@@ -122,47 +122,47 @@ export function DailySalesTracker({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         {/* Venda Total do Dia */}
-        <div className="bg-card/50 rounded-lg p-4 space-y-2">
+        <div className="bg-card/50 rounded-xl p-6 space-y-3">
           <div className="flex items-center gap-2">
-            <DollarSign className="h-4 w-4 text-primary" />
-            <span className="text-xs text-muted-foreground">Venda do Dia</span>
+            <DollarSign className="h-5 w-5 text-primary" />
+            <span className="text-sm text-muted-foreground">Venda do Dia</span>
           </div>
-          <p className="text-xl font-bold">{formatCurrency(todaySales)}</p>
+          <p className="text-3xl font-bold">{formatCurrency(todaySales)}</p>
         </div>
 
         {/* Comissão Total do Dia */}
-        <div className="bg-card/50 rounded-lg p-4 space-y-2">
+        <div className="bg-card/50 rounded-xl p-6 space-y-3">
           <div className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-info" />
-            <span className="text-xs text-muted-foreground">Comissão do Dia</span>
+            <TrendingUp className="h-5 w-5 text-info" />
+            <span className="text-sm text-muted-foreground">Comissão do Dia</span>
           </div>
-          <p className="text-xl font-bold">{formatCurrency(todayComissaoTotal)}</p>
+          <p className="text-3xl font-bold">{formatCurrency(todayComissaoTotal)}</p>
         </div>
 
         {/* Ganho do Dia */}
-        <div className="bg-card/50 rounded-lg p-4 space-y-2">
+        <div className="bg-card/50 rounded-xl p-6 space-y-3">
           <div className="flex items-center gap-2">
-            <Wallet className={cn("h-4 w-4", ganhoDia >= 0 ? "text-emerald-500" : "text-red-500")} />
-            <span className="text-xs text-muted-foreground">Ganho do Dia</span>
+            <Wallet className={cn("h-5 w-5", ganhoDia >= 0 ? "text-emerald-500" : "text-red-500")} />
+            <span className="text-sm text-muted-foreground">Ganho do Dia</span>
           </div>
-          <p className={cn("text-xl font-bold", ganhoDia >= 0 ? "text-emerald-500" : "text-red-500")}>
+          <p className={cn("text-3xl font-bold", ganhoDia >= 0 ? "text-emerald-500" : "text-red-500")}>
             {formatCurrency(ganhoDia)}
           </p>
-          <p className="text-[10px] text-muted-foreground">Comissão - Vendedores</p>
+          <p className="text-xs text-muted-foreground">Comissão - Vendedores</p>
         </div>
 
         {/* Resultado do Dia */}
-        <div className="bg-card/50 rounded-lg p-4 space-y-2">
+        <div className="bg-card/50 rounded-xl p-6 space-y-3">
           <div className="flex items-center gap-2">
-            <TrendingUp className={cn("h-4 w-4", resultadoDia >= 0 ? "text-emerald-500" : "text-red-500")} />
-            <span className="text-xs text-muted-foreground">Resultado do Dia</span>
+            <TrendingUp className={cn("h-5 w-5", resultadoDia >= 0 ? "text-emerald-500" : "text-red-500")} />
+            <span className="text-sm text-muted-foreground">Resultado do Dia</span>
           </div>
-          <p className={cn("text-xl font-bold", resultadoDia >= 0 ? "text-emerald-500" : "text-red-500")}>
+          <p className={cn("text-3xl font-bold", resultadoDia >= 0 ? "text-emerald-500" : "text-red-500")}>
             {formatCurrency(resultadoDia)}
           </p>
-          <p className="text-[10px] text-muted-foreground">Ganho - {formatCurrency(dailyCost)}/dia</p>
+          <p className="text-xs text-muted-foreground">Ganho - {formatCurrency(dailyCost)}/dia</p>
         </div>
       </div>
     </div>
