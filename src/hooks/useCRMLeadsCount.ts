@@ -59,9 +59,20 @@ export function useCRMLeadsCount() {
         const dateStr = lead.notion_created_at || lead.created_at;
         if (!dateStr) return;
 
-        const date = new Date(dateStr);
-        const month = date.getMonth() + 1;
-        const year = date.getFullYear();
+        // Parse date string properly - notion_created_at is YYYY-MM-DD format
+        let month: number;
+        let year: number;
+        
+        if (dateStr.includes('-')) {
+          // YYYY-MM-DD format
+          const parts = dateStr.split('-');
+          year = parseInt(parts[0]);
+          month = parseInt(parts[1]);
+        } else {
+          const date = new Date(dateStr);
+          month = date.getMonth() + 1;
+          year = date.getFullYear();
+        }
         const key = `${month}-${year}`;
 
         if (!monthMap.has(key)) {
