@@ -104,68 +104,14 @@ export function OrderFormDialog({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!sheetUrl) {
-      toast({
-        title: "Erro",
-        description: "URL da planilha não configurada.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!formData.vendedor) {
-      toast({
-        title: "Campo obrigatório",
-        description: "Selecione um vendedor.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const action = mode === 'add' ? 'append' : 'update';
-      const requestData = mode === 'edit' && order?.rowIndex 
-        ? { ...formData, rowIndex: order.rowIndex }
-        : formData;
-
-      console.log(`${action} order:`, requestData);
-
-      const { data, error } = await supabase.functions.invoke('write-google-sheet', {
-        body: { 
-          sheetUrl, 
-          action,
-          data: requestData
-        }
-      });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      toast({
-        title: mode === 'add' ? "Pedido adicionado!" : "Pedido atualizado!",
-        description: "Os dados foram sincronizados com a planilha.",
-      });
-
-      setOpen(false);
-      setFormData(emptyOrder);
-      onSuccess?.();
-    } catch (error) {
-      console.error('Error:', error);
-      toast({
-        title: "Erro",
-        description: error instanceof Error ? error.message : "Erro ao salvar pedido.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+    // Integração com Google Sheets temporariamente desativada
+    toast({
+      title: "Funcionalidade temporariamente desativada",
+      description: "A sincronização com a planilha Google está em manutenção. Por favor, adicione os pedidos diretamente na planilha.",
+      variant: "default",
+    });
+    
+    setOpen(false);
   };
 
   const formatCurrency = (value: number) => {
