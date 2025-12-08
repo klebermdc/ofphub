@@ -71,7 +71,7 @@ export function DailySalesTracker({
   
   // Calculate today's metrics
   salesReps.forEach(rep => {
-    rep.orders?.forEach(order => {
+    rep.orders?.forEach((order: any) => {
       if (!order.data) return;
       const parts = order.data.split('/');
       if (parts.length >= 3) {
@@ -83,8 +83,10 @@ export function DailySalesTracker({
         const orderDate = `${orderDay}/${orderMonth}/${orderYear}`;
         
         if (orderDate === todayFormatted) {
-          todaySales += order.venda;
-          todayComissaoTotal += order.comissao || 0;
+          todaySales += order.venda || 0;
+          // Comissão Total = comissão da empresa (campo comissaoTotal da planilha)
+          todayComissaoTotal += order.comissaoTotal || order.comissao || 0;
+          // Comissão Vendedor = comissão paga ao vendedor
           todayComissaoVendedor += order.comissaoVendedor || 0;
         }
       }
