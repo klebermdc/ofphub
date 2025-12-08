@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { FileText, Send, Search, X, Loader2, Building2, User, Mail, MapPin, Receipt, AlertCircle, CheckCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { FileText, Send, Search, X, Loader2, User, MapPin, Receipt, AlertCircle, History, Eye, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,8 +8,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface TomadorData {
   cpfCnpj: string;
@@ -32,10 +34,32 @@ interface ServicoData {
   aliquota: number;
 }
 
+interface NfseHistoryItem {
+  id: string;
+  numero_nfse: string | null;
+  codigo_verificacao: string | null;
+  rps_numero: string;
+  rps_serie: string;
+  data_emissao: string;
+  ambiente: string;
+  status: string;
+  tomador_cpf_cnpj: string;
+  tomador_razao_social: string;
+  tomador_email: string | null;
+  codigo_servico: string;
+  discriminacao: string;
+  valor_servico: number;
+  aliquota: number;
+  created_at: string;
+}
+
 export function NFSeTab() {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("emitir");
   const [isLoading, setIsLoading] = useState(false);
   const [ambiente, setAmbiente] = useState<"homologacao" | "producao">("homologacao");
+  const [history, setHistory] = useState<NfseHistoryItem[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   
   // Emissão
   const [tomador, setTomador] = useState<TomadorData>({
@@ -55,8 +79,8 @@ export function NFSeTab() {
   const [servico, setServico] = useState<ServicoData>({
     discriminacao: "Comissão",
     valorServico: 0,
-    codigoServico: "07109", // Agenciamento de turismo (conforme modelo)
-    aliquota: 0 // Simples Nacional - sem alíquota destacada
+    codigoServico: "07109",
+    aliquota: 0
   });
   
   // Consulta
@@ -69,6 +93,67 @@ export function NFSeTab() {
 
   const formatCurrency = (value: number) => {
     return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  };
+
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString('pt-BR');
+  };
+
+  // Load history
+  const loadHistory = async () => {
+    if (!user) return;
+    
+    setIsLoadingHistory(true);
+    try {
+      const { data, error } = await supabase
+        .from('nfse_history')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+      setHistory(data || []);
+    } catch (err: any) {
+      console.error('Erro ao carregar histórico:', err);
+    }
+    setIsLoadingHistory(false);
+  };
+
+  useEffect(() => {
+    if (activeTab === 'historico') {
+      loadHistory();
+    }
+  }, [activeTab, user]);
+
+  const saveToHistory = async (nfseData: any, rpsData: any, servicoData: ServicoData, tomadorData: TomadorData, amb: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('nfse_history')
+        .insert({
+          user_id: user.id,
+          numero_nfse: nfseData?.numero || null,
+          codigo_verificacao: nfseData?.codigoVerificacao || null,
+          rps_numero: rpsData.numero,
+          rps_serie: rpsData.serie,
+          data_emissao: rpsData.dataEmissao,
+          ambiente: amb,
+          status: nfseData?.numero ? 'emitida' : 'rps_gerado',
+          tomador_cpf_cnpj: tomadorData.cpfCnpj,
+          tomador_razao_social: tomadorData.razaoSocial,
+          tomador_email: tomadorData.email || null,
+          codigo_servico: servicoData.codigoServico,
+          discriminacao: servicoData.discriminacao,
+          valor_servico: servicoData.valorServico,
+          aliquota: servicoData.aliquota
+        });
+
+      if (error) throw error;
+      console.log('NFS-e salva no histórico');
+    } catch (err: any) {
+      console.error('Erro ao salvar histórico:', err);
+    }
   };
 
   const handleEmitir = async () => {
@@ -95,10 +180,24 @@ export function NFSeTab() {
       if (error) throw error;
 
       if (data.success) {
+        // Save to history
+        await saveToHistory(data.data.nfse, data.data.rps, servico, tomador, ambiente);
+
         toast({
-          title: "RPS gerado",
-          description: `RPS ${data.data.rps.numero} gerado com sucesso. ${data.data.message}`,
+          title: data.data.status === 'success' ? "NFS-e emitida" : "RPS gerado",
+          description: data.data.message,
         });
+
+        // Clear form on success
+        if (data.data.status === 'success') {
+          setTomador({
+            cpfCnpj: "",
+            razaoSocial: "",
+            email: "",
+            endereco: { logradouro: "", numero: "", bairro: "", cidade: "São Paulo", uf: "SP", cep: "" }
+          });
+          setServico({ discriminacao: "Comissão", valorServico: 0, codigoServico: "07109", aliquota: 0 });
+        }
       } else {
         throw new Error(data.error);
       }
@@ -181,6 +280,14 @@ export function NFSeTab() {
 
       if (error) throw error;
 
+      // Update history status if cancelled successfully
+      if (data.data.status === 'success') {
+        await supabase
+          .from('nfse_history')
+          .update({ status: 'cancelada' })
+          .eq('numero_nfse', numeroNfseCancelamento);
+      }
+
       toast({
         title: "Cancelamento solicitado",
         description: data.data.message,
@@ -193,6 +300,17 @@ export function NFSeTab() {
       });
     }
     setIsLoading(false);
+  };
+
+  const getStatusBadge = (status: string) => {
+    const variants: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; label: string }> = {
+      emitida: { variant: "default", label: "Emitida" },
+      rps_gerado: { variant: "secondary", label: "RPS Gerado" },
+      cancelada: { variant: "destructive", label: "Cancelada" },
+      erro: { variant: "destructive", label: "Erro" }
+    };
+    const config = variants[status] || { variant: "outline", label: status };
+    return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
   return (
@@ -240,10 +358,14 @@ export function NFSeTab() {
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full max-w-md grid-cols-3">
+        <TabsList className="grid w-full max-w-lg grid-cols-4">
           <TabsTrigger value="emitir" className="gap-2">
             <Send className="h-4 w-4" />
             Emitir
+          </TabsTrigger>
+          <TabsTrigger value="historico" className="gap-2">
+            <History className="h-4 w-4" />
+            Histórico
           </TabsTrigger>
           <TabsTrigger value="consultar" className="gap-2">
             <Search className="h-4 w-4" />
@@ -446,6 +568,91 @@ export function NFSeTab() {
           </div>
         </TabsContent>
 
+        {/* Histórico */}
+        <TabsContent value="historico" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <History className="h-5 w-5" />
+                    Histórico de NFS-e
+                  </CardTitle>
+                  <CardDescription>Notas fiscais emitidas anteriormente</CardDescription>
+                </div>
+                <Button variant="outline" size="sm" onClick={loadHistory} disabled={isLoadingHistory}>
+                  {isLoadingHistory ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {isLoadingHistory ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : history.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <p>Nenhuma NFS-e emitida ainda</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Data</TableHead>
+                        <TableHead>NFS-e / RPS</TableHead>
+                        <TableHead>Tomador</TableHead>
+                        <TableHead>Valor</TableHead>
+                        <TableHead>Ambiente</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {history.map((item) => (
+                        <TableRow key={item.id}>
+                          <TableCell className="font-medium">
+                            {formatDate(item.data_emissao)}
+                          </TableCell>
+                          <TableCell>
+                            {item.numero_nfse ? (
+                              <div>
+                                <span className="font-medium">NFS-e: {item.numero_nfse}</span>
+                                {item.codigo_verificacao && (
+                                  <p className="text-xs text-muted-foreground">Cód: {item.codigo_verificacao}</p>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground">RPS: {item.rps_numero}</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <span className="font-medium">{item.tomador_razao_social}</span>
+                              <p className="text-xs text-muted-foreground">{item.tomador_cpf_cnpj}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            {formatCurrency(item.valor_servico)}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={item.ambiente === 'producao' ? 'default' : 'secondary'}>
+                              {item.ambiente === 'producao' ? 'PRD' : 'HML'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {getStatusBadge(item.status)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* Consulta */}
         <TabsContent value="consultar" className="space-y-6">
           <Card>
@@ -494,31 +701,24 @@ export function NFSeTab() {
         <TabsContent value="cancelar" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-destructive">
+              <CardTitle className="flex items-center gap-2">
                 <X className="h-5 w-5" />
                 Cancelar NFS-e
               </CardTitle>
-              <CardDescription>Solicite o cancelamento de uma nota fiscal emitida</CardDescription>
+              <CardDescription>Solicite o cancelamento de uma nota fiscal</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
-                <p className="text-sm text-destructive flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4" />
-                  Atenção: O cancelamento de NFS-e é irreversível e deve ser justificado.
-                </p>
-              </div>
-
               <div>
-                <Label>Número da NFS-e</Label>
+                <Label>Número da NFS-e *</Label>
                 <Input
                   placeholder="Digite o número da nota a cancelar"
                   value={numeroNfseCancelamento}
                   onChange={(e) => setNumeroNfseCancelamento(e.target.value)}
                 />
               </div>
-
+              
               <div>
-                <Label>Motivo do Cancelamento (mín. 15 caracteres)</Label>
+                <Label>Motivo do Cancelamento * (mín. 15 caracteres)</Label>
                 <Textarea
                   placeholder="Descreva o motivo do cancelamento..."
                   rows={3}

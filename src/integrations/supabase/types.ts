@@ -372,6 +372,69 @@ export type Database = {
         }
         Relationships: []
       }
+      nfse_history: {
+        Row: {
+          aliquota: number
+          ambiente: string
+          codigo_servico: string
+          codigo_verificacao: string | null
+          created_at: string
+          data_emissao: string
+          discriminacao: string
+          id: string
+          numero_nfse: string | null
+          rps_numero: string
+          rps_serie: string
+          status: string
+          tomador_cpf_cnpj: string
+          tomador_email: string | null
+          tomador_razao_social: string
+          updated_at: string
+          user_id: string
+          valor_servico: number
+        }
+        Insert: {
+          aliquota?: number
+          ambiente?: string
+          codigo_servico: string
+          codigo_verificacao?: string | null
+          created_at?: string
+          data_emissao: string
+          discriminacao: string
+          id?: string
+          numero_nfse?: string | null
+          rps_numero: string
+          rps_serie: string
+          status?: string
+          tomador_cpf_cnpj: string
+          tomador_email?: string | null
+          tomador_razao_social: string
+          updated_at?: string
+          user_id: string
+          valor_servico?: number
+        }
+        Update: {
+          aliquota?: number
+          ambiente?: string
+          codigo_servico?: string
+          codigo_verificacao?: string | null
+          created_at?: string
+          data_emissao?: string
+          discriminacao?: string
+          id?: string
+          numero_nfse?: string | null
+          rps_numero?: string
+          rps_serie?: string
+          status?: string
+          tomador_cpf_cnpj?: string
+          tomador_email?: string | null
+          tomador_razao_social?: string
+          updated_at?: string
+          user_id?: string
+          valor_servico?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
