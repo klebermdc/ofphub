@@ -463,7 +463,7 @@ const Index = () => {
   const resultadoParcial = ganhoBruto - custoProporcional;
 
   // Calculate results by fortnight (quinzena)
-  const { primeiraQuinzena, segundaQuinzena } = useMemo(() => {
+  const { primeiraQuinzena, segundaQuinzena, primeiraQuinzenaComissaoTotal, segundaQuinzenaComissaoTotal } = useMemo(() => {
     let primeira = { comissaoTotal: 0, comissaoVendedor: 0 };
     let segunda = { comissaoTotal: 0, comissaoVendedor: 0 };
     
@@ -486,7 +486,9 @@ const Index = () => {
     
     return {
       primeiraQuinzena: primeira.comissaoTotal - primeira.comissaoVendedor,
-      segundaQuinzena: segunda.comissaoTotal - segunda.comissaoVendedor
+      segundaQuinzena: segunda.comissaoTotal - segunda.comissaoVendedor,
+      primeiraQuinzenaComissaoTotal: primeira.comissaoTotal,
+      segundaQuinzenaComissaoTotal: segunda.comissaoTotal
     };
   }, [dashboardFilteredSalesReps]);
 
@@ -748,16 +750,30 @@ const Index = () => {
                     <h2 className="text-lg sm:text-xl font-semibold text-foreground">Acompanhamento por Quinzena</h2>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                     <MetricCard
-                      title="1ª Quinzena (1-15)"
-                      value={formatCurrency(primeiraQuinzena)}
+                      title="1ª Quinzena - Comissão Total"
+                      value={formatCurrency(primeiraQuinzenaComissaoTotal)}
                       icon={Calendar}
                       delay={175}
+                      variant="warning"
+                    />
+                    <MetricCard
+                      title="1ª Quinzena - Ganho Bruto"
+                      value={formatCurrency(primeiraQuinzena)}
+                      icon={Calendar}
+                      delay={185}
                       variant={primeiraQuinzena >= 0 ? "success" : "danger"}
                     />
                     <MetricCard
-                      title="2ª Quinzena (16-31)"
+                      title="2ª Quinzena - Comissão Total"
+                      value={formatCurrency(segundaQuinzenaComissaoTotal)}
+                      icon={Calendar}
+                      delay={195}
+                      variant="warning"
+                    />
+                    <MetricCard
+                      title="2ª Quinzena - Ganho Bruto"
                       value={formatCurrency(segundaQuinzena)}
                       icon={Calendar}
                       delay={200}
