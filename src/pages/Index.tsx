@@ -736,7 +736,7 @@ const Index = () => {
 
                 {/* Projeção */}
                 <div className="grid grid-cols-1 gap-6">
-                  <RevenueForecastChart salesReps={salesReps} availableMonths={availableMonths} />
+                  <RevenueForecastChart salesReps={salesReps} availableMonths={availableMonths} monthlyGoal={monthlyGoal} />
                 </div>
 
                 {/* Metas */}
