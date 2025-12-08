@@ -123,15 +123,33 @@ async function emitirNfse(
 
   // Gerar RPS (Recibo Provisório de Serviços)
   const rpsNumero = Date.now().toString().slice(-8);
-  const rpsSerie = 'RPS';
+  const rpsSerie = '1';
   const dataEmissao = new Date().toISOString().split('T')[0];
 
-  // XML para envio de RPS em lote (simplificado)
+  // Dados do prestador (fixos conforme modelo da NF)
+  const prestador = {
+    cnpj: cnpj.replace(/\D/g, ''),
+    ccm: ccm.replace(/\D/g, ''),
+    razaoSocial: 'RENATA ALBINO GODOY DOS SANTOS',
+    endereco: {
+      logradouro: 'R NSRA DAS MERCES',
+      numero: '628',
+      complemento: 'APT 38',
+      bairro: 'VILA DAS MERCES',
+      cidade: '3550308', // Código IBGE São Paulo
+      uf: 'SP',
+      cep: '04165010'
+    }
+  };
+
+  // XML para envio de RPS em lote conforme modelo NFS-e SP
+  // Regime: Simples Nacional (TributacaoRPS = 'T')
+  // Código Serviço: 07109 - Agenciamento de turismo
   const xmlRps = `<?xml version="1.0" encoding="UTF-8"?>
 <PedidoEnvioLoteRPS xmlns="http://www.prefeitura.sp.gov.br/nfe">
   <Cabecalho Versao="1">
     <CPFCNPJRemetente>
-      <CNPJ>${cnpj.replace(/\D/g, '')}</CNPJ>
+      <CNPJ>${prestador.cnpj}</CNPJ>
     </CPFCNPJRemetente>
     <transacao>true</transacao>
     <dtInicio>${dataEmissao}</dtInicio>
@@ -143,7 +161,7 @@ async function emitirNfse(
   <RPS>
     <Assinatura></Assinatura>
     <ChaveRPS>
-      <InscricaoPrestador>${ccm.replace(/\D/g, '')}</InscricaoPrestador>
+      <InscricaoPrestador>${prestador.ccm}</InscricaoPrestador>
       <SerieRPS>${rpsSerie}</SerieRPS>
       <NumeroRPS>${rpsNumero}</NumeroRPS>
     </ChaveRPS>
@@ -167,7 +185,7 @@ async function emitirNfse(
     <RazaoSocialTomador>${tomador.razaoSocial}</RazaoSocialTomador>
     ${tomador.endereco ? `
     <EnderecoTomador>
-      <TipoLogradouro>Rua</TipoLogradouro>
+      <TipoLogradouro>R</TipoLogradouro>
       <Logradouro>${tomador.endereco.logradouro}</Logradouro>
       <NumeroEndereco>${tomador.endereco.numero}</NumeroEndereco>
       <Bairro>${tomador.endereco.bairro}</Bairro>
@@ -181,21 +199,38 @@ async function emitirNfse(
   </RPS>
 </PedidoEnvioLoteRPS>`;
 
-  console.log('XML RPS gerado:', xmlRps.substring(0, 500));
+  console.log('XML RPS gerado:', xmlRps.substring(0, 800));
+  console.log('Prestador:', prestador.razaoSocial);
+  console.log('Tomador:', tomador.razaoSocial);
+  console.log('Valor:', servico.valorServico);
+  console.log('Código Serviço:', servico.codigoServico);
 
   // Para implementação completa, seria necessário:
-  // 1. Assinar o XML com o certificado digital
+  // 1. Assinar o XML com o certificado digital A1
   // 2. Enviar via SOAP para a prefeitura
   // 3. Processar a resposta
 
-  // Por enquanto, retornamos uma simulação para testes
   return {
     status: 'pending_signature',
-    message: 'XML gerado. Implementação de assinatura digital em andamento.',
+    message: 'XML gerado conforme modelo NFS-e SP. Implementação de assinatura digital em andamento.',
     rps: {
       numero: rpsNumero,
       serie: rpsSerie,
       dataEmissao
+    },
+    prestador: {
+      cnpj: prestador.cnpj,
+      ccm: prestador.ccm,
+      razaoSocial: prestador.razaoSocial
+    },
+    tomador: {
+      cpfCnpj: tomador.cpfCnpj,
+      razaoSocial: tomador.razaoSocial
+    },
+    servico: {
+      codigo: servico.codigoServico,
+      valor: servico.valorServico,
+      discriminacao: servico.discriminacao
     },
     xmlGerado: true
   };
