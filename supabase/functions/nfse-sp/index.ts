@@ -42,9 +42,21 @@ interface NfseRequest {
 function parsePFXCertificate(pfxBase64: string, password: string): { privateKey: string; certificate: string; certDer: string } {
   try {
     console.log('Iniciando parsing do certificado PFX...');
+    console.log('Tamanho do base64 recebido:', pfxBase64.length);
+    
+    // Limpar base64 de possíveis espaços, quebras de linha, etc.
+    const cleanBase64 = pfxBase64.replace(/[\s\r\n]+/g, '');
+    console.log('Tamanho após limpeza:', cleanBase64.length);
+    console.log('Primeiros 50 chars:', cleanBase64.substring(0, 50));
     
     // Decode base64 PFX
-    const pfxDer = forge.util.decode64(pfxBase64);
+    const pfxDer = forge.util.decode64(cleanBase64);
+    console.log('Bytes decodificados:', pfxDer.length);
+    
+    if (pfxDer.length < 100) {
+      throw new Error(`Certificado muito pequeno (${pfxDer.length} bytes). Verifique se o certificado foi salvo corretamente em base64.`);
+    }
+    
     const pfxAsn1 = forge.asn1.fromDer(pfxDer);
     const pfx = forge.pkcs12.pkcs12FromAsn1(pfxAsn1, password);
     
