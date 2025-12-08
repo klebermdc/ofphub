@@ -20,8 +20,10 @@ function getDaysInMonth(month: number, year: number): number {
 export function RevenueForecastChart({ salesReps, currentMonth, monthlyGoal = 0 }: RevenueForecastChartProps) {
   const [m, y] = currentMonth.split('/').map(Number);
   const now = new Date();
-  const today = now.getMonth() + 1 === m && now.getFullYear() === y ? now.getDate() : getDaysInMonth(m, y);
+  const isCurrentMonth = now.getMonth() + 1 === m && now.getFullYear() === y;
   const totalDays = getDaysInMonth(m, y);
+  // Se for o mês atual, mostra até hoje; se for mês passado, mostra o mês completo
+  const today = isCurrentMonth ? now.getDate() : totalDays;
   
   // Calculate daily sales for the current month
   const dailySales: { [day: number]: number } = {};
