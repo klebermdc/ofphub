@@ -608,7 +608,7 @@ const Index = () => {
                 />
 
                 {/* KPIs Principais - Receitas */}
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <MetricCard
                     title="Faturamento"
                     value={dashboardTotals ? formatCurrency(dashboardTotals.totalVendas) : "R$ 0"}
@@ -628,6 +628,13 @@ const Index = () => {
                     value={dashboardTotals ? formatCurrency(dashboardTotals.totalComissao) : "R$ 0"}
                     icon={TrendingUp}
                     delay={75}
+                  />
+                  <MetricCard
+                    title="Ganho Bruto"
+                    value={formatCurrency(totalComissaoTotal - (dashboardTotals?.totalComissao || 0))}
+                    icon={TrendingUp}
+                    delay={85}
+                    variant="success"
                   />
                 </div>
 
