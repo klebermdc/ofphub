@@ -106,8 +106,8 @@ export function DailySalesTracker({
   const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
   return (
-    <div className="glass rounded-xl p-4 sm:p-6 animate-slide-up">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 mb-4 sm:mb-6">
+    <div className="space-y-4 animate-slide-up">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
         <div className="flex items-center gap-3">
           <div className="h-8 w-1 bg-primary rounded-full" />
           <h3 className="text-lg sm:text-xl font-semibold text-foreground">Acompanhamento Diário</h3>
