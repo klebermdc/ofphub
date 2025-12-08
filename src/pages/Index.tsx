@@ -663,21 +663,14 @@ const Index = () => {
                   />
                 </div>
 
-                {/* KPIs - Custo Total e Resultado */}
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {/* KPIs - Custo Total e Ticket Médio */}
+                <div className="grid grid-cols-2 gap-4">
                   <MetricCard
                     title="Custo Total"
                     value={formatCurrency(totalCost)}
                     icon={Wallet}
                     delay={115}
                     variant="danger"
-                  />
-                  <MetricCard
-                    title="Resultado"
-                    value={formatCurrency(resultado)}
-                    icon={CircleDollarSign}
-                    delay={125}
-                    variant={resultado >= 0 ? "success" : "danger"}
                   />
                   <MetricCard
                     title="Ticket Médio"
@@ -688,11 +681,20 @@ const Index = () => {
                   />
                 </div>
 
-                {/* EBITDA Card */}
-                <EBITDACard
-                  receita={totalComissaoTotal}
-                  custoOperacional={(dashboardTotals?.totalComissao || 0) + totalSalaries + marketingCost + operationalCost}
-                />
+                {/* Resultado e EBITDA - Lado a lado */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <MetricCard
+                    title="Resultado"
+                    value={formatCurrency(resultado)}
+                    icon={CircleDollarSign}
+                    delay={125}
+                    variant={resultado >= 0 ? "success" : "danger"}
+                  />
+                  <EBITDACard
+                    receita={totalComissaoTotal}
+                    custoOperacional={(dashboardTotals?.totalComissao || 0) + totalSalaries + marketingCost + operationalCost}
+                  />
+                </div>
 
                 {/* KPIs por Quinzena */}
                 <div className="grid grid-cols-2 gap-4">
