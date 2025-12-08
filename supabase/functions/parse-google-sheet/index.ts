@@ -284,6 +284,16 @@ serve(async (req) => {
       );
     }
 
+    // Log Maria Gabriela's orders specifically for debugging
+    const mariaGabrielaData = salesData.find(s => s.vendedor === 'Maria Gabriela');
+    if (mariaGabrielaData) {
+      console.log('Maria Gabriela orders:', mariaGabrielaData.pedidos.map(p => ({
+        cliente: p.cliente,
+        pedido: p.pedido,
+        data: p.data
+      })));
+    }
+
     const totals = {
       totalVendas: salesData.reduce((sum, d) => sum + d.vendas, 0),
       totalComissao: salesData.reduce((sum, d) => sum + d.comissao, 0),
