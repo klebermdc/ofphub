@@ -13,29 +13,34 @@ interface MetricCardProps {
 
 const variantStyles = {
   default: {
-    iconBg: "bg-primary/10",
-    iconColor: "text-primary",
-    valueBg: "",
+    gradient: "from-slate-900/50 to-slate-800/30",
+    border: "border-slate-600/30",
+    iconColor: "text-slate-400",
+    valueColor: "text-foreground",
   },
   success: {
-    iconBg: "bg-emerald-500/10",
+    gradient: "from-emerald-950/50 to-emerald-900/20",
+    border: "border-emerald-500/40",
     iconColor: "text-emerald-500",
-    valueBg: "",
+    valueColor: "text-emerald-500",
   },
   danger: {
-    iconBg: "bg-red-500/10",
+    gradient: "from-red-950/50 to-red-900/20",
+    border: "border-red-500/40",
     iconColor: "text-red-500",
-    valueBg: "",
+    valueColor: "text-red-500",
   },
   warning: {
-    iconBg: "bg-amber-500/10",
+    gradient: "from-amber-950/50 to-amber-900/20",
+    border: "border-amber-500/40",
     iconColor: "text-amber-500",
-    valueBg: "",
+    valueColor: "text-amber-500",
   },
   info: {
-    iconBg: "bg-blue-500/10",
+    gradient: "from-blue-950/50 to-blue-900/20",
+    border: "border-blue-500/40",
     iconColor: "text-blue-500",
-    valueBg: "",
+    valueColor: "text-blue-500",
   },
 };
 
@@ -52,21 +57,24 @@ export function MetricCard({
 
   return (
     <div 
-      className="glass rounded-xl p-4 sm:p-5 animate-slide-up h-full"
+      className={cn(
+        "rounded-xl p-4 sm:p-6 animate-slide-up h-full",
+        "bg-gradient-to-br border",
+        styles.gradient,
+        styles.border
+      )}
       style={{ animationDelay: `${delay}ms` }}
     >
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center gap-2 mb-3">
+        <Icon className={cn("h-4 w-4 sm:h-5 sm:w-5", styles.iconColor)} />
         <p className="text-xs sm:text-sm text-muted-foreground">{title}</p>
-        <div className={cn("rounded-lg p-2", styles.iconBg)}>
-          <Icon className={cn("h-4 w-4 sm:h-5 sm:w-5", styles.iconColor)} />
-        </div>
       </div>
-      <p className={cn("text-xl sm:text-2xl font-bold tracking-tight", styles.valueBg)}>{value}</p>
+      <p className={cn("text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight", styles.valueColor)}>{value}</p>
       {change && (
         <p className={cn(
-          "text-xs sm:text-sm font-medium mt-1",
-          changeType === "positive" && "text-success",
-          changeType === "negative" && "text-destructive",
+          "text-xs sm:text-sm font-medium mt-2",
+          changeType === "positive" && "text-emerald-500",
+          changeType === "negative" && "text-red-500",
           changeType === "neutral" && "text-muted-foreground"
         )}>
           {change}
