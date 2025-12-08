@@ -87,6 +87,8 @@ function extractSheetId(url: string): string | null {
 }
 
 serve(async (req) => {
+  console.log('Request method:', req.method);
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -94,23 +96,34 @@ serve(async (req) => {
   try {
     // Authenticate user
     const authHeader = req.headers.get('Authorization');
+    console.log('Auth header present:', !!authHeader);
+    
     if (!authHeader) {
+      console.log('No authorization header found');
       return new Response(
         JSON.stringify({ error: 'Authorization required' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY');
+    console.log('Supabase URL configured:', !!supabaseUrl);
+    console.log('Supabase Key configured:', !!supabaseKey);
+
     const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      supabaseUrl ?? '',
+      supabaseKey ?? '',
       { global: { headers: { Authorization: authHeader } } }
     );
 
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    console.log('Auth result - user:', !!user, 'error:', authError?.message);
+    
     if (authError || !user) {
+      console.log('Authentication failed:', authError?.message);
       return new Response(
-        JSON.stringify({ error: 'Authentication failed' }),
+        JSON.stringify({ error: 'Authentication failed', details: authError?.message }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
