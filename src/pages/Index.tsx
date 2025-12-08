@@ -111,6 +111,12 @@ const Index = () => {
   const filteredSalesReps = useMemo(() => {
     if (selectedMonth === 'all') return salesReps;
     
+    // Debug: log Maria Gabriela's orders before filtering
+    const mariaGabriela = salesReps.find(rep => rep.name === 'Maria Gabriela');
+    if (mariaGabriela) {
+      console.log('Maria Gabriela raw orders:', mariaGabriela.orders?.map(o => ({ cliente: o.cliente, data: o.data, pedido: o.pedido })));
+    }
+    
     return salesReps.map(rep => {
       const filteredOrders = rep.orders?.filter(order => {
         if (!order.data) return false;
@@ -121,13 +127,25 @@ const Index = () => {
           if (year.length === 2) {
             year = `20${year}`;
           }
-          return `${month}/${year}` === selectedMonth;
+          const orderMonth = `${month}/${year}`;
+          
+          // Debug for Maria Gabriela's orders
+          if (rep.name === 'Maria Gabriela') {
+            console.log(`Maria Gabriela order: ${order.cliente} - date: ${order.data} -> parsed: ${orderMonth}, selected: ${selectedMonth}, match: ${orderMonth === selectedMonth}`);
+          }
+          
+          return orderMonth === selectedMonth;
         }
         return false;
       }) || [];
       
       const sales = filteredOrders.reduce((sum, o) => sum + o.venda, 0);
       const commission = filteredOrders.reduce((sum, o) => sum + o.comissaoVendedor, 0);
+      
+      // Debug: log filtered result for Maria Gabriela
+      if (rep.name === 'Maria Gabriela') {
+        console.log('Maria Gabriela filtered orders count:', filteredOrders.length, 'orders:', filteredOrders.map(o => ({ cliente: o.cliente, data: o.data })));
+      }
       
       return {
         ...rep,
