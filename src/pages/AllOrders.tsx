@@ -1,10 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { DollarSign, TrendingUp, Package, Calendar, Filter, ArrowLeft, Users, ShoppingBag, Building } from "lucide-react";
+import { DollarSign, TrendingUp, Package, Calendar, Filter, ArrowLeft, Users, ShoppingBag, Building, RefreshCw } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
+import { OrderFormDialog } from "@/components/OrderFormDialog";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useSheetData } from "@/contexts/SheetDataContext";
+import { useSheetSettings } from "@/hooks/useSheetSettings";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -28,6 +30,8 @@ const AllOrders = () => {
   const { user, loading } = useAuth();
   const { role, isLoading: roleLoading } = useUserRole(user?.id);
   const { salesReps, isLoading: dataLoading, hasData, refreshData } = useSheetData();
+  const { savedUrl } = useSheetSettings(user?.id);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Load data on mount
   useEffect(() => {
@@ -239,6 +243,30 @@ const AllOrders = () => {
                 <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Dados da planilha em tempo real</p>
               </div>
             </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={async () => {
+                setRefreshing(true);
+                await refreshData();
+                setRefreshing(false);
+              }}
+              disabled={refreshing}
+              className="gap-1"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">Atualizar</span>
+            </Button>
+            <OrderFormDialog
+              mode="add"
+              sheetUrl={savedUrl}
+              availableVendedores={availableVendedores}
+              availableProdutos={availableProdutos}
+              availableFornecedores={availableFornecedores}
+              onSuccess={refreshData}
+            />
           </div>
         </div>
       </header>
