@@ -487,36 +487,50 @@ const Index = () => {
       
       <DashboardHeader availableSalespeople={salesReps.map(r => r.name)} />
       
-      <main className="container mx-auto px-6 py-6 relative">
-        <Tabs defaultValue={initialTab} className="space-y-6">
-          <TabsList className="grid w-full max-w-2xl grid-cols-5">
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="vendedores" className="gap-1">
-              <Users className="h-4 w-4" />
+      <main className="container mx-auto px-3 sm:px-6 py-4 sm:py-6 relative">
+        <Tabs defaultValue={initialTab} className="space-y-4 sm:space-y-6">
+          <TabsList className="w-full grid grid-cols-3 sm:grid-cols-5 gap-1 h-auto p-1">
+            <TabsTrigger value="dashboard" className="text-xs sm:text-sm py-2">Dashboard</TabsTrigger>
+            <TabsTrigger value="vendedores" className="gap-1 text-xs sm:text-sm py-2">
+              <Users className="h-3 w-3 sm:h-4 sm:w-4 hidden sm:block" />
               Comercial
             </TabsTrigger>
-            <TabsTrigger value="marketing" className="gap-1">
-              <Megaphone className="h-4 w-4" />
+            <TabsTrigger value="marketing" className="gap-1 text-xs sm:text-sm py-2">
+              <Megaphone className="h-3 w-3 sm:h-4 sm:w-4 hidden sm:block" />
               Marketing
             </TabsTrigger>
-            <TabsTrigger value="contabilidade" className="gap-1">
-              <Receipt className="h-4 w-4" />
+            <TabsTrigger value="contabilidade" className="gap-1 text-xs sm:text-sm py-2 hidden sm:flex">
+              <Receipt className="h-3 w-3 sm:h-4 sm:w-4 hidden sm:block" />
               Contabilidade
             </TabsTrigger>
-            <TabsTrigger value="nfse" className="gap-1">
-              <FileCheck className="h-4 w-4" />
+            <TabsTrigger value="nfse" className="gap-1 text-xs sm:text-sm py-2 hidden sm:flex">
+              <FileCheck className="h-3 w-3 sm:h-4 sm:w-4 hidden sm:block" />
               NFS-e
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="dashboard" className="space-y-6">
+          {/* Mobile additional tabs */}
+          <div className="flex sm:hidden gap-2">
+            <TabsList className="grid grid-cols-2 gap-1 w-full h-auto p-1">
+              <TabsTrigger value="contabilidade" className="gap-1 text-xs py-2">
+                <Receipt className="h-3 w-3" />
+                Contabilidade
+              </TabsTrigger>
+              <TabsTrigger value="nfse" className="gap-1 text-xs py-2">
+                <FileCheck className="h-3 w-3" />
+                NFS-e
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          <TabsContent value="dashboard" className="space-y-4 sm:space-y-6">
             {!hasData ? (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
                 <div className="lg:col-span-2">
-                  <div className="glass rounded-xl p-8 text-center">
-                    <FileSpreadsheet className="h-12 w-12 mx-auto mb-4 text-primary" />
-                    <h2 className="text-2xl font-bold mb-4">Bem-vindo ao Hub de Gestão</h2>
-                    <p className="text-muted-foreground mb-6">
+                  <div className="glass rounded-xl p-4 sm:p-8 text-center">
+                    <FileSpreadsheet className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 text-primary" />
+                    <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">Bem-vindo ao Hub de Gestão</h2>
+                    <p className="text-muted-foreground mb-4 sm:mb-6 text-sm sm:text-base">
                       Importe sua planilha do Google Sheets para começar a análise de comissões.
                     </p>
                     <SheetInput onAnalyze={handleAnalyze} isLoading={isLoading} />
@@ -526,19 +540,19 @@ const Index = () => {
             ) : (
               <>
                 {/* Header com período e fonte */}
-                <div className="flex items-center justify-between flex-wrap gap-4">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm text-muted-foreground">Fonte:</span>
-                    <Badge variant={dataSource === 'sheet' ? 'default' : 'secondary'} className="gap-1">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                    <span className="text-xs sm:text-sm text-muted-foreground">Fonte:</span>
+                    <Badge variant={dataSource === 'sheet' ? 'default' : 'secondary'} className="gap-1 text-xs">
                       <FileSpreadsheet className="h-3 w-3" />
                       {dataSource === 'sheet' ? 'Planilha' : 'Histórico'}
                     </Badge>
                     
                     {/* Filtro de Mês */}
-                    <div className="flex items-center gap-2 ml-4">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
                       <Select value={dashboardMonth} onValueChange={setDashboardMonth}>
-                        <SelectTrigger className="w-[160px] h-8">
+                        <SelectTrigger className="w-[130px] sm:w-[160px] h-8 text-xs sm:text-sm">
                           <SelectValue placeholder="Todos os meses" />
                         </SelectTrigger>
                         <SelectContent>
@@ -555,7 +569,7 @@ const Index = () => {
                       </Select>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
                     <OperationalCostsDialog onSave={saveOperationalCosts} getCostForMonth={getCostForMonth} />
                     <SheetInput onAnalyze={handleAnalyze} isLoading={isLoading} compact savedUrl={savedUrl} />
                     <SaveReportDialog onSave={handleSaveReport} disabled={!hasData} />
@@ -574,10 +588,11 @@ const Index = () => {
                         });
                         toast({ title: "PDF pronto!", description: "Relatório consolidado baixado com sucesso." });
                       }}
-                      className="gap-2"
+                      className="gap-1 sm:gap-2 text-xs sm:text-sm"
                     >
-                      <FileText className="h-4 w-4" />
-                      PDF Consolidado
+                      <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      <span className="hidden sm:inline">PDF Consolidado</span>
+                      <span className="sm:hidden">PDF</span>
                     </Button>
                   </div>
                 </div>

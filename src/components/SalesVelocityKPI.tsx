@@ -185,39 +185,39 @@ export function SalesVelocityKPI({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-slide-up">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 animate-slide-up">
       {/* Velocidade de Vendas */}
-      <div className="glass rounded-xl p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Gauge className="h-5 w-5 text-primary" />
-          <h3 className="text-lg font-semibold">Velocidade de Vendas</h3>
+      <div className="glass rounded-xl p-4 sm:p-6">
+        <div className="flex items-center gap-2 mb-3 sm:mb-4">
+          <Gauge className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+          <h3 className="text-base sm:text-lg font-semibold">Velocidade de Vendas</h3>
         </div>
 
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 bg-background/50 rounded-lg border border-border/50">
-              <span className="text-xs text-muted-foreground block mb-1">Vendas/Dia Atual</span>
-              <span className="text-lg font-bold text-primary">
+        <div className="space-y-3 sm:space-y-4">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
+            <div className="p-2 sm:p-3 bg-background/50 rounded-lg border border-border/50">
+              <span className="text-[10px] sm:text-xs text-muted-foreground block mb-0.5 sm:mb-1">Vendas/Dia Atual</span>
+              <span className="text-sm sm:text-lg font-bold text-primary">
                 {formatCurrency(currentDailyRate)}
               </span>
             </div>
-            <div className="p-3 bg-background/50 rounded-lg border border-border/50">
-              <span className="text-xs text-muted-foreground block mb-1">Vendas/Dia Necessário</span>
-              <span className={`text-lg font-bold ${requiredDailyRate === 0 ? 'text-green-500' : 'text-foreground'}`}>
+            <div className="p-2 sm:p-3 bg-background/50 rounded-lg border border-border/50">
+              <span className="text-[10px] sm:text-xs text-muted-foreground block mb-0.5 sm:mb-1">Vendas/Dia Necessário</span>
+              <span className={`text-sm sm:text-lg font-bold ${requiredDailyRate === 0 ? 'text-green-500' : 'text-foreground'}`}>
                 {requiredDailyRate > 0 ? formatCurrency(requiredDailyRate) : 'Meta atingida'}
               </span>
             </div>
           </div>
 
-          <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">
-                {elapsedDays} dias úteis • {remainingDays} restantes
+          <div className="flex items-center justify-between p-2 sm:p-3 bg-muted/30 rounded-lg">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
+              <span className="text-xs sm:text-sm text-muted-foreground">
+                {elapsedDays} dias • {remainingDays} restantes
               </span>
             </div>
             {velocityRatio > 0 && velocityRatio < 999 && (
-              <span className={`text-sm font-medium ${velocityRatio >= 1 ? 'text-green-500' : 'text-orange-500'}`}>
+              <span className={`text-xs sm:text-sm font-medium ${velocityRatio >= 1 ? 'text-green-500' : 'text-orange-500'}`}>
                 {(velocityRatio * 100).toFixed(0)}%
               </span>
             )}
@@ -226,44 +226,44 @@ export function SalesVelocityKPI({
       </div>
 
       {/* Projeção de Faturamento */}
-      <div className="glass rounded-xl p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <TrendingUp className="h-5 w-5 text-primary" />
-          <h3 className="text-lg font-semibold">Projeção Faturamento</h3>
+      <div className="glass rounded-xl p-4 sm:p-6">
+        <div className="flex items-center gap-2 mb-3 sm:mb-4">
+          <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+          <h3 className="text-base sm:text-lg font-semibold">Projeção Faturamento</h3>
         </div>
 
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 bg-background/50 rounded-lg border border-border/50">
-              <span className="text-xs text-muted-foreground block mb-1">Meta</span>
-              <span className="text-lg font-bold">
+        <div className="space-y-3 sm:space-y-4">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
+            <div className="p-2 sm:p-3 bg-background/50 rounded-lg border border-border/50">
+              <span className="text-[10px] sm:text-xs text-muted-foreground block mb-0.5 sm:mb-1">Meta</span>
+              <span className="text-sm sm:text-lg font-bold">
                 {formatCurrency(goalValue)}
               </span>
             </div>
-            <div className={`p-3 rounded-lg border ${
+            <div className={`p-2 sm:p-3 rounded-lg border ${
               isOnTrack 
                 ? 'bg-green-500/10 border-green-500/30' 
                 : 'bg-orange-500/10 border-orange-500/30'
             }`}>
-              <span className="text-xs text-muted-foreground block mb-1">Projeção</span>
-              <span className={`text-lg font-bold ${isOnTrack ? 'text-green-500' : 'text-orange-500'}`}>
+              <span className="text-[10px] sm:text-xs text-muted-foreground block mb-0.5 sm:mb-1">Projeção</span>
+              <span className={`text-sm sm:text-lg font-bold ${isOnTrack ? 'text-green-500' : 'text-orange-500'}`}>
                 {elapsedDays > 0 ? formatCurrency(projectedTotal) : '---'}
               </span>
             </div>
           </div>
 
           {elapsedDays > 0 && (
-            <div className={`p-3 rounded-lg ${
+            <div className={`p-2 sm:p-3 rounded-lg ${
               isOnTrack ? 'bg-green-500/10' : 'bg-orange-500/10'
             }`}>
-              <div className="flex items-center gap-2">
-                <Target className="h-4 w-4" />
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <Target className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 {isOnTrack ? (
-                  <span className="text-sm text-green-500">
+                  <span className="text-xs sm:text-sm text-green-500">
                     +{formatCurrency(projectedDifference)} acima da meta
                   </span>
                 ) : (
-                  <span className="text-sm text-orange-500">
+                  <span className="text-xs sm:text-sm text-orange-500">
                     {formatCurrency(Math.abs(projectedDifference))} abaixo
                   </span>
                 )}
@@ -274,39 +274,39 @@ export function SalesVelocityKPI({
       </div>
 
       {/* Projeção de Resultado */}
-      <div className="glass rounded-xl p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <CircleDollarSign className="h-5 w-5 text-primary" />
-          <h3 className="text-lg font-semibold">Projeção Resultado</h3>
+      <div className="glass rounded-xl p-4 sm:p-6 sm:col-span-2 lg:col-span-1">
+        <div className="flex items-center gap-2 mb-3 sm:mb-4">
+          <CircleDollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+          <h3 className="text-base sm:text-lg font-semibold">Projeção Resultado</h3>
         </div>
 
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 bg-background/50 rounded-lg border border-border/50">
-              <span className="text-xs text-muted-foreground block mb-1">Resultado Atual</span>
-              <span className={`text-lg font-bold ${currentResultado >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+        <div className="space-y-3 sm:space-y-4">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
+            <div className="p-2 sm:p-3 bg-background/50 rounded-lg border border-border/50">
+              <span className="text-[10px] sm:text-xs text-muted-foreground block mb-0.5 sm:mb-1">Resultado Atual</span>
+              <span className={`text-sm sm:text-lg font-bold ${currentResultado >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                 {formatCurrency(currentResultado)}
               </span>
             </div>
-            <div className={`p-3 rounded-lg border ${
+            <div className={`p-2 sm:p-3 rounded-lg border ${
               isResultadoPositive 
                 ? 'bg-green-500/10 border-green-500/30' 
                 : 'bg-red-500/10 border-red-500/30'
             }`}>
-              <span className="text-xs text-muted-foreground block mb-1">Projeção</span>
-              <span className={`text-lg font-bold ${isResultadoPositive ? 'text-green-500' : 'text-red-500'}`}>
+              <span className="text-[10px] sm:text-xs text-muted-foreground block mb-0.5 sm:mb-1">Projeção</span>
+              <span className={`text-sm sm:text-lg font-bold ${isResultadoPositive ? 'text-green-500' : 'text-red-500'}`}>
                 {elapsedDays > 0 ? formatCurrency(projectedResultado) : '---'}
               </span>
             </div>
           </div>
 
           {elapsedDays > 0 && (
-            <div className={`p-3 rounded-lg ${
+            <div className={`p-2 sm:p-3 rounded-lg ${
               isResultadoPositive ? 'bg-green-500/10' : 'bg-red-500/10'
             }`}>
-              <div className="flex items-center gap-2">
-                <CircleDollarSign className="h-4 w-4" />
-                <span className={`text-sm ${isResultadoPositive ? 'text-green-500' : 'text-red-500'}`}>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <CircleDollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className={`text-xs sm:text-sm ${isResultadoPositive ? 'text-green-500' : 'text-red-500'}`}>
                   {isResultadoPositive 
                     ? `Lucro projetado de ${formatCurrency(projectedResultado)}`
                     : `Prejuízo projetado de ${formatCurrency(Math.abs(projectedResultado))}`
@@ -318,17 +318,17 @@ export function SalesVelocityKPI({
 
           {/* Projeção em USD */}
           {elapsedDays > 0 && dollarRate && (
-            <div className="p-3 bg-background/50 rounded-lg border border-border/50">
+            <div className="p-2 sm:p-3 bg-background/50 rounded-lg border border-border/50">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <DollarSign className={`h-4 w-4 ${isResultadoPositive ? 'text-green-500' : 'text-red-500'}`} />
-                  <span className="text-xs text-muted-foreground">Projeção em USD</span>
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <DollarSign className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isResultadoPositive ? 'text-green-500' : 'text-red-500'}`} />
+                  <span className="text-[10px] sm:text-xs text-muted-foreground">Projeção em USD</span>
                 </div>
-                <span className={`text-lg font-bold ${isResultadoPositive ? 'text-green-500' : 'text-red-500'}`}>
+                <span className={`text-sm sm:text-lg font-bold ${isResultadoPositive ? 'text-green-500' : 'text-red-500'}`}>
                   $ {(projectedResultado / dollarRate).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                 </span>
               </div>
-              <div className="flex justify-between text-xs mt-1">
+              <div className="flex justify-between text-[10px] sm:text-xs mt-1">
                 <span className="text-muted-foreground">Cotação comercial</span>
                 <span className="text-muted-foreground">R$ {dollarRate.toFixed(2)}</span>
               </div>
@@ -336,7 +336,7 @@ export function SalesVelocityKPI({
           )}
 
           {elapsedDays === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-2">
+            <p className="text-xs sm:text-sm text-muted-foreground text-center py-2">
               Projeção disponível após início do mês
             </p>
           )}

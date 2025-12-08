@@ -92,7 +92,7 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 sm:p-6">
       <div 
         className="fixed inset-0 pointer-events-none"
         style={{
@@ -101,24 +101,24 @@ export default function Auth() {
       />
       
       <div className="w-full max-w-md relative">
-        <div className="text-center mb-8">
+        <div className="text-center mb-6 sm:mb-8">
           <img 
             src="/images/logo-branco.png" 
             alt="Orlando Fast Pass" 
-            className="h-16 mx-auto mb-4"
+            className="h-12 sm:h-16 mx-auto mb-3 sm:mb-4"
           />
-          <h1 className="text-2xl font-bold">
+          <h1 className="text-xl sm:text-2xl font-bold">
             <span className="gradient-text">Orlando Fast Pass</span>
           </h1>
-          <p className="text-muted-foreground mt-2">Hub de Gestão</p>
+          <p className="text-muted-foreground mt-1 sm:mt-2 text-sm sm:text-base">Hub de Gestão</p>
         </div>
 
-        <div className="glass rounded-xl p-8">
-          <div className="flex mb-6">
+        <div className="glass rounded-xl p-6 sm:p-8">
+          <div className="flex mb-4 sm:mb-6">
             <button
               type="button"
               onClick={() => setIsLogin(true)}
-              className={`flex-1 py-2 text-center font-medium transition-colors ${
+              className={`flex-1 py-2 text-center font-medium transition-colors text-sm sm:text-base ${
                 isLogin 
                   ? "text-primary border-b-2 border-primary" 
                   : "text-muted-foreground border-b border-border"
@@ -129,7 +129,7 @@ export default function Auth() {
             <button
               type="button"
               onClick={() => setIsLogin(false)}
-              className={`flex-1 py-2 text-center font-medium transition-colors ${
+              className={`flex-1 py-2 text-center font-medium transition-colors text-sm sm:text-base ${
                 !isLogin 
                   ? "text-primary border-b-2 border-primary" 
                   : "text-muted-foreground border-b border-border"
@@ -139,10 +139,10 @@ export default function Auth() {
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
             {!isLogin && (
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Nome Completo</Label>
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="fullName" className="text-sm">Nome Completo</Label>
                 <Input
                   id="fullName"
                   type="text"
@@ -150,12 +150,13 @@ export default function Auth() {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   required={!isLogin}
+                  className="h-10 sm:h-11"
                 />
               </div>
             )}
 
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="email" className="text-sm">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -163,11 +164,12 @@ export default function Auth() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="h-10 sm:h-11"
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="password" className="text-sm">Senha</Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -177,6 +179,7 @@ export default function Auth() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
+                  className="h-10 sm:h-11"
                 />
                 <button
                   type="button"
@@ -188,7 +191,7 @@ export default function Auth() {
               </div>
             </div>
 
-            <Button type="submit" className="w-full gap-2" disabled={isLoading}>
+            <Button type="submit" className="w-full gap-2 h-10 sm:h-11 mt-2" disabled={isLoading}>
               {isLoading ? (
                 "Carregando..."
               ) : isLogin ? (
