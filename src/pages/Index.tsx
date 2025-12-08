@@ -437,6 +437,31 @@ const Index = () => {
   // Calculate profit (Comissão Total - Custo Total)
   const resultado = totalComissaoTotal - totalCost;
 
+  // Calculate Ganho Bruto (Comissão Total - Comissão Vendedor)
+  const ganhoBruto = totalComissaoTotal - (dashboardTotals?.totalComissao || 0);
+
+  // Calculate proportional costs based on elapsed days
+  const calcularCustoProporcional = () => {
+    const now = new Date();
+    const [m, y] = dashboardMonth !== 'all' ? dashboardMonth.split('/') : [String(now.getMonth() + 1), String(now.getFullYear())];
+    const month = parseInt(m) - 1;
+    const year = parseInt(y);
+    
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const currentDay = now.getMonth() === month && now.getFullYear() === year ? now.getDate() : daysInMonth;
+    const proporcao = currentDay / daysInMonth;
+    
+    // Custos fixos mensais proporcionais aos dias decorridos
+    const custosProporcional = (totalSalaries + marketingCost + operationalCost) * proporcao;
+    // Imposto estimado proporcional
+    const impostoProporcional = impostoEstimado * proporcao;
+    
+    return custosProporcional + impostoProporcional;
+  };
+
+  const custoProporcional = calcularCustoProporcional();
+  const resultadoParcial = ganhoBruto - custoProporcional;
+
   // Calculate results by fortnight (quinzena)
   const { primeiraQuinzena, segundaQuinzena } = useMemo(() => {
     let primeira = { comissaoTotal: 0, comissaoVendedor: 0 };
@@ -631,10 +656,17 @@ const Index = () => {
                   />
                   <MetricCard
                     title="Ganho Bruto"
-                    value={formatCurrency(totalComissaoTotal - (dashboardTotals?.totalComissao || 0))}
+                    value={formatCurrency(ganhoBruto)}
                     icon={TrendingUp}
                     delay={85}
                     variant="success"
+                  />
+                  <MetricCard
+                    title="Resultado Parcial"
+                    value={formatCurrency(resultadoParcial)}
+                    icon={TrendingUp}
+                    delay={90}
+                    variant={resultadoParcial >= 0 ? "success" : "danger"}
                   />
                 </div>
 
