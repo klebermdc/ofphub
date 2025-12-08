@@ -94,7 +94,7 @@ serve(async (req) => {
   }
 
   try {
-    // Authenticate user
+    // Get auth header - JWT is already verified by Supabase when verify_jwt = true
     const authHeader = req.headers.get('Authorization');
     console.log('Auth header present:', !!authHeader);
     
@@ -106,29 +106,28 @@ serve(async (req) => {
       );
     }
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY');
-    console.log('Supabase URL configured:', !!supabaseUrl);
-    console.log('Supabase Key configured:', !!supabaseKey);
-
-    const supabaseClient = createClient(
-      supabaseUrl ?? '',
-      supabaseKey ?? '',
-      { global: { headers: { Authorization: authHeader } } }
-    );
-
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
-    console.log('Auth result - user:', !!user, 'error:', authError?.message);
-    
-    if (authError || !user) {
-      console.log('Authentication failed:', authError?.message);
+    // Extract and decode JWT to get user info
+    const token = authHeader.replace('Bearer ', '');
+    const parts = token.split('.');
+    if (parts.length !== 3) {
       return new Response(
-        JSON.stringify({ error: 'Authentication failed', details: authError?.message }),
+        JSON.stringify({ error: 'Invalid token format' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Authenticated user:', user.id);
+    // Decode JWT payload (already verified by Supabase)
+    const payload = JSON.parse(atob(parts[1]));
+    const userId = payload.sub;
+    
+    if (!userId) {
+      return new Response(
+        JSON.stringify({ error: 'No user in token' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('Authenticated user:', userId);
 
     const { sheetUrl, action, data } = await req.json();
 
