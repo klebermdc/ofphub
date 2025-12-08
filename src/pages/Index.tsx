@@ -15,7 +15,7 @@ import { GoalsKPICard } from "@/components/GoalsKPICard";
 import { SalesVelocityKPI } from "@/components/SalesVelocityKPI";
 import { SalesRanking } from "@/components/SalesRanking";
 import { SalaryManagementDialog } from "@/components/SalaryManagementDialog";
-import { MonthComparisonCard } from "@/components/MonthComparisonCard";
+
 import { RevenueForecastChart } from "@/components/RevenueForecastChart";
 import { SalespersonROI } from "@/components/SalespersonROI";
 import { DailySalesTracker } from "@/components/DailySalesTracker";
@@ -719,12 +719,6 @@ const Index = () => {
                   />
                 </div>
 
-                {/* Comparação Mensal */}
-                <MonthComparisonCard 
-                  salesReps={salesReps}
-                  availableMonths={availableMonths}
-                  currentMonth={dashboardMonth}
-                />
 
                 {/* Gráficos - Vendedor, Produto, Fornecedor */}
                 <SalesChart salesReps={dashboardFilteredSalesReps} />
