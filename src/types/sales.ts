@@ -1,5 +1,6 @@
 export interface OrderDetail {
   cliente: string;
+  emailCliente?: string;
   data: string;
   pedido: string;
   venda: number;
@@ -9,6 +10,7 @@ export interface OrderDetail {
   comissaoTotal: number;
   porcentagemVendedor: number;
   comissaoVendedor: number;
+  status?: string;
   rowIndex?: number;
 }
 

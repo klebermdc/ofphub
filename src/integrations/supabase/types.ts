@@ -482,11 +482,13 @@ export type Database = {
           comissao_vendedor: number
           created_at: string
           data: string
+          email_cliente: string | null
           fornecedor: string | null
           id: string
           pedido: string | null
           porcentagem_vendedor: number
           produto: string | null
+          status: string | null
           updated_at: string
           user_id: string
           venda: number
@@ -499,11 +501,13 @@ export type Database = {
           comissao_vendedor?: number
           created_at?: string
           data: string
+          email_cliente?: string | null
           fornecedor?: string | null
           id?: string
           pedido?: string | null
           porcentagem_vendedor?: number
           produto?: string | null
+          status?: string | null
           updated_at?: string
           user_id: string
           venda?: number
@@ -516,11 +520,13 @@ export type Database = {
           comissao_vendedor?: number
           created_at?: string
           data?: string
+          email_cliente?: string | null
           fornecedor?: string | null
           id?: string
           pedido?: string | null
           porcentagem_vendedor?: number
           produto?: string | null
+          status?: string | null
           updated_at?: string
           user_id?: string
           venda?: number
