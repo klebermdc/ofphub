@@ -198,7 +198,7 @@ const AllOrders = () => {
   }, [filteredOrders]);
 
   const formatCurrency = (value: number) => {
-    return `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `R$\u00A0${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
   const clearFilters = () => {
