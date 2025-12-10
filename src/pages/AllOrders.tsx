@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { DollarSign, TrendingUp, Package, Calendar, Filter, ArrowLeft, Users, ShoppingBag, Building, RefreshCw, Edit2, Wallet } from "lucide-react";
+import { DollarSign, TrendingUp, Package, Calendar, Filter, ArrowLeft, Users, ShoppingBag, Building, RefreshCw, Edit2, Wallet, Send } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
 import { OrderFormDialog } from "@/components/OrderFormDialog";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,7 +10,10 @@ import { useSheetSettings } from "@/hooks/useSheetSettings";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 import { getMonthName } from "@/hooks/useCommissionHistory";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 interface Order {
   cliente: string;
@@ -35,6 +38,7 @@ const AllOrders = () => {
   const { salesReps, isLoading: dataLoading, hasData, refreshData } = useSheetData();
   const { savedUrl } = useSheetSettings(user?.id);
   const [refreshing, setRefreshing] = useState(false);
+  const [enviadoStatus, setEnviadoStatus] = useState<Record<string, boolean>>({});
 
   // Load data on mount
   useEffect(() => {
@@ -44,6 +48,63 @@ const AllOrders = () => {
   }, [user, hasData, dataLoading, refreshData]);
   const navigate = useNavigate();
   
+  // Fetch enviado status from database
+  const fetchEnviadoStatus = useCallback(async () => {
+    if (!user) return;
+    
+    const { data, error } = await supabase
+      .from('orders')
+      .select('pedido, enviado');
+    
+    if (!error && data) {
+      const statusMap: Record<string, boolean> = {};
+      data.forEach(order => {
+        if (order.pedido) {
+          statusMap[order.pedido] = order.enviado || false;
+        }
+      });
+      setEnviadoStatus(statusMap);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchEnviadoStatus();
+  }, [fetchEnviadoStatus]);
+
+  // Toggle enviado status
+  const toggleEnviado = async (pedido: string, currentValue: boolean) => {
+    if (!user) return;
+    
+    const newValue = !currentValue;
+    
+    // Optimistic update
+    setEnviadoStatus(prev => ({ ...prev, [pedido]: newValue }));
+    
+    // Check if order exists in DB
+    const { data: existing } = await supabase
+      .from('orders')
+      .select('id')
+      .eq('pedido', pedido)
+      .maybeSingle();
+    
+    if (existing) {
+      // Update existing
+      const { error } = await supabase
+        .from('orders')
+        .update({ enviado: newValue })
+        .eq('pedido', pedido);
+      
+      if (error) {
+        // Revert on error
+        setEnviadoStatus(prev => ({ ...prev, [pedido]: currentValue }));
+        toast({ title: "Erro", description: "Falha ao atualizar status", variant: "destructive" });
+      }
+    } else {
+      // Just update local state for now - order not in DB
+      toast({ title: "Aviso", description: "Pedido atualizado localmente", variant: "default" });
+    }
+  };
+
   // Filters
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
   const [selectedVendedor, setSelectedVendedor] = useState<string>('all');
@@ -443,6 +504,9 @@ const AllOrders = () => {
                       <TableHeader>
                         <TableRow>
                           <TableHead className="text-xs sm:text-sm w-10"></TableHead>
+                          <TableHead className="text-xs sm:text-sm text-center w-16">
+                            <Send className="h-3.5 w-3.5 mx-auto" />
+                          </TableHead>
                           <TableHead className="text-xs sm:text-sm">Data</TableHead>
                           <TableHead className="text-xs sm:text-sm">Pedido</TableHead>
                           <TableHead className="text-xs sm:text-sm">Vendedor</TableHead>
@@ -487,6 +551,13 @@ const AllOrders = () => {
                                     <Edit2 className="h-3.5 w-3.5" />
                                   </Button>
                                 }
+                              />
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Checkbox
+                                checked={enviadoStatus[order.pedido] || false}
+                                onCheckedChange={() => toggleEnviado(order.pedido, enviadoStatus[order.pedido] || false)}
+                                className="data-[state=checked]:bg-success data-[state=checked]:border-success"
                               />
                             </TableCell>
                             <TableCell className="text-xs sm:text-sm">{order.data || '-'}</TableCell>

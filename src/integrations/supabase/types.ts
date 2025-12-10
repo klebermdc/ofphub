@@ -483,6 +483,7 @@ export type Database = {
           created_at: string
           data: string
           email_cliente: string | null
+          enviado: boolean
           fornecedor: string | null
           id: string
           pedido: string | null
@@ -502,6 +503,7 @@ export type Database = {
           created_at?: string
           data: string
           email_cliente?: string | null
+          enviado?: boolean
           fornecedor?: string | null
           id?: string
           pedido?: string | null
@@ -521,6 +523,7 @@ export type Database = {
           created_at?: string
           data?: string
           email_cliente?: string | null
+          enviado?: boolean
           fornecedor?: string | null
           id?: string
           pedido?: string | null
