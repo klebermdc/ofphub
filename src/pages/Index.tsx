@@ -26,6 +26,7 @@ import { SalesRep, SalesTotals } from "@/types/sales";
 import { generateSalesRepPDF } from "@/utils/pdfGenerator";
 import { generateConsolidatedPDF } from "@/utils/consolidatedPdfGenerator";
 import { useCommissionHistory, getMonthName } from "@/hooks/useCommissionHistory";
+import { isExcludedName } from "@/config/salaries";
 import { useAuth } from "@/hooks/useAuth";
 import { useSheetSettings } from "@/hooks/useSheetSettings";
 import { useSalespersonSalaries } from "@/hooks/useSalespersonSalaries";
@@ -404,10 +405,7 @@ const Index = () => {
   const operationalCost = getOperationalCostsForMonth(currentGoalMonth, currentGoalYear);
   
   // Calculate Custo Equipe Comercial (Comissão Vendedores + Salários) - excluding partners
-  const partnersToExclude = ['kleber', 'renata', 'site'];
-  const nonPartnerReps = dashboardFilteredSalesReps.filter(
-    rep => !partnersToExclude.some(partner => rep.name.toLowerCase().includes(partner))
-  );
+  const nonPartnerReps = dashboardFilteredSalesReps.filter(rep => !isExcludedName(rep.name));
   const nonPartnerCommissions = nonPartnerReps.reduce((sum, rep) => sum + rep.commission, 0);
   const nonPartnerSalaries = nonPartnerReps.reduce((sum, rep) => sum + getSalary(rep.name), 0);
   const custoEquipeComercial = nonPartnerCommissions + nonPartnerSalaries;

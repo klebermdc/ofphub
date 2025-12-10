@@ -3,7 +3,7 @@ import { Button } from "./ui/button";
 import { SalesRep } from "@/types/sales";
 import { useCommissionPayments } from "@/hooks/useCommissionPayments";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "./ui/dialog";
 import { toast } from "sonner";
+import { isExcludedName } from "@/config/salaries";
 
 interface SalesRepTableProps {
   salesReps: SalesRep[];
@@ -22,6 +23,12 @@ interface SalesRepTableProps {
 
 export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selectedYear, getSalary }: SalesRepTableProps) {
   const { isPaid, togglePayment, uploadReceipt, getReceiptUrl, loading } = useCommissionPayments(selectedMonth, selectedYear);
+  
+  // Filter out excluded names (partners)
+  const filteredSalesReps = useMemo(() => 
+    salesReps.filter(rep => !isExcludedName(rep.name)), 
+    [salesReps]
+  );
   const [receiptDialog, setReceiptDialog] = useState<{ open: boolean; url: string; name: string }>({
     open: false,
     url: '',
@@ -152,7 +159,7 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
               </tr>
             </thead>
             <tbody>
-              {salesReps.map((rep, index) => {
+              {filteredSalesReps.map((rep, index) => {
                 const salary = getSalary(rep.name);
                 const totalToReceive = rep.commission + salary;
                 const receiptUrl = getReceiptUrl(rep.name);
