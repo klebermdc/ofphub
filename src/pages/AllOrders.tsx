@@ -489,16 +489,16 @@ const AllOrders = () => {
                             <TableCell className="text-xs sm:text-sm">{order.cliente || '-'}</TableCell>
                             <TableCell className="max-w-[150px] sm:max-w-[200px] truncate text-xs sm:text-sm">{order.produto || '-'}</TableCell>
                             <TableCell className="text-xs sm:text-sm">{order.fornecedor || '-'}</TableCell>
-                            <TableCell className="text-right font-mono text-xs sm:text-sm">
+                            <TableCell className="text-right font-mono text-xs sm:text-sm whitespace-nowrap">
                               {formatCurrency(order.venda)}
                             </TableCell>
-                            <TableCell className="text-right font-mono text-warning text-xs sm:text-sm">
+                            <TableCell className="text-right font-mono text-warning text-xs sm:text-sm whitespace-nowrap">
                               {formatCurrency(order.comissaoTotal)}
                             </TableCell>
-                            <TableCell className="text-right font-mono text-orange-400 text-xs sm:text-sm">
+                            <TableCell className="text-right font-mono text-orange-400 text-xs sm:text-sm whitespace-nowrap">
                               {formatCurrency(order.comissaoVendedor)}
                             </TableCell>
-                            <TableCell className="text-right font-mono text-success text-xs sm:text-sm">
+                            <TableCell className="text-right font-mono text-success text-xs sm:text-sm whitespace-nowrap">
                               {formatCurrency(order.comissaoTotal - order.comissaoVendedor)}
                             </TableCell>
                           </TableRow>
