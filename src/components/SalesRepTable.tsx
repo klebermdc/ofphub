@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from "./ui/dialog";
 import { toast } from "sonner";
-import { isExcludedName } from "@/config/salaries";
+import { SALESPERSON_SALARIES, isExcludedName } from "@/config/salaries";
 
 interface SalesRepTableProps {
   salesReps: SalesRep[];
@@ -24,11 +24,29 @@ interface SalesRepTableProps {
 export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selectedYear, getSalary }: SalesRepTableProps) {
   const { isPaid, togglePayment, uploadReceipt, getReceiptUrl, loading } = useCommissionPayments(selectedMonth, selectedYear);
   
-  // Filter out excluded names (partners)
-  const filteredSalesReps = useMemo(() => 
-    salesReps.filter(rep => !isExcludedName(rep.name)), 
-    [salesReps]
-  );
+  // Filter out excluded names (partners) but add salary-only people (like Henrique TI)
+  const allPeopleForPayment = useMemo(() => {
+    // Get salesReps without excluded names
+    const filteredSalesReps = salesReps.filter(rep => !isExcludedName(rep.name));
+    
+    // Get names already in salesReps
+    const existingNames = new Set(filteredSalesReps.map(rep => rep.name.toLowerCase()));
+    
+    // Add salary-only people who aren't in salesReps
+    const salaryOnlyPeople: SalesRep[] = Object.keys(SALESPERSON_SALARIES)
+      .filter(name => !existingNames.has(name.toLowerCase()) && !isExcludedName(name))
+      .map(name => ({
+        id: `salary-only-${name}`,
+        name,
+        sales: 0,
+        commission: 0,
+        deals: 0,
+        rate: 0,
+        orders: []
+      }));
+    
+    return [...filteredSalesReps, ...salaryOnlyPeople];
+  }, [salesReps]);
   const [receiptDialog, setReceiptDialog] = useState<{ open: boolean; url: string; name: string }>({
     open: false,
     url: '',
@@ -159,7 +177,7 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
               </tr>
             </thead>
             <tbody>
-              {filteredSalesReps.map((rep, index) => {
+              {allPeopleForPayment.map((rep, index) => {
                 const salary = getSalary(rep.name);
                 const totalToReceive = rep.commission + salary;
                 const receiptUrl = getReceiptUrl(rep.name);
