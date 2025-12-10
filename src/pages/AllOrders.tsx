@@ -444,7 +444,9 @@ const AllOrders = () => {
                           <TableHead className="text-xs sm:text-sm">Produto</TableHead>
                           <TableHead className="text-xs sm:text-sm">Fornecedor</TableHead>
                           <TableHead className="text-right text-xs sm:text-sm">Venda</TableHead>
-                          <TableHead className="text-right text-xs sm:text-sm">Comissão</TableHead>
+                          <TableHead className="text-right text-xs sm:text-sm">Com. Total</TableHead>
+                          <TableHead className="text-right text-xs sm:text-sm">Com. Vend.</TableHead>
+                          <TableHead className="text-right text-xs sm:text-sm">Ganho</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -490,8 +492,14 @@ const AllOrders = () => {
                             <TableCell className="text-right font-mono text-xs sm:text-sm">
                               {formatCurrency(order.venda)}
                             </TableCell>
-                            <TableCell className="text-right font-mono text-success text-xs sm:text-sm">
+                            <TableCell className="text-right font-mono text-warning text-xs sm:text-sm">
+                              {formatCurrency(order.comissaoTotal)}
+                            </TableCell>
+                            <TableCell className="text-right font-mono text-orange-400 text-xs sm:text-sm">
                               {formatCurrency(order.comissaoVendedor)}
+                            </TableCell>
+                            <TableCell className="text-right font-mono text-success text-xs sm:text-sm">
+                              {formatCurrency(order.comissaoTotal - order.comissaoVendedor)}
                             </TableCell>
                           </TableRow>
                         ))}
