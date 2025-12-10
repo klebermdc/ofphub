@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { DollarSign, TrendingUp, Package, Calendar, LogOut, User, Kanban, BarChart3, Sparkles, ArrowLeft } from "lucide-react";
+import { DollarSign, TrendingUp, Package, Calendar, LogOut, User, Kanban, BarChart3, Sparkles, ArrowLeft, Send } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
 import { getMonthName } from "@/hooks/useCommissionHistory";
 import { SalespersonGoalKPI } from "@/components/SalespersonGoalKPI";
 import { SalespersonVelocityKPI } from "@/components/SalespersonVelocityKPI";
@@ -17,6 +18,8 @@ import { SalespersonFollowUpAlerts } from "@/components/SalespersonFollowUpAlert
 import { SalespersonTopItems } from "@/components/SalespersonTopItems";
 import { CRMTab } from "@/components/crm/CRMTab";
 import { ProposalTab } from "@/components/proposals/ProposalTab";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 const SalespersonDashboard = () => {
   const { salespersonName: urlSalespersonName } = useParams<{ salespersonName?: string }>();
@@ -40,6 +43,61 @@ const SalespersonDashboard = () => {
   };
   
   const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonthKey());
+  const [enviadoStatus, setEnviadoStatus] = useState<Record<string, boolean>>({});
+
+  // Fetch enviado status from database
+  const fetchEnviadoStatus = useCallback(async () => {
+    if (!user) return;
+    
+    const { data, error } = await supabase
+      .from('orders')
+      .select('pedido, enviado');
+    
+    if (!error && data) {
+      const statusMap: Record<string, boolean> = {};
+      data.forEach(order => {
+        if (order.pedido) {
+          statusMap[order.pedido] = order.enviado || false;
+        }
+      });
+      setEnviadoStatus(statusMap);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchEnviadoStatus();
+  }, [fetchEnviadoStatus]);
+
+  // Toggle enviado status
+  const toggleEnviado = async (pedido: string, currentValue: boolean) => {
+    if (!user) return;
+    
+    const newValue = !currentValue;
+    
+    // Optimistic update
+    setEnviadoStatus(prev => ({ ...prev, [pedido]: newValue }));
+    
+    // Check if order exists in DB
+    const { data: existing } = await supabase
+      .from('orders')
+      .select('id')
+      .eq('pedido', pedido)
+      .maybeSingle();
+    
+    if (existing) {
+      const { error } = await supabase
+        .from('orders')
+        .update({ enviado: newValue })
+        .eq('pedido', pedido);
+      
+      if (error) {
+        setEnviadoStatus(prev => ({ ...prev, [pedido]: currentValue }));
+        toast({ title: "Erro", description: "Falha ao atualizar status", variant: "destructive" });
+      }
+    } else {
+      toast({ title: "Aviso", description: "Pedido atualizado localmente", variant: "default" });
+    }
+  };
 
   // Redirect logic - only for salespeople accessing their own dashboard
   useEffect(() => {
@@ -342,6 +400,9 @@ const SalespersonDashboard = () => {
                     <Table>
                       <TableHeader>
                         <TableRow>
+                          <TableHead className="text-xs sm:text-sm text-center w-16">
+                            <Send className="h-3.5 w-3.5 mx-auto" />
+                          </TableHead>
                           <TableHead className="text-xs sm:text-sm">Data</TableHead>
                           <TableHead className="text-xs sm:text-sm">Pedido</TableHead>
                           <TableHead className="text-xs sm:text-sm">Cliente</TableHead>
@@ -354,6 +415,13 @@ const SalespersonDashboard = () => {
                       <TableBody>
                         {filteredOrders.map((order, index) => (
                           <TableRow key={index}>
+                            <TableCell className="text-center">
+                              <Checkbox
+                                checked={enviadoStatus[order.pedido] || false}
+                                onCheckedChange={() => toggleEnviado(order.pedido, enviadoStatus[order.pedido] || false)}
+                                className="data-[state=checked]:bg-success data-[state=checked]:border-success"
+                              />
+                            </TableCell>
                             <TableCell className="text-xs sm:text-sm">{order.data || '-'}</TableCell>
                             <TableCell className="text-xs sm:text-sm">{order.pedido || '-'}</TableCell>
                             <TableCell className="text-xs sm:text-sm">{order.cliente || '-'}</TableCell>
