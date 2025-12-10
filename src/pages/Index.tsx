@@ -598,7 +598,6 @@ const Index = () => {
                   <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
                     <OperationalCostsDialog onSave={saveOperationalCosts} getCostForMonth={getCostForMonth} />
                     <SheetInput onAnalyze={handleAnalyze} isLoading={isLoading} compact savedUrl={savedUrl} />
-                    <SaveReportDialog onSave={handleSaveReport} disabled={!hasData} />
                     <Button
                       variant="outline"
                       size="sm"
@@ -608,27 +607,6 @@ const Index = () => {
                       <ClipboardList className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       <span className="hidden sm:inline">Todos os Pedidos</span>
                       <span className="sm:hidden">Pedidos</span>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={async () => {
-                        toast({ title: "Gerando PDF...", description: "Relatório consolidado será baixado em instantes." });
-                        const [m, y] = dashboardMonth !== 'all' ? dashboardMonth.split('/') : ['', ''];
-                        await generateConsolidatedPDF({
-                          salesReps: dashboardFilteredSalesReps,
-                          totals: dashboardTotals,
-                          getSalary,
-                          month: m ? getMonthName(parseInt(m)) : undefined,
-                          year: y || undefined
-                        });
-                        toast({ title: "PDF pronto!", description: "Relatório consolidado baixado com sucesso." });
-                      }}
-                      className="gap-1 sm:gap-2 text-xs sm:text-sm"
-                    >
-                      <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                      <span className="hidden sm:inline">PDF Consolidado</span>
-                      <span className="sm:hidden">PDF</span>
                     </Button>
                   </div>
                 </div>
