@@ -157,6 +157,42 @@ export type Database = {
           },
         ]
       }
+      commission_payments: {
+        Row: {
+          created_at: string
+          id: string
+          paid: boolean
+          paid_at: string | null
+          period_month: number
+          period_year: number
+          salesperson_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          paid?: boolean
+          paid_at?: string | null
+          period_month: number
+          period_year: number
+          salesperson_name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          paid?: boolean
+          paid_at?: string | null
+          period_month?: number
+          period_year?: number
+          salesperson_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       commission_reports: {
         Row: {
           created_at: string
