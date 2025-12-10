@@ -938,6 +938,7 @@ const Index = () => {
                   onGeneratePDF={handleGeneratePDF}
                   selectedMonth={parseInt(selectedMonth.split('/')[0])}
                   selectedYear={parseInt(selectedMonth.split('/')[1])}
+                  getSalary={getSalary}
                 />
               </>
             ) : (

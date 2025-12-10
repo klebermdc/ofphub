@@ -10,6 +10,7 @@ interface CommissionPayment {
   period_year: number;
   paid: boolean;
   paid_at: string | null;
+  receipt_url: string | null;
 }
 
 export function useCommissionPayments(month: number, year: number) {
@@ -47,7 +48,6 @@ export function useCommissionPayments(month: number, year: number) {
 
     try {
       if (existingPayment) {
-        // Update existing payment
         const newPaidStatus = !existingPayment.paid;
         const { error } = await supabase
           .from('commission_payments')
@@ -64,7 +64,6 @@ export function useCommissionPayments(month: number, year: number) {
           description: `${salespersonName} - ${month}/${year}`,
         });
       } else {
-        // Insert new payment record
         const { error } = await supabase
           .from('commission_payments')
           .insert({
@@ -95,9 +94,79 @@ export function useCommissionPayments(month: number, year: number) {
     }
   };
 
+  const uploadReceipt = async (salespersonName: string, file: File) => {
+    if (!user) return;
+
+    const existingPayment = payments.find(
+      p => p.salesperson_name === salespersonName
+    );
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${salespersonName}_${month}_${year}_${Date.now()}.${fileExt}`;
+
+      // Upload file to storage
+      const { error: uploadError } = await supabase.storage
+        .from('payment-receipts')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('payment-receipts')
+        .getPublicUrl(fileName);
+
+      const receiptUrl = urlData.publicUrl;
+
+      if (existingPayment) {
+        // Update existing payment with receipt
+        const { error } = await supabase
+          .from('commission_payments')
+          .update({ receipt_url: receiptUrl })
+          .eq('id', existingPayment.id);
+
+        if (error) throw error;
+      } else {
+        // Create new payment record with receipt
+        const { error } = await supabase
+          .from('commission_payments')
+          .insert({
+            user_id: user.id,
+            salesperson_name: salespersonName,
+            period_month: month,
+            period_year: year,
+            paid: false,
+            receipt_url: receiptUrl
+          });
+
+        if (error) throw error;
+      }
+
+      toast({
+        title: "Comprovante anexado",
+        description: `Comprovante de ${salespersonName} salvo com sucesso.`,
+      });
+
+      fetchPayments();
+    } catch (error) {
+      console.error('Error uploading receipt:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível anexar o comprovante.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const isPaid = (salespersonName: string): boolean => {
     const payment = payments.find(p => p.salesperson_name === salespersonName);
     return payment?.paid || false;
+  };
+
+  const getReceiptUrl = (salespersonName: string): string | null => {
+    const payment = payments.find(p => p.salesperson_name === salespersonName);
+    return payment?.receipt_url || null;
   };
 
   useEffect(() => {
@@ -109,6 +178,8 @@ export function useCommissionPayments(month: number, year: number) {
     loading,
     togglePayment,
     isPaid,
+    getReceiptUrl,
+    uploadReceipt,
     refetch: fetchPayments
   };
 }

@@ -165,6 +165,7 @@ export type Database = {
           paid_at: string | null
           period_month: number
           period_year: number
+          receipt_url: string | null
           salesperson_name: string
           updated_at: string
           user_id: string
@@ -176,6 +177,7 @@ export type Database = {
           paid_at?: string | null
           period_month: number
           period_year: number
+          receipt_url?: string | null
           salesperson_name: string
           updated_at?: string
           user_id: string
@@ -187,6 +189,7 @@ export type Database = {
           paid_at?: string | null
           period_month?: number
           period_year?: number
+          receipt_url?: string | null
           salesperson_name?: string
           updated_at?: string
           user_id?: string
