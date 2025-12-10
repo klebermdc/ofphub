@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { DollarSign, TrendingUp, Package, Calendar, Filter, ArrowLeft, Users, ShoppingBag, Building, RefreshCw, Edit2 } from "lucide-react";
+import { DollarSign, TrendingUp, Package, Calendar, Filter, ArrowLeft, Users, ShoppingBag, Building, RefreshCw, Edit2, Wallet } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
 import { OrderFormDialog } from "@/components/OrderFormDialog";
 import { useAuth } from "@/hooks/useAuth";
@@ -389,7 +389,7 @@ const AllOrders = () => {
             </div>
 
             {/* Metrics */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
               <MetricCard
                 title="Total em Vendas"
                 value={formatCurrency(totals.totalVendas)}
@@ -407,6 +407,12 @@ const AllOrders = () => {
                 value={formatCurrency(totals.totalComissao)}
                 icon={TrendingUp}
                 variant="info"
+              />
+              <MetricCard
+                title="Ganho Bruto"
+                value={formatCurrency(totals.totalComissaoTotal - totals.totalComissao)}
+                icon={Wallet}
+                variant="success"
               />
               <MetricCard
                 title="Pedidos"
