@@ -1,15 +1,16 @@
-import { FileDown, User, Check, Circle, Paperclip, Eye } from "lucide-react";
+import { FileDown, User, Check, Circle, Image, Eye } from "lucide-react";
 import { Button } from "./ui/button";
 import { SalesRep } from "@/types/sales";
 import { useCommissionPayments } from "@/hooks/useCommissionPayments";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "./ui/dialog";
+import { toast } from "sonner";
 
 interface SalesRepTableProps {
   salesReps: SalesRep[];
@@ -21,30 +22,62 @@ interface SalesRepTableProps {
 
 export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selectedYear, getSalary }: SalesRepTableProps) {
   const { isPaid, togglePayment, uploadReceipt, getReceiptUrl, loading } = useCommissionPayments(selectedMonth, selectedYear);
-  const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
   const [receiptDialog, setReceiptDialog] = useState<{ open: boolean; url: string; name: string }>({
     open: false,
     url: '',
     name: ''
   });
-
-  const handleFileChange = (salespersonName: string, event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      uploadReceipt(salespersonName, file);
-    }
-    // Reset input
-    if (fileInputRefs.current[salespersonName]) {
-      fileInputRefs.current[salespersonName]!.value = '';
-    }
-  };
+  const [pasteDialog, setPasteDialog] = useState<{ open: boolean; name: string }>({
+    open: false,
+    name: ''
+  });
+  const [pastedImage, setPastedImage] = useState<string | null>(null);
 
   const openReceiptDialog = (url: string, name: string) => {
     setReceiptDialog({ open: true, url, name });
   };
 
+  const openPasteDialog = (name: string) => {
+    setPastedImage(null);
+    setPasteDialog({ open: true, name });
+  };
+
+  const handlePaste = async (event: React.ClipboardEvent<HTMLDivElement>) => {
+    const items = event.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') !== -1) {
+        const blob = items[i].getAsFile();
+        if (blob) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            setPastedImage(e.target?.result as string);
+          };
+          reader.readAsDataURL(blob);
+        }
+        break;
+      }
+    }
+  };
+
+  const handleSaveReceipt = async () => {
+    if (!pastedImage || !pasteDialog.name) return;
+
+    // Convert base64 to blob
+    const response = await fetch(pastedImage);
+    const blob = await response.blob();
+    const file = new File([blob], `comprovante-${pasteDialog.name}-${Date.now()}.png`, { type: 'image/png' });
+
+    await uploadReceipt(pasteDialog.name, file);
+    setPasteDialog({ open: false, name: '' });
+    setPastedImage(null);
+    toast.success('Comprovante salvo com sucesso!');
+  };
+
   return (
     <>
+      {/* Dialog para visualizar comprovante */}
       <Dialog open={receiptDialog.open} onOpenChange={(open) => setReceiptDialog(prev => ({ ...prev, open }))}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-auto">
           <DialogHeader>
@@ -52,21 +85,51 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
           </DialogHeader>
           <div className="flex justify-center p-4">
             {receiptDialog.url && (
-              receiptDialog.url.toLowerCase().endsWith('.pdf') ? (
-                <iframe 
-                  src={receiptDialog.url} 
-                  className="w-full h-[70vh] border rounded-lg"
-                  title="Comprovante PDF"
-                />
-              ) : (
-                <img 
-                  src={receiptDialog.url} 
-                  alt="Comprovante de pagamento"
-                  className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-lg"
-                />
-              )
+              <img 
+                src={receiptDialog.url} 
+                alt="Comprovante de pagamento"
+                className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-lg"
+              />
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog para colar comprovante */}
+      <Dialog open={pasteDialog.open} onOpenChange={(open) => setPasteDialog(prev => ({ ...prev, open }))}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Comprovante - {pasteDialog.name}</DialogTitle>
+          </DialogHeader>
+          <div 
+            className="min-h-[300px] border-2 border-dashed border-border rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer focus:outline-none focus:border-primary"
+            tabIndex={0}
+            onPaste={handlePaste}
+          >
+            {pastedImage ? (
+              <img 
+                src={pastedImage} 
+                alt="Comprovante colado"
+                className="max-w-full max-h-[400px] object-contain rounded-lg"
+              />
+            ) : (
+              <div className="text-center text-muted-foreground">
+                <Image className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p className="text-lg font-medium">Clique aqui e cole a imagem (Ctrl+V)</p>
+                <p className="text-sm mt-2">Faça print do comprovante e cole aqui</p>
+              </div>
+            )}
+          </div>
+          {pastedImage && (
+            <div className="flex justify-end gap-2 mt-4">
+              <Button variant="outline" onClick={() => setPastedImage(null)}>
+                Limpar
+              </Button>
+              <Button onClick={handleSaveReceipt}>
+                Salvar Comprovante
+              </Button>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
@@ -157,26 +220,19 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
                     </td>
                     <td className="p-3 sm:p-4 text-center">
                       <div className="flex items-center justify-center gap-1">
-                        <input
-                          type="file"
-                          accept="image/*,.pdf"
-                          className="hidden"
-                          ref={(el) => fileInputRefs.current[rep.name] = el}
-                          onChange={(e) => handleFileChange(rep.name, e)}
-                        />
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
                               variant="ghost"
                               size="icon"
                               className={`h-7 w-7 sm:h-8 sm:w-8 ${receiptUrl ? 'text-primary' : 'text-muted-foreground'}`}
-                              onClick={() => fileInputRefs.current[rep.name]?.click()}
+                              onClick={() => openPasteDialog(rep.name)}
                             >
-                              <Paperclip className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                              <Image className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            {receiptUrl ? 'Substituir comprovante' : 'Anexar comprovante'}
+                            {receiptUrl ? 'Substituir comprovante' : 'Colar comprovante'}
                           </TooltipContent>
                         </Tooltip>
                         {receiptUrl && (
