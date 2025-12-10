@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface OrderFormData {
   cliente: string;
+  emailCliente: string;
   data: string;
   pedido: string;
   venda: number;
@@ -27,6 +28,7 @@ interface OrderFormData {
   porcentagemVendedor: number;
   comissaoVendedor: number;
   vendedor: string;
+  status: string;
 }
 
 interface OrderFormDialogProps {
@@ -42,6 +44,7 @@ interface OrderFormDialogProps {
 
 const emptyOrder: OrderFormData = {
   cliente: '',
+  emailCliente: '',
   data: new Date().toLocaleDateString('pt-BR'),
   pedido: '',
   venda: 0,
@@ -52,6 +55,7 @@ const emptyOrder: OrderFormData = {
   porcentagemVendedor: 0,
   comissaoVendedor: 0,
   vendedor: '',
+  status: 'Pendente',
 };
 
 export function OrderFormDialog({
@@ -125,6 +129,7 @@ export function OrderFormDialog({
       const orderData = {
         user_id: user.id,
         cliente: formData.cliente,
+        email_cliente: formData.emailCliente,
         data: formData.data,
         pedido: formData.pedido,
         venda: formData.venda,
@@ -135,6 +140,7 @@ export function OrderFormDialog({
         porcentagem_vendedor: formData.porcentagemVendedor,
         comissao_vendedor: formData.comissaoVendedor,
         vendedor: formData.vendedor,
+        status: formData.status,
       };
 
       if (mode === 'add') {
@@ -232,16 +238,28 @@ export function OrderFormDialog({
             </div>
           </div>
 
-          {/* Row 2: Cliente */}
-          <div className="space-y-2">
-            <Label htmlFor="cliente">Cliente</Label>
-            <Input
-              id="cliente"
-              type="text"
-              placeholder="Nome do cliente"
-              value={formData.cliente}
-              onChange={(e) => handleFieldChange('cliente', e.target.value)}
-            />
+          {/* Row 2: Cliente e Email */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="cliente">Cliente</Label>
+              <Input
+                id="cliente"
+                type="text"
+                placeholder="Nome do cliente"
+                value={formData.cliente}
+                onChange={(e) => handleFieldChange('cliente', e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="emailCliente">Email do Cliente</Label>
+              <Input
+                id="emailCliente"
+                type="email"
+                placeholder="email@exemplo.com"
+                value={formData.emailCliente}
+                onChange={(e) => handleFieldChange('emailCliente', e.target.value)}
+              />
+            </div>
           </div>
 
           {/* Row 3: Produto, Fornecedor */}
@@ -309,7 +327,7 @@ export function OrderFormDialog({
             </div>
           </div>
 
-          {/* Row 5: Porcentagem Vendedor */}
+          {/* Row 5: Porcentagem Vendedor e Status */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="porcentagemVendedor">% Vendedor</Label>
@@ -323,6 +341,21 @@ export function OrderFormDialog({
                 value={formData.porcentagemVendedor || ''}
                 onChange={(e) => handleFieldChange('porcentagemVendedor', parseFloat(e.target.value) || 0)}
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <Select 
+                value={formData.status} 
+                onValueChange={(value) => handleFieldChange('status', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Pendente">Pendente</SelectItem>
+                  <SelectItem value="Enviado">Enviado</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

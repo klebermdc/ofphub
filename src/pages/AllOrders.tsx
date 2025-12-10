@@ -14,6 +14,7 @@ import { getMonthName } from "@/hooks/useCommissionHistory";
 
 interface Order {
   cliente: string;
+  emailCliente?: string;
   data: string;
   pedido: string;
   venda: number;
@@ -24,6 +25,7 @@ interface Order {
   porcentagemVendedor: number;
   comissaoVendedor: number;
   salesperson_name: string;
+  status?: string;
   rowIndex?: number;
 }
 
@@ -453,6 +455,7 @@ const AllOrders = () => {
                                 mode="edit"
                                 order={{
                                   cliente: order.cliente,
+                                  emailCliente: order.emailCliente || '',
                                   data: order.data,
                                   pedido: order.pedido,
                                   venda: order.venda,
@@ -463,6 +466,7 @@ const AllOrders = () => {
                                   porcentagemVendedor: order.porcentagemVendedor,
                                   comissaoVendedor: order.comissaoVendedor,
                                   vendedor: order.salesperson_name,
+                                  status: order.status || 'Pendente',
                                   rowIndex: order.rowIndex
                                 }}
                                 sheetUrl={savedUrl}
