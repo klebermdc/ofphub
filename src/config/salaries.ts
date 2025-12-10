@@ -4,7 +4,6 @@ export const SALESPERSON_SALARIES: Record<string, number> = {
   "Suelen": 1500,
   "Rafael": 5000,
   "Pedro": 1500,
-  "Marcela": 1500,
   "Marcella": 1500,
   "Henrique TI": 500,
 };
