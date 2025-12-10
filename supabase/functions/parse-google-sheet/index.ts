@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { decode as decodeJWT } from "https://deno.land/x/djwt@v3.0.2/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -88,7 +89,7 @@ serve(async (req) => {
   }
 
   try {
-    // Verify authentication
+    // Get authorization header - JWT is already validated by Supabase gateway (verify_jwt = true)
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       console.error('No authorization header provided');
@@ -98,26 +99,28 @@ serve(async (req) => {
       );
     }
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    
-    // Use service role key for server-side auth validation
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    
-    // Extract the JWT token from the auth header
+    // Extract and decode JWT to get user info (no session validation needed - gateway already verified)
     const token = authHeader.replace('Bearer ', '');
+    let userId: string;
     
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
-    if (authError || !user) {
-      console.error('Authentication error:', authError);
+    try {
+      const [_header, payload, _signature] = decodeJWT(token);
+      userId = (payload as { sub?: string }).sub || '';
+      
+      if (!userId) {
+        throw new Error('No user ID in token');
+      }
+      
+      console.log('Authenticated user:', userId);
+    } catch (jwtError) {
+      console.error('JWT decode error:', jwtError);
       return new Response(
         JSON.stringify({ error: 'Não autorizado - Token inválido' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Authenticated user:', user.id);
+    
 
     const { sheetUrl } = await req.json();
     
