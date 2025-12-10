@@ -602,6 +602,16 @@ const Index = () => {
                     <Button
                       variant="outline"
                       size="sm"
+                      onClick={() => navigate('/pedidos')}
+                      className="gap-1 sm:gap-2 text-xs sm:text-sm"
+                    >
+                      <ClipboardList className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      <span className="hidden sm:inline">Todos os Pedidos</span>
+                      <span className="sm:hidden">Pedidos</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={async () => {
                         toast({ title: "Gerando PDF...", description: "Relatório consolidado será baixado em instantes." });
                         const [m, y] = dashboardMonth !== 'all' ? dashboardMonth.split('/') : ['', ''];
