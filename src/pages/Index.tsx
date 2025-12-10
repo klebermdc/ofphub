@@ -933,7 +933,12 @@ const Index = () => {
                 </div>
 
                 {/* Tabela de Vendedores */}
-                <SalesRepTable salesReps={filteredSalesReps} onGeneratePDF={handleGeneratePDF} />
+                <SalesRepTable 
+                  salesReps={filteredSalesReps} 
+                  onGeneratePDF={handleGeneratePDF}
+                  selectedMonth={parseInt(selectedMonth.split('/')[0])}
+                  selectedYear={parseInt(selectedMonth.split('/')[1])}
+                />
               </>
             ) : (
               <div className="glass rounded-xl p-8 text-center">
