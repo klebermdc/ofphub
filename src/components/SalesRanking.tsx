@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { SalesRep } from "@/types/sales";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { isExcludedName } from "@/config/salaries";
 
 interface SalesRankingProps {
   salesReps: SalesRep[];
@@ -10,7 +11,9 @@ interface SalesRankingProps {
 
 export function SalesRanking({ salesReps }: SalesRankingProps) {
   const navigate = useNavigate();
-  const sortedReps = [...salesReps].sort((a, b) => b.sales - a.sales);
+  // Filter out excluded names (partners) and sort by sales
+  const filteredReps = salesReps.filter(rep => !isExcludedName(rep.name));
+  const sortedReps = [...filteredReps].sort((a, b) => b.sales - a.sales);
 
   const getRankIcon = (index: number) => {
     switch (index) {

@@ -2,6 +2,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { PieChart, TrendingUp } from "lucide-react";
 import { SalesRep } from "@/types/sales";
 import { cn } from "@/lib/utils";
+import { isExcludedName } from "@/config/salaries";
 
 interface SalespersonROIProps {
   salesReps: SalesRep[];
@@ -21,14 +22,9 @@ function formatCurrency(value: number): string {
   return `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 }
 
-// Names to exclude from ROI calculation (company partners)
-const EXCLUDED_NAMES = ['Kleber', 'Renata', 'Site'];
-
 export function SalespersonROI({ salesReps, getSalary }: SalespersonROIProps) {
   // Filter out company partners and calculate ROI for each salesperson
-  const filteredReps = salesReps.filter(rep => 
-    !EXCLUDED_NAMES.some(name => rep.name.toLowerCase().includes(name.toLowerCase()))
-  );
+  const filteredReps = salesReps.filter(rep => !isExcludedName(rep.name));
 
   const roiData: ROIData[] = filteredReps.map(rep => {
     // Receita = soma da comissão total (o que a empresa ganha)
