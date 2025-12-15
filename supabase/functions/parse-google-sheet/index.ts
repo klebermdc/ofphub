@@ -1,11 +1,22 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { decode as decodeJWT } from "https://deno.land/x/djwt@v3.0.2/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Simple JWT payload decoder (no validation - gateway already validated)
+function decodeJwtPayload(token: string): { sub?: string } | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const payload = parts[1];
+    const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+    return JSON.parse(decoded);
+  } catch {
+    return null;
+  }
+}
 
 interface OrderDetail {
   cliente: string;
@@ -36,15 +47,10 @@ function extractSheetId(url: string): string | null {
 }
 
 function parseCSV(csv: string): string[][] {
-  // Normalize line endings to handle both \r\n and \n
   const normalizedCsv = csv.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
   const lines = normalizedCsv.split('\n');
   
   console.log('Total lines in CSV:', lines.length);
-  
-  // Log last 3 lines for debugging
-  const lastLines = lines.slice(-3);
-  console.log('Last 3 lines of CSV:', lastLines);
   
   return lines.map(line => {
     const result: string[] = [];
@@ -69,11 +75,10 @@ function parseCSV(csv: string): string[][] {
 
 function parseNumber(value: string): number {
   if (!value) return 0;
-  // Remove currency symbols, spaces, and handle Brazilian number format
   const cleaned = value
     .replace(/[R$\s]/g, '')
-    .replace(/\./g, '') // Remove thousand separators
-    .replace(',', '.'); // Convert decimal comma to dot
+    .replace(/\./g, '')
+    .replace(',', '.');
   return parseFloat(cleaned) || 0;
 }
 
@@ -89,36 +94,21 @@ serve(async (req) => {
   }
 
   try {
-    // Get authorization header - JWT is already validated by Supabase gateway (verify_jwt = true)
+    // JWT is already validated by Supabase gateway (verify_jwt = true in config.toml)
+    // We just extract user info for logging purposes
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      console.error('No authorization header provided');
+      console.error('No authorization header');
       return new Response(
-        JSON.stringify({ error: 'Não autorizado - Token de autenticação ausente' }),
+        JSON.stringify({ error: 'Não autorizado' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Extract and decode JWT to get user info (no session validation needed - gateway already verified)
     const token = authHeader.replace('Bearer ', '');
-    let userId: string;
-    
-    try {
-      const [_header, payload, _signature] = decodeJWT(token);
-      userId = (payload as { sub?: string }).sub || '';
-      
-      if (!userId) {
-        throw new Error('No user ID in token');
-      }
-      
-      console.log('Authenticated user:', userId);
-    } catch (jwtError) {
-      console.error('JWT decode error:', jwtError);
-      return new Response(
-        JSON.stringify({ error: 'Não autorizado - Token inválido' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    const payload = decodeJwtPayload(token);
+    const userId = payload?.sub || 'unknown';
+    console.log('User:', userId);
 
     
 
