@@ -489,6 +489,7 @@ export type Database = {
           pedido: string | null
           porcentagem_vendedor: number
           produto: string | null
+          sheet_row_index: number | null
           status: string | null
           updated_at: string
           user_id: string
@@ -509,6 +510,7 @@ export type Database = {
           pedido?: string | null
           porcentagem_vendedor?: number
           produto?: string | null
+          sheet_row_index?: number | null
           status?: string | null
           updated_at?: string
           user_id: string
@@ -529,6 +531,7 @@ export type Database = {
           pedido?: string | null
           porcentagem_vendedor?: number
           produto?: string | null
+          sheet_row_index?: number | null
           status?: string | null
           updated_at?: string
           user_id?: string
