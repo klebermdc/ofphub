@@ -41,9 +41,15 @@ interface SalesData {
   pedidos: OrderDetail[];
 }
 
-function extractSheetId(url: string): string | null {
-  const match = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-  return match ? match[1] : null;
+function extractSheetInfo(url: string): { sheetId: string | null; gid: string | null } {
+  const idMatch = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+  const sheetId = idMatch ? idMatch[1] : null;
+
+  // Support links to a specific tab/worksheet (gid can appear in querystring or hash)
+  const gidMatch = url.match(/[?#&]gid=(\d+)/);
+  const gid = gidMatch ? gidMatch[1] : null;
+
+  return { sheetId, gid };
 }
 
 function parseCSV(csv: string): string[][] {
@@ -123,7 +129,7 @@ serve(async (req) => {
       );
     }
 
-    const sheetId = extractSheetId(sheetUrl);
+    const { sheetId, gid } = extractSheetInfo(sheetUrl);
     
     if (!sheetId) {
       return new Response(
@@ -132,9 +138,10 @@ serve(async (req) => {
       );
     }
 
-    console.log('Extracted sheet ID:', sheetId);
+    console.log('Extracted sheet ID:', sheetId, gid ? `(gid=${gid})` : '');
 
-    const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+    // Cache-bust to avoid stale CSV responses and respect specific worksheet tabs (gid)
+    const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv${gid ? `&gid=${gid}` : ''}&cachebust=${Date.now()}`;
     
     console.log('Fetching CSV from:', csvUrl);
     
