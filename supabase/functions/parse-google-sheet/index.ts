@@ -145,7 +145,13 @@ serve(async (req) => {
     
     console.log('Fetching CSV from:', csvUrl);
     
-    const response = await fetch(csvUrl);
+    const response = await fetch(csvUrl, {
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, max-age=0',
+        Pragma: 'no-cache',
+      },
+    });
     
     if (!response.ok) {
       console.error('Failed to fetch sheet:', response.status, response.statusText);

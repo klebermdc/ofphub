@@ -55,53 +55,84 @@ export function SheetInput({ onAnalyze, isLoading, compact = false, savedUrl = "
   };
 
   if (compact) {
+    const handleQuickRefresh = () => {
+      // If we already have a saved URL, refresh immediately (no extra dialog step)
+      if (savedUrl?.trim()) {
+        onAnalyze(savedUrl);
+        return;
+      }
+
+      // Otherwise, ask the user to paste the URL
+      setOpen(true);
+    };
+
     return (
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          <Button variant="outline" size="sm" className="gap-2">
-            <RefreshCw className="h-4 w-4" />
-            Atualizar Planilha
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <FileSpreadsheet className="h-5 w-5 text-primary" />
-              Atualizar Planilha
-            </DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="relative">
-              <Link className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="url"
-                placeholder="https://docs.google.com/spreadsheets/d/..."
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Button 
-              type="submit" 
-              variant="gradient" 
-              className="w-full"
-              disabled={isLoading}
+      <div className="flex items-center gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="gap-2"
+          disabled={isLoading}
+          onClick={handleQuickRefresh}
+        >
+          <RefreshCw className={isLoading ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
+          Atualizar Planilha
+        </Button>
+
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="gap-2"
+              aria-label="Alterar link da planilha"
             >
-              {isLoading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Analisando...
-                </>
-              ) : (
-                "Analisar Planilha"
-              )}
+              <FileSpreadsheet className="h-4 w-4" />
+              Alterar link
             </Button>
-          </form>
-          <p className="text-xs text-muted-foreground">
-            <strong className="text-foreground">Dica:</strong> Certifique-se de que a planilha está compartilhada como "Qualquer pessoa com o link pode visualizar".
-          </p>
-        </DialogContent>
-      </Dialog>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <FileSpreadsheet className="h-5 w-5 text-primary" />
+                Atualizar Planilha
+              </DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="relative">
+                <Link className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="url"
+                  placeholder="https://docs.google.com/spreadsheets/d/..."
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Button 
+                type="submit" 
+                variant="gradient" 
+                className="w-full"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Analisando...
+                  </>
+                ) : (
+                  "Analisar Planilha"
+                )}
+              </Button>
+            </form>
+            <p className="text-xs text-muted-foreground">
+              <strong className="text-foreground">Dica:</strong> Para importar uma aba específica, copie o link direto da aba (ele contém <code>gid=</code>).
+            </p>
+          </DialogContent>
+        </Dialog>
+      </div>
     );
   }
 
