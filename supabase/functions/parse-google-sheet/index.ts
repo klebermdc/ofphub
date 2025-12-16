@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -312,12 +313,75 @@ serve(async (req) => {
       vendedoresAtivos: salesData.length
     };
 
+    // --------------- SYNC ORDERS TO DATABASE ---------------
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Build array of all orders to upsert
+    const allOrders: {
+      user_id: string;
+      cliente: string;
+      data: string;
+      pedido: string;
+      venda: number;
+      fornecedor: string;
+      produto: string;
+      comissao: number;
+      comissao_total: number;
+      porcentagem_vendedor: number;
+      comissao_vendedor: number;
+      vendedor: string;
+    }[] = [];
+
+    for (const rep of salesData) {
+      for (const order of rep.pedidos) {
+        allOrders.push({
+          user_id: userId,
+          cliente: order.cliente || '',
+          data: order.data || '',
+          pedido: order.pedido || '',
+          venda: order.venda,
+          fornecedor: order.fornecedor || '',
+          produto: order.produto || '',
+          comissao: order.comissao,
+          comissao_total: order.comissaoTotal,
+          porcentagem_vendedor: order.porcentagemVendedor,
+          comissao_vendedor: order.comissaoVendedor,
+          vendedor: rep.vendedor,
+        });
+      }
+    }
+
+    // Upsert orders in batches (Supabase limit ~1000 per call)
+    const BATCH_SIZE = 500;
+    let syncedCount = 0;
+    let syncError: string | null = null;
+
+    for (let i = 0; i < allOrders.length; i += BATCH_SIZE) {
+      const batch = allOrders.slice(i, i + BATCH_SIZE);
+      const { error: upsertErr } = await supabase
+        .from('orders')
+        .upsert(batch, { onConflict: 'user_id,pedido', ignoreDuplicates: false });
+
+      if (upsertErr) {
+        console.error('Upsert batch error:', upsertErr);
+        syncError = upsertErr.message;
+        break;
+      }
+      syncedCount += batch.length;
+    }
+
+    console.log(`Synced ${syncedCount}/${allOrders.length} orders to DB`);
+
     return new Response(
       JSON.stringify({ 
         success: true,
         data: salesData,
         totals,
-        message: `${salesData.length} vendedores encontrados`
+        syncedOrders: syncedCount,
+        syncError,
+        message: `${salesData.length} vendedores encontrados, ${syncedCount} pedidos sincronizados`
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
