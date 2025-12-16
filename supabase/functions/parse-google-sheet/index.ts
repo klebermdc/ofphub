@@ -318,9 +318,10 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Build array of all orders to upsert
+    // Build array of all orders to upsert using sheet_row_index as unique key
     const allOrders: {
       user_id: string;
+      sheet_row_index: number;
       cliente: string;
       data: string;
       pedido: string;
@@ -338,6 +339,7 @@ serve(async (req) => {
       for (const order of rep.pedidos) {
         allOrders.push({
           user_id: userId,
+          sheet_row_index: order.rowIndex,
           cliente: order.cliente || '',
           data: order.data || '',
           pedido: order.pedido || '',
@@ -362,7 +364,7 @@ serve(async (req) => {
       const batch = allOrders.slice(i, i + BATCH_SIZE);
       const { error: upsertErr } = await supabase
         .from('orders')
-        .upsert(batch, { onConflict: 'user_id,pedido', ignoreDuplicates: false });
+        .upsert(batch, { onConflict: 'user_id,sheet_row_index', ignoreDuplicates: false });
 
       if (upsertErr) {
         console.error('Upsert batch error:', upsertErr);
