@@ -56,14 +56,16 @@ function extractSheetInfo(url: string): { sheetId: string | null; gid: string | 
 function parseCSV(csv: string): string[][] {
   const normalizedCsv = csv.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
   const lines = normalizedCsv.split('\n');
-  
+
   console.log('Total lines in CSV:', lines.length);
-  
+
+  // IMPORTANT: keep empty lines to preserve the original sheet row index
+  // (we skip empty rows later, but we must not shift indices here)
   return lines.map(line => {
     const result: string[] = [];
     let current = '';
     let inQuotes = false;
-    
+
     for (let i = 0; i < line.length; i++) {
       const char = line[i];
       if (char === '"') {
@@ -77,7 +79,7 @@ function parseCSV(csv: string): string[][] {
     }
     result.push(current.trim());
     return result;
-  }).filter(row => row.some(cell => cell.length > 0));
+  });
 }
 
 function parseNumber(value: string): number {
