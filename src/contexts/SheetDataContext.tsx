@@ -77,6 +77,13 @@ export function SheetDataProvider({ children }: { children: ReactNode }) {
         if (url && url !== savedUrl) {
           await saveUrl(url);
         }
+
+        // Show success toast
+        const totalOrders = reps.reduce((sum, r) => sum + r.deals, 0);
+        toast({
+          title: "Dados atualizados",
+          description: `${totalOrders} pedidos carregados e sincronizados ao banco.`,
+        });
       }
     } catch (error) {
       console.error('Error fetching sheet data:', error);
