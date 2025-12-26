@@ -6,6 +6,13 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Input validation constants
+const MAX_NAME_LENGTH = 200;
+const MAX_PHONE_LENGTH = 30;
+const MAX_EMAIL_LENGTH = 255;
+const MAX_NOTES_LENGTH = 5000;
+const MAX_PAGES = 500;
+
 // Mapping of Notion Status to CRM Stage
 const statusToStage: Record<string, string> = {
   'Coletando informações': 'coletando_informacao',
@@ -21,6 +28,9 @@ const statusToStage: Record<string, string> = {
   'Gabi': 'novo_lead',
   'Aguardando Emissão': 'proposta_enviada',
 };
+
+// Valid CRM stages
+const VALID_STAGES = ['novo_lead', 'coletando_informacao', 'proposta_enviada', 'venda_concluida', 'venda_perdida'];
 
 // Mapping of Notion Vendedor to normalized salesperson names
 const vendedorMapping: Record<string, string> = {
@@ -56,35 +66,62 @@ interface NotionPage {
   };
 }
 
+// Sanitize string to prevent injection
+function sanitizeString(value: string | null | undefined, maxLength: number): string | null {
+  if (!value || typeof value !== 'string') return null;
+  return value.substring(0, maxLength).trim() || null;
+}
+
+// Validate and sanitize email
+function sanitizeEmail(email: string | null | undefined): string | null {
+  if (!email || typeof email !== 'string') return null;
+  const trimmed = email.substring(0, MAX_EMAIL_LENGTH).trim().toLowerCase();
+  // Basic email format validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(trimmed) ? trimmed : null;
+}
+
+// Validate numeric value
+function parseNumericValue(value: string | null | undefined): number {
+  if (!value || typeof value !== 'string') return 0;
+  const cleaned = value.replace(/[^\d.,]/g, '').replace(',', '.');
+  const parsed = parseFloat(cleaned);
+  // Limit to reasonable range
+  if (isNaN(parsed) || parsed < 0 || parsed > 999999999) return 0;
+  return parsed;
+}
+
 function parseNotionPage(page: NotionPage) {
   const props = page.properties;
   
-  // Extract name
-  const name = props.Nome?.title?.[0]?.plain_text || 'Sem Nome';
+  // Extract and sanitize name
+  const rawName = props.Nome?.title?.[0]?.plain_text;
+  const name = sanitizeString(rawName, MAX_NAME_LENGTH) || 'Sem Nome';
   
-  // Extract phone
-  const phone = props.Telefone?.phone_number || null;
+  // Extract and sanitize phone
+  const phone = sanitizeString(props.Telefone?.phone_number, MAX_PHONE_LENGTH);
   
-  // Extract email
-  const email = props['E-mail']?.email || null;
+  // Extract and validate email
+  const email = sanitizeEmail(props['E-mail']?.email);
   
-  // Extract value and parse to number
-  const valorText = props.Valor?.rich_text?.[0]?.plain_text || '0';
-  const estimatedValue = parseFloat(valorText.replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
+  // Extract and validate value
+  const valorText = props.Valor?.rich_text?.[0]?.plain_text;
+  const estimatedValue = parseNumericValue(valorText);
   
   // Extract and map vendedor
   const vendedorRaw = props.Vendedor?.select?.name || null;
-  const salespersonName = vendedorRaw ? (vendedorMapping[vendedorRaw] || vendedorRaw) : null;
+  const salespersonName = vendedorRaw ? sanitizeString(vendedorMapping[vendedorRaw] || vendedorRaw, 100) : null;
   
-  // Extract and map status to stage
+  // Extract and validate status to stage mapping
   const statusRaw = props.Status?.select?.name || 'Aguardando Atendente';
-  const stage = statusToStage[statusRaw] || 'novo_lead';
+  const mappedStage = statusToStage[statusRaw] || 'novo_lead';
+  const stage = VALID_STAGES.includes(mappedStage) ? mappedStage : 'novo_lead';
   
-  // Extract notes
-  const notes = props.Notas?.rich_text?.[0]?.plain_text || null;
+  // Extract and sanitize notes
+  const notes = sanitizeString(props.Notas?.rich_text?.[0]?.plain_text, MAX_NOTES_LENGTH);
   
   // Extract first product
-  const product = props.Produtos?.multi_select?.[0]?.name || null;
+  const product = sanitizeString(props.Produtos?.multi_select?.[0]?.name, 200);
   
   // Use 'Data Geração Lead' if available, otherwise use Notion's created_time
   const createdAt = props['Data Geração Lead']?.date?.start || page.created_time;
@@ -116,7 +153,18 @@ serve(async (req) => {
   }
 
   try {
+    // Verify authentication
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      console.error('No authorization header');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Não autorizado' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const notionApiKey = Deno.env.get('NOTION_API_KEY');
 
@@ -124,84 +172,139 @@ serve(async (req) => {
       throw new Error('NOTION_API_KEY is not configured');
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    // Verify user authentication
+    const userSupabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    const { data: { user }, error: authError } = await userSupabase.auth.getUser();
+    
+    if (authError || !user) {
+      console.error('Authentication error:', authError);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Não autorizado - Token inválido' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('Authenticated user:', user.id);
+
+    // Authorization check: verify user has manager role
+    const serviceSupabase = createClient(supabaseUrl, supabaseServiceKey);
+    const { data: userRole, error: roleError } = await serviceSupabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .single();
+    
+    if (roleError || !userRole) {
+      console.error('User role not found:', roleError);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Usuário não possui permissão para esta operação' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    if (userRole.role !== 'manager') {
+      console.error('Insufficient permissions. Role:', userRole.role);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Apenas gerentes podem sincronizar com Notion' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    console.log('User authorized as manager');
 
     // Get request body
     const body = await req.json();
     const { user_id, database_id = '1e22d56c151b80c6bc3ac52cb35d539e' } = body;
 
-    if (!user_id) {
-      throw new Error('user_id is required');
+    // Security check: user_id must match authenticated user or be omitted
+    const targetUserId = user_id || user.id;
+    if (user_id && user_id !== user.id) {
+      console.error('User trying to sync for different user_id');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Não é permitido sincronizar dados de outro usuário' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    console.log(`Starting Notion sync for user ${user_id}`);
+    console.log(`Starting Notion sync for user ${targetUserId}`);
 
     // Fetch pages from Notion database - only December onwards
-    const MAX_PAGES = 500;
     let allPages: NotionPage[] = [];
     let hasMore = true;
     let startCursor: string | undefined = undefined;
 
-    while (hasMore && allPages.length < MAX_PAGES) {
-      const requestBody: any = {
-        page_size: 100,
-        filter: {
-          property: 'Data Geração Lead',
-          date: {
-            on_or_after: '2024-12-01'
-          }
-        },
-        sorts: [
-          {
+    // Add timeout for Notion API calls
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
+
+    try {
+      while (hasMore && allPages.length < MAX_PAGES) {
+        const requestBody: any = {
+          page_size: 100,
+          filter: {
             property: 'Data Geração Lead',
-            direction: 'descending',
+            date: {
+              on_or_after: '2024-12-01'
+            }
           },
-        ],
-      };
+          sorts: [
+            {
+              property: 'Data Geração Lead',
+              direction: 'descending',
+            },
+          ],
+        };
 
-      if (startCursor) {
-        requestBody.start_cursor = startCursor;
-      }
-
-      const notionResponse = await fetch(
-        `https://api.notion.com/v1/databases/${database_id}/query`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${notionApiKey}`,
-            'Notion-Version': '2022-06-28',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(requestBody),
+        if (startCursor) {
+          requestBody.start_cursor = startCursor;
         }
-      );
 
-      if (!notionResponse.ok) {
-        const errorText = await notionResponse.text();
-        console.error('Notion API error:', errorText);
-        throw new Error(`Notion API error: ${notionResponse.status}`);
+        const notionResponse = await fetch(
+          `https://api.notion.com/v1/databases/${database_id}/query`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${notionApiKey}`,
+              'Notion-Version': '2022-06-28',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody),
+            signal: controller.signal,
+          }
+        );
+
+        if (!notionResponse.ok) {
+          const errorText = await notionResponse.text();
+          console.error('Notion API error:', errorText);
+          throw new Error(`Notion API error: ${notionResponse.status}`);
+        }
+
+        const notionData = await notionResponse.json();
+        const pages: NotionPage[] = notionData.results;
+        
+        allPages = allPages.concat(pages);
+        hasMore = notionData.has_more && allPages.length < MAX_PAGES;
+        startCursor = notionData.next_cursor;
+
+        console.log(`Fetched ${pages.length} pages (total: ${allPages.length})`);
       }
-
-      const notionData = await notionResponse.json();
-      const pages: NotionPage[] = notionData.results;
-      
-      allPages = allPages.concat(pages);
-      hasMore = notionData.has_more && allPages.length < MAX_PAGES;
-      startCursor = notionData.next_cursor;
-
-      console.log(`Fetched ${pages.length} pages (total: ${allPages.length})`);
+    } finally {
+      clearTimeout(timeoutId);
     }
 
     console.log(`Total pages fetched from Notion: ${allPages.length}`);
 
-    // Parse all pages
+    // Parse all pages with validation
     const leads = allPages.map(parseNotionPage);
 
     // Get existing leads for this user to check for updates
-    const { data: existingLeads, error: fetchError } = await supabase
+    const { data: existingLeads, error: fetchError } = await serviceSupabase
       .from('crm_leads')
       .select('id, name, email, phone')
-      .eq('user_id', user_id);
+      .eq('user_id', targetUserId);
 
     if (fetchError) {
       console.error('Error fetching existing leads:', fetchError);
@@ -228,7 +331,7 @@ serve(async (req) => {
 
       if (existingId) {
         // Update existing lead
-        const { error: updateError } = await supabase
+        const { error: updateError } = await serviceSupabase
           .from('crm_leads')
           .update({
             estimated_value: lead.estimated_value,
@@ -249,10 +352,10 @@ serve(async (req) => {
         }
       } else {
         // Create new lead
-        const { error: insertError } = await supabase
+        const { error: insertError } = await serviceSupabase
           .from('crm_leads')
           .insert({
-            user_id,
+            user_id: targetUserId,
             name: lead.name,
             phone: lead.phone,
             email: lead.email,
@@ -291,9 +394,9 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error('Sync error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    // Return generic error to avoid leaking internal details
     return new Response(
-      JSON.stringify({ success: false, error: errorMessage }),
+      JSON.stringify({ success: false, error: 'Erro ao sincronizar com Notion. Tente novamente.' }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

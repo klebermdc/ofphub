@@ -6,6 +6,12 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Input validation constants
+const MAX_SHEET_URL_LENGTH = 500;
+const MAX_CSV_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_ROWS = 10000;
+const ALLOWED_GOOGLE_SHEETS_DOMAIN = 'docs.google.com';
+
 interface LeadData {
   telefone: string;
   nome: string;
@@ -32,6 +38,34 @@ interface LeadsByMonth {
   total: number;
   bySource: { [key: string]: number };
   leads: LeadData[];
+}
+
+// Validate Google Sheets URL
+function validateSheetUrl(url: string): { valid: boolean; error?: string } {
+  if (!url || typeof url !== 'string') {
+    return { valid: false, error: 'URL da planilha é obrigatória' };
+  }
+  
+  if (url.length > MAX_SHEET_URL_LENGTH) {
+    return { valid: false, error: 'URL da planilha muito longa' };
+  }
+  
+  try {
+    const parsedUrl = new URL(url);
+    if (parsedUrl.hostname !== ALLOWED_GOOGLE_SHEETS_DOMAIN) {
+      return { valid: false, error: 'URL deve ser do Google Sheets' };
+    }
+  } catch {
+    return { valid: false, error: 'URL inválida' };
+  }
+  
+  return { valid: true };
+}
+
+// Sanitize string to prevent injection
+function sanitizeString(value: string, maxLength: number = 500): string {
+  if (!value || typeof value !== 'string') return '';
+  return value.substring(0, maxLength).trim();
 }
 
 function extractSheetId(url: string): string | null {
@@ -118,6 +152,7 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } }
@@ -134,17 +169,46 @@ serve(async (req) => {
     }
 
     console.log('Authenticated user:', user.id);
-
-    const { sheetUrl } = await req.json();
     
-    console.log('Received leads sheet URL:', sheetUrl);
+    // Authorization check: verify user has manager or marketing role
+    const serviceSupabase = createClient(supabaseUrl, supabaseServiceKey);
+    const { data: userRole, error: roleError } = await serviceSupabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .single();
     
-    if (!sheetUrl) {
+    if (roleError || !userRole) {
+      console.error('User role not found:', roleError);
       return new Response(
-        JSON.stringify({ error: 'URL da planilha é obrigatória' }),
+        JSON.stringify({ error: 'Usuário não possui permissão para esta operação' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    if (!['manager', 'marketing'].includes(userRole.role)) {
+      console.error('Insufficient permissions. Role:', userRole.role);
+      return new Response(
+        JSON.stringify({ error: 'Apenas gerentes e marketing podem acessar esta função' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    console.log('User authorized with role:', userRole.role);
+
+    const body = await req.json();
+    const sheetUrl = body?.sheetUrl;
+    
+    // Validate input
+    const urlValidation = validateSheetUrl(sheetUrl);
+    if (!urlValidation.valid) {
+      return new Response(
+        JSON.stringify({ error: urlValidation.error }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+    
+    console.log('Received leads sheet URL:', sheetUrl);
 
     const sheetId = extractSheetId(sheetUrl);
     
@@ -161,7 +225,16 @@ serve(async (req) => {
     
     console.log('Fetching CSV from:', csvUrl);
     
-    const response = await fetch(csvUrl);
+    // Add timeout to prevent hanging
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+    
+    let response;
+    try {
+      response = await fetch(csvUrl, { signal: controller.signal });
+    } finally {
+      clearTimeout(timeoutId);
+    }
     
     if (!response.ok) {
       console.error('Failed to fetch sheet:', response.status, response.statusText);
@@ -174,9 +247,26 @@ serve(async (req) => {
     }
 
     const csvText = await response.text();
+    
+    // Validate CSV size
+    if (csvText.length > MAX_CSV_SIZE) {
+      return new Response(
+        JSON.stringify({ error: 'Planilha muito grande. Limite de 10MB.' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
     console.log('CSV content preview:', csvText.substring(0, 500));
     
     const rows = parseCSV(csvText);
+    
+    // Validate row count
+    if (rows.length > MAX_ROWS) {
+      return new Response(
+        JSON.stringify({ error: `Planilha muito grande. Máximo de ${MAX_ROWS} linhas.` }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     
     if (rows.length < 2) {
       return new Response(
@@ -215,20 +305,20 @@ serve(async (req) => {
       
       if (row.every(cell => !cell)) continue;
       
-      const source = sourceIdx >= 0 ? row[sourceIdx]?.trim() || '' : '';
+      const source = sourceIdx >= 0 ? sanitizeString(row[sourceIdx], 100) : '';
       const normalizedSource = normalizeSource(source);
       
       const lead: LeadData = {
-        telefone: telefoneIdx >= 0 ? row[telefoneIdx]?.trim() || '' : '',
-        nome: nomeIdx >= 0 ? row[nomeIdx]?.trim() || '' : '',
-        sobrenome: sobrenomeIdx >= 0 ? row[sobrenomeIdx]?.trim() || '' : '',
-        email: emailIdx >= 0 ? row[emailIdx]?.trim() || '' : '',
-        medium: mediumIdx >= 0 ? row[mediumIdx]?.trim() || '' : '',
+        telefone: telefoneIdx >= 0 ? sanitizeString(row[telefoneIdx], 20) : '',
+        nome: nomeIdx >= 0 ? sanitizeString(row[nomeIdx], 100) : '',
+        sobrenome: sobrenomeIdx >= 0 ? sanitizeString(row[sobrenomeIdx], 100) : '',
+        email: emailIdx >= 0 ? sanitizeString(row[emailIdx], 255) : '',
+        medium: mediumIdx >= 0 ? sanitizeString(row[mediumIdx], 50) : '',
         source: normalizedSource,
-        campaign: campaignIdx >= 0 ? row[campaignIdx]?.trim() || '' : '',
-        content: contentIdx >= 0 ? row[contentIdx]?.trim() || '' : '',
-        term: termIdx >= 0 ? row[termIdx]?.trim() || '' : '',
-        pageReferrer: referrerIdx >= 0 ? row[referrerIdx]?.trim() || '' : '',
+        campaign: campaignIdx >= 0 ? sanitizeString(row[campaignIdx], 200) : '',
+        content: contentIdx >= 0 ? sanitizeString(row[contentIdx], 200) : '',
+        term: termIdx >= 0 ? sanitizeString(row[termIdx], 100) : '',
+        pageReferrer: referrerIdx >= 0 ? sanitizeString(row[referrerIdx], 500) : '',
       };
       
       // Skip empty leads
@@ -317,9 +407,9 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error parsing leads sheet:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    // Return generic error to avoid leaking internal details
     return new Response(
-      JSON.stringify({ error: `Erro ao processar planilha de leads: ${errorMessage}` }),
+      JSON.stringify({ error: 'Erro ao processar planilha de leads. Tente novamente.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
