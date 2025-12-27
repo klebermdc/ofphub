@@ -1,29 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { FileSpreadsheet, Users, Megaphone, Receipt, FileCheck, Kanban, Calendar, ClipboardList } from "lucide-react";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { SheetInput } from "@/components/SheetInput";
-import { SalesChart } from "@/components/SalesChart";
-import { ProductChart } from "@/components/ProductChart";
-import { SupplierChart } from "@/components/SupplierChart";
-import { SalesRepTable } from "@/components/SalesRepTable";
-import { GoalsManagementDialog } from "@/components/GoalsManagementDialog";
-import { GoalsKPICard } from "@/components/GoalsKPICard";
-import { SalesVelocityKPI } from "@/components/SalesVelocityKPI";
-import { SalesRanking } from "@/components/SalesRanking";
-import { SalaryManagementDialog } from "@/components/SalaryManagementDialog";
-import { RevenueForecastChart } from "@/components/RevenueForecastChart";
-import { SalespersonROI } from "@/components/SalespersonROI";
-import { DailySalesTracker } from "@/components/DailySalesTracker";
-import { EBITDACard } from "@/components/EBITDACard";
-import { AccountingTab } from "@/components/AccountingTab";
-import { MarketingTab } from "@/components/MarketingTab";
-import { CRMTab } from "@/components/crm/CRMTab";
-import { NFSeTab } from "@/components/nfse/NFSeTab";
-import { DashboardMonthlyMetrics } from "@/components/dashboard/DashboardMonthlyMetrics";
-import { DashboardFortnightMetrics } from "@/components/dashboard/DashboardFortnightMetrics";
-import { DashboardOperationalMetrics } from "@/components/dashboard/DashboardOperationalMetrics";
-import { DashboardHeaderControls } from "@/components/dashboard/DashboardHeaderControls";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -41,7 +21,36 @@ import { useCRMLeadsCount } from "@/hooks/useCRMLeadsCount";
 import { useFilteredSalesReps, useDashboardMetrics } from "@/hooks/useSalesData";
 import { useSalesGoals } from "@/hooks/useSheetData";
 import { useCostCalculation } from "@/hooks/useCostCalculation";
-import { getCurrentMonthKey, getMonthName, parseMonthKey } from "@/utils/dateUtils";
+import { getCurrentMonthKey, getMonthName } from "@/utils/dateUtils";
+import { 
+  DashboardSkeleton, 
+  TableSkeleton, 
+  KanbanSkeleton,
+  ChartSkeleton 
+} from "@/components/ui/skeletons";
+
+// Lazy loaded components
+const SalesChart = lazy(() => import("@/components/SalesChart").then(m => ({ default: m.SalesChart })));
+const ProductChart = lazy(() => import("@/components/ProductChart").then(m => ({ default: m.ProductChart })));
+const SupplierChart = lazy(() => import("@/components/SupplierChart").then(m => ({ default: m.SupplierChart })));
+const SalesRepTable = lazy(() => import("@/components/SalesRepTable").then(m => ({ default: m.SalesRepTable })));
+const GoalsManagementDialog = lazy(() => import("@/components/GoalsManagementDialog").then(m => ({ default: m.GoalsManagementDialog })));
+const GoalsKPICard = lazy(() => import("@/components/GoalsKPICard").then(m => ({ default: m.GoalsKPICard })));
+const SalesVelocityKPI = lazy(() => import("@/components/SalesVelocityKPI").then(m => ({ default: m.SalesVelocityKPI })));
+const SalesRanking = lazy(() => import("@/components/SalesRanking").then(m => ({ default: m.SalesRanking })));
+const SalaryManagementDialog = lazy(() => import("@/components/SalaryManagementDialog").then(m => ({ default: m.SalaryManagementDialog })));
+const RevenueForecastChart = lazy(() => import("@/components/RevenueForecastChart").then(m => ({ default: m.RevenueForecastChart })));
+const SalespersonROI = lazy(() => import("@/components/SalespersonROI").then(m => ({ default: m.SalespersonROI })));
+const DailySalesTracker = lazy(() => import("@/components/DailySalesTracker").then(m => ({ default: m.DailySalesTracker })));
+const EBITDACard = lazy(() => import("@/components/EBITDACard").then(m => ({ default: m.EBITDACard })));
+const AccountingTab = lazy(() => import("@/components/AccountingTab").then(m => ({ default: m.AccountingTab })));
+const MarketingTab = lazy(() => import("@/components/MarketingTab").then(m => ({ default: m.MarketingTab })));
+const CRMTab = lazy(() => import("@/components/crm/CRMTab").then(m => ({ default: m.CRMTab })));
+const NFSeTab = lazy(() => import("@/components/nfse/NFSeTab").then(m => ({ default: m.NFSeTab })));
+const DashboardMonthlyMetrics = lazy(() => import("@/components/dashboard/DashboardMonthlyMetrics").then(m => ({ default: m.DashboardMonthlyMetrics })));
+const DashboardFortnightMetrics = lazy(() => import("@/components/dashboard/DashboardFortnightMetrics").then(m => ({ default: m.DashboardFortnightMetrics })));
+const DashboardOperationalMetrics = lazy(() => import("@/components/dashboard/DashboardOperationalMetrics").then(m => ({ default: m.DashboardOperationalMetrics })));
+const DashboardHeaderControls = lazy(() => import("@/components/dashboard/DashboardHeaderControls").then(m => ({ default: m.DashboardHeaderControls })));
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -244,269 +253,305 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div 
-        className="fixed inset-0 pointer-events-none"
-        style={{ background: 'var(--gradient-glow)' }}
-      />
-      
-      <DashboardHeader availableSalespeople={salesReps.map(r => r.name)} />
-      
-      <main className="container mx-auto px-3 sm:px-6 py-4 sm:py-6 relative">
-        <Tabs defaultValue={initialTab} className="space-y-4 sm:space-y-6">
-          <TabsList className="w-full grid grid-cols-3 sm:grid-cols-5 gap-1 h-auto p-1">
-            <TabsTrigger value="dashboard" className="text-xs sm:text-sm py-2">Dashboard</TabsTrigger>
-            <TabsTrigger value="vendedores" className="gap-1 text-xs sm:text-sm py-2">
-              <Users className="h-3 w-3 sm:h-4 sm:w-4 hidden sm:block" />
-              Comercial
-            </TabsTrigger>
-            <TabsTrigger value="marketing" className="gap-1 text-xs sm:text-sm py-2">
-              <Megaphone className="h-3 w-3 sm:h-4 sm:w-4 hidden sm:block" />
-              Marketing
-            </TabsTrigger>
-            <TabsTrigger value="contabilidade" className="gap-1 text-xs sm:text-sm py-2 hidden sm:flex">
-              <Receipt className="h-3 w-3 sm:h-4 sm:w-4 hidden sm:block" />
-              Contabilidade
-            </TabsTrigger>
-            <TabsTrigger value="nfse" className="gap-1 text-xs sm:text-sm py-2 hidden sm:flex">
-              <FileCheck className="h-3 w-3 sm:h-4 sm:w-4 hidden sm:block" />
-              NFS-e
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Mobile additional tabs */}
-          <div className="flex sm:hidden gap-2">
-            <TabsList className="grid grid-cols-2 gap-1 w-full h-auto p-1">
-              <TabsTrigger value="contabilidade" className="gap-1 text-xs py-2">
-                <Receipt className="h-3 w-3" />
+    <ErrorBoundary>
+      <div className="min-h-screen bg-background">
+        <div 
+          className="fixed inset-0 pointer-events-none"
+          style={{ background: 'var(--gradient-glow)' }}
+        />
+        
+        <DashboardHeader availableSalespeople={salesReps.map(r => r.name)} />
+        
+        <main className="container mx-auto px-3 sm:px-6 py-4 sm:py-6 relative">
+          <Tabs defaultValue={initialTab} className="space-y-4 sm:space-y-6">
+            <TabsList className="w-full grid grid-cols-3 sm:grid-cols-5 gap-1 h-auto p-1">
+              <TabsTrigger value="dashboard" className="text-xs sm:text-sm py-2">Dashboard</TabsTrigger>
+              <TabsTrigger value="vendedores" className="gap-1 text-xs sm:text-sm py-2">
+                <Users className="h-3 w-3 sm:h-4 sm:w-4 hidden sm:block" />
+                Comercial
+              </TabsTrigger>
+              <TabsTrigger value="marketing" className="gap-1 text-xs sm:text-sm py-2">
+                <Megaphone className="h-3 w-3 sm:h-4 sm:w-4 hidden sm:block" />
+                Marketing
+              </TabsTrigger>
+              <TabsTrigger value="contabilidade" className="gap-1 text-xs sm:text-sm py-2 hidden sm:flex">
+                <Receipt className="h-3 w-3 sm:h-4 sm:w-4 hidden sm:block" />
                 Contabilidade
               </TabsTrigger>
-              <TabsTrigger value="nfse" className="gap-1 text-xs py-2">
-                <FileCheck className="h-3 w-3" />
+              <TabsTrigger value="nfse" className="gap-1 text-xs sm:text-sm py-2 hidden sm:flex">
+                <FileCheck className="h-3 w-3 sm:h-4 sm:w-4 hidden sm:block" />
                 NFS-e
               </TabsTrigger>
             </TabsList>
-          </div>
 
-          <TabsContent value="dashboard" className="space-y-4 sm:space-y-6">
-            {!hasData ? (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-                <div className="lg:col-span-2">
-                  <div className="glass rounded-xl p-4 sm:p-8 text-center">
-                    <FileSpreadsheet className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 text-primary" />
-                    <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">Bem-vindo ao Hub de Gestão</h2>
-                    <p className="text-muted-foreground mb-4 sm:mb-6 text-sm sm:text-base">
-                      Importe sua planilha do Google Sheets para começar a análise de comissões.
-                    </p>
-                    <SheetInput onAnalyze={handleAnalyze} isLoading={isLoading} />
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <>
-                <DashboardHeaderControls
-                  dataSource={dataSource}
-                  dashboardMonth={dashboardMonth}
-                  setDashboardMonth={setDashboardMonth}
-                  availableMonths={availableMonths}
-                  onAnalyze={handleAnalyze}
-                  isLoading={isLoading}
-                  savedUrl={savedUrl}
-                  onSaveOperationalCosts={saveOperationalCosts}
-                  getCostForMonth={getCostForMonth}
-                />
-
-                <DailySalesTracker
-                  salesReps={salesReps}
-                  currentMonth={dashboardMonth !== 'all' ? dashboardMonth : getCurrentMonthKey()}
-                  totalSalaries={costCalc.totalSalaries}
-                  marketingCosts={marketingCost}
-                  operationalCosts={operationalCost}
-                />
-
-                <DashboardMonthlyMetrics
-                  totalVendas={metrics.totalVendas}
-                  totalComissaoTotal={metrics.totalComissaoTotal}
-                  totalComissao={metrics.totalComissao}
-                  ganhoBruto={metrics.ganhoBruto}
-                  custoEquipeComercial={costCalc.custoEquipeComercial}
-                  marketingCost={marketingCost}
-                  operationalCost={operationalCost}
-                  impostoEstimado={costCalc.impostoEstimado}
-                  totalCost={costCalc.totalCost}
-                  ticketMedio={metrics.ticketMedio}
-                  resultadoParcial={costCalc.resultadoParcial}
-                  resultado={costCalc.resultado}
-                />
-
-                <EBITDACard
-                  receita={metrics.totalComissaoTotal}
-                  custoOperacional={metrics.totalComissao + costCalc.totalSalaries + marketingCost + operationalCost}
-                />
-
-                <DashboardFortnightMetrics
-                  primeiraQuinzena={metrics.primeiraQuinzena}
-                  segundaQuinzena={metrics.segundaQuinzena}
-                />
-
-                <DashboardOperationalMetrics
-                  vendedoresAtivos={metrics.vendedoresAtivos}
-                  totalNegocios={metrics.totalNegocios}
-                  totalLeads={totalLeads}
-                  conversionRate={conversionRate}
-                />
-
-                <SalesChart salesReps={dashboardFilteredSalesReps} />
-                
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <ProductChart salesReps={dashboardFilteredSalesReps} />
-                  <SupplierChart salesReps={dashboardFilteredSalesReps} />
-                </div>
-
-                <div className="grid grid-cols-1 gap-6">
-                  <RevenueForecastChart 
-                    salesReps={dashboardFilteredSalesReps} 
-                    currentMonth={dashboardMonth} 
-                    monthlyGoal={monthlyGoal} 
-                  />
-                </div>
-
-                <GoalsKPICard
-                  userId={user.id}
-                  month={currentGoalMonth}
-                  year={currentGoalYear}
-                  totalSales={metrics.totalVendas}
-                />
-
-                <SalesVelocityKPI
-                  userId={user.id}
-                  month={currentGoalMonth}
-                  year={currentGoalYear}
-                  totalSales={metrics.totalVendas}
-                  currentComissaoTotal={metrics.totalComissaoTotal}
-                  currentComissaoVendedor={metrics.totalComissao}
-                  fixedCosts={costCalc.totalSalaries + marketingCost + operationalCost}
-                />
-              </>
-            )}
-          </TabsContent>
-
-          <TabsContent value="vendedores" className="space-y-6">
-            {/* Sub-navigation Comercial */}
-            <div className="flex items-center gap-2">
-              <Button
-                variant={comercialView === 'equipe' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setComercialView('equipe')}
-                className="gap-2"
-              >
-                <Users className="h-4 w-4" />
-                Equipe
-              </Button>
-              <Button
-                variant={comercialView === 'crm' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setComercialView('crm')}
-                className="gap-2"
-              >
-                <Kanban className="h-4 w-4" />
-                CRM
-              </Button>
+            {/* Mobile additional tabs */}
+            <div className="flex sm:hidden gap-2">
+              <TabsList className="grid grid-cols-2 gap-1 w-full h-auto p-1">
+                <TabsTrigger value="contabilidade" className="gap-1 text-xs py-2">
+                  <Receipt className="h-3 w-3" />
+                  Contabilidade
+                </TabsTrigger>
+                <TabsTrigger value="nfse" className="gap-1 text-xs py-2">
+                  <FileCheck className="h-3 w-3" />
+                  NFS-e
+                </TabsTrigger>
+              </TabsList>
             </div>
 
-            {comercialView === 'crm' ? (
-              <CRMTab salespeople={salesReps.map(r => r.name)} />
-            ) : hasData ? (
-              <>
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Filtrar por mês:</span>
-                    <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Todos os meses" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Todos os meses</SelectItem>
-                        {availableMonths.map(month => {
-                          const [m, y] = month.split('/');
-                          return (
-                            <SelectItem key={month} value={month}>
-                              {getMonthName(parseInt(m))} {y}
-                            </SelectItem>
-                          );
-                        })}
-                      </SelectContent>
-                    </Select>
-                    {selectedMonth !== 'all' && (
-                      <Badge variant="secondary">
-                        {filteredSalesReps.length} vendedor(es)
-                      </Badge>
-                    )}
+            <TabsContent value="dashboard" className="space-y-4 sm:space-y-6">
+              <ErrorBoundary>
+                {!hasData ? (
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+                    <div className="lg:col-span-2">
+                      <div className="glass rounded-xl p-4 sm:p-8 text-center">
+                        <FileSpreadsheet className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 text-primary" />
+                        <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">Bem-vindo ao Hub de Gestão</h2>
+                        <p className="text-muted-foreground mb-4 sm:mb-6 text-sm sm:text-base">
+                          Importe sua planilha do Google Sheets para começar a análise de comissões.
+                        </p>
+                        <SheetInput onAnalyze={handleAnalyze} isLoading={isLoading} />
+                      </div>
+                    </div>
                   </div>
-                  
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <SalaryManagementDialog salaries={salaries} onSave={saveSalaries} />
-                    <GoalsManagementDialog
+                ) : (
+                  <Suspense fallback={<DashboardSkeleton />}>
+                    <DashboardHeaderControls
+                      dataSource={dataSource}
+                      dashboardMonth={dashboardMonth}
+                      setDashboardMonth={setDashboardMonth}
+                      availableMonths={availableMonths}
+                      onAnalyze={handleAnalyze}
+                      isLoading={isLoading}
+                      savedUrl={savedUrl}
+                      onSaveOperationalCosts={saveOperationalCosts}
+                      getCostForMonth={getCostForMonth}
+                    />
+
+                    <DailySalesTracker
+                      salesReps={salesReps}
+                      currentMonth={dashboardMonth !== 'all' ? dashboardMonth : getCurrentMonthKey()}
+                      totalSalaries={costCalc.totalSalaries}
+                      marketingCosts={marketingCost}
+                      operationalCosts={operationalCost}
+                    />
+
+                    <DashboardMonthlyMetrics
+                      totalVendas={metrics.totalVendas}
+                      totalComissaoTotal={metrics.totalComissaoTotal}
+                      totalComissao={metrics.totalComissao}
+                      ganhoBruto={metrics.ganhoBruto}
+                      custoEquipeComercial={costCalc.custoEquipeComercial}
+                      marketingCost={marketingCost}
+                      operationalCost={operationalCost}
+                      impostoEstimado={costCalc.impostoEstimado}
+                      totalCost={costCalc.totalCost}
+                      ticketMedio={metrics.ticketMedio}
+                      resultadoParcial={costCalc.resultadoParcial}
+                      resultado={costCalc.resultado}
+                    />
+
+                    <EBITDACard
+                      receita={metrics.totalComissaoTotal}
+                      custoOperacional={metrics.totalComissao + costCalc.totalSalaries + marketingCost + operationalCost}
+                    />
+
+                    <DashboardFortnightMetrics
+                      primeiraQuinzena={metrics.primeiraQuinzena}
+                      segundaQuinzena={metrics.segundaQuinzena}
+                    />
+
+                    <DashboardOperationalMetrics
+                      vendedoresAtivos={metrics.vendedoresAtivos}
+                      totalNegocios={metrics.totalNegocios}
+                      totalLeads={totalLeads}
+                      conversionRate={conversionRate}
+                    />
+
+                    <Suspense fallback={<ChartSkeleton />}>
+                      <SalesChart salesReps={dashboardFilteredSalesReps} />
+                    </Suspense>
+                    
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <Suspense fallback={<ChartSkeleton />}>
+                        <ProductChart salesReps={dashboardFilteredSalesReps} />
+                      </Suspense>
+                      <Suspense fallback={<ChartSkeleton />}>
+                        <SupplierChart salesReps={dashboardFilteredSalesReps} />
+                      </Suspense>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-6">
+                      <Suspense fallback={<ChartSkeleton />}>
+                        <RevenueForecastChart 
+                          salesReps={dashboardFilteredSalesReps} 
+                          currentMonth={dashboardMonth} 
+                          monthlyGoal={monthlyGoal} 
+                        />
+                      </Suspense>
+                    </div>
+
+                    <GoalsKPICard
                       userId={user.id}
                       month={currentGoalMonth}
                       year={currentGoalYear}
-                      salesReps={filteredSalesReps}
-                      onGoalsSaved={() => refetchGoals()}
+                      totalSales={metrics.totalVendas}
                     />
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => navigate('/pedidos')}
-                      className="gap-2"
-                    >
-                      <ClipboardList className="h-4 w-4" />
-                      Todos os Pedidos
-                    </Button>
+
+                    <SalesVelocityKPI
+                      userId={user.id}
+                      month={currentGoalMonth}
+                      year={currentGoalYear}
+                      totalSales={metrics.totalVendas}
+                      currentComissaoTotal={metrics.totalComissaoTotal}
+                      currentComissaoVendedor={metrics.totalComissao}
+                      fixedCosts={costCalc.totalSalaries + marketingCost + operationalCost}
+                    />
+                  </Suspense>
+                )}
+              </ErrorBoundary>
+            </TabsContent>
+
+            <TabsContent value="vendedores" className="space-y-6">
+              <ErrorBoundary>
+                {/* Sub-navigation Comercial */}
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant={comercialView === 'equipe' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setComercialView('equipe')}
+                    className="gap-2"
+                  >
+                    <Users className="h-4 w-4" />
+                    Equipe
+                  </Button>
+                  <Button
+                    variant={comercialView === 'crm' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setComercialView('crm')}
+                    className="gap-2"
+                  >
+                    <Kanban className="h-4 w-4" />
+                    CRM
+                  </Button>
+                </div>
+
+                {comercialView === 'crm' ? (
+                  <Suspense fallback={<KanbanSkeleton />}>
+                    <CRMTab salespeople={salesReps.map(r => r.name)} />
+                  </Suspense>
+                ) : hasData ? (
+                  <>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">Filtrar por mês:</span>
+                        <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                          <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Todos os meses" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Todos os meses</SelectItem>
+                            {availableMonths.map(month => {
+                              const [m, y] = month.split('/');
+                              return (
+                                <SelectItem key={month} value={month}>
+                                  {getMonthName(parseInt(m))} {y}
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
+                        {selectedMonth !== 'all' && (
+                          <Badge variant="secondary">
+                            {filteredSalesReps.length} vendedor(es)
+                          </Badge>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Suspense fallback={null}>
+                          <SalaryManagementDialog salaries={salaries} onSave={saveSalaries} />
+                          <GoalsManagementDialog
+                            userId={user.id}
+                            month={currentGoalMonth}
+                            year={currentGoalYear}
+                            salesReps={filteredSalesReps}
+                            onGoalsSaved={() => refetchGoals()}
+                          />
+                        </Suspense>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => navigate('/pedidos')}
+                          className="gap-2"
+                        >
+                          <ClipboardList className="h-4 w-4" />
+                          Todos os Pedidos
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <Suspense fallback={<ChartSkeleton />}>
+                        <SalesRanking salesReps={filteredSalesReps} />
+                      </Suspense>
+                      <Suspense fallback={<ChartSkeleton />}>
+                        <SalespersonROI salesReps={filteredSalesReps} getSalary={getSalary} />
+                      </Suspense>
+                    </div>
+
+                    <Suspense fallback={<TableSkeleton rows={5} columns={7} />}>
+                      <SalesRepTable 
+                        salesReps={filteredSalesReps} 
+                        onGeneratePDF={handleGeneratePDF}
+                        selectedMonth={parseInt(selectedMonth.split('/')[0])}
+                        selectedYear={parseInt(selectedMonth.split('/')[1])}
+                        getSalary={getSalary}
+                      />
+                    </Suspense>
+                  </>
+                ) : (
+                  <div className="glass rounded-xl p-8 text-center">
+                    <p className="text-muted-foreground">
+                      Importe uma planilha ou carregue um relatório do histórico para ver os vendedores.
+                    </p>
                   </div>
-                </div>
+                )}
+              </ErrorBoundary>
+            </TabsContent>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <SalesRanking salesReps={filteredSalesReps} />
-                  <SalespersonROI salesReps={filteredSalesReps} getSalary={getSalary} />
-                </div>
+            <TabsContent value="marketing" className="space-y-6">
+              <ErrorBoundary>
+                <Suspense fallback={<DashboardSkeleton />}>
+                  <MarketingTab 
+                    costs={marketingCosts}
+                    onSave={saveMarketingCost}
+                    getCostForMonth={getCostForMonth}
+                    salesReps={salesReps}
+                  />
+                </Suspense>
+              </ErrorBoundary>
+            </TabsContent>
 
-                <SalesRepTable 
-                  salesReps={filteredSalesReps} 
-                  onGeneratePDF={handleGeneratePDF}
-                  selectedMonth={parseInt(selectedMonth.split('/')[0])}
-                  selectedYear={parseInt(selectedMonth.split('/')[1])}
-                  getSalary={getSalary}
-                />
-              </>
-            ) : (
-              <div className="glass rounded-xl p-8 text-center">
-                <p className="text-muted-foreground">
-                  Importe uma planilha ou carregue um relatório do histórico para ver os vendedores.
-                </p>
-              </div>
-            )}
-          </TabsContent>
+            <TabsContent value="contabilidade" className="space-y-6">
+              <ErrorBoundary>
+                <Suspense fallback={<TableSkeleton rows={8} columns={5} />}>
+                  <AccountingTab userId={user?.id} />
+                </Suspense>
+              </ErrorBoundary>
+            </TabsContent>
 
-          <TabsContent value="marketing" className="space-y-6">
-            <MarketingTab 
-              costs={marketingCosts}
-              onSave={saveMarketingCost}
-              getCostForMonth={getCostForMonth}
-              salesReps={salesReps}
-            />
-          </TabsContent>
-
-          <TabsContent value="contabilidade" className="space-y-6">
-            <AccountingTab userId={user?.id} />
-          </TabsContent>
-
-          <TabsContent value="nfse" className="space-y-6">
-            <NFSeTab />
-          </TabsContent>
-        </Tabs>
-      </main>
-    </div>
+            <TabsContent value="nfse" className="space-y-6">
+              <ErrorBoundary>
+                <Suspense fallback={<TableSkeleton rows={6} columns={6} />}>
+                  <NFSeTab />
+                </Suspense>
+              </ErrorBoundary>
+            </TabsContent>
+          </Tabs>
+        </main>
+      </div>
+    </ErrorBoundary>
   );
 };
 
