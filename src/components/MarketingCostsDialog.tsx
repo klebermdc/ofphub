@@ -78,10 +78,10 @@ export function MarketingCostsDialog({ onSave, getCostForMonth }: MarketingCosts
   const loadExistingData = () => {
     const existing = getCostForMonth(month, year);
     if (existing) {
-      setGoogleAds(String(existing.google_ads));
-      setMetaAds(String(existing.meta_ads));
-      setOtherMarketing(String(existing.other_marketing));
-      setLeads(String(existing.leads || ""));
+      setGoogleAds(String(existing.google_ads || 0));
+      setMetaAds(String(existing.meta_ads || 0));
+      setOtherMarketing(String(existing.other_marketing || 0));
+      setLeads(existing.leads !== null && existing.leads !== undefined ? String(existing.leads) : "");
       setDescription(existing.description || "");
     } else {
       setGoogleAds("");
