@@ -116,18 +116,23 @@ const Index = () => {
     selectedMonth: dashboardMonth,
   });
 
-  // CRM Leads
+  // CRM Leads - Use manual value from marketing_costs if available, otherwise count from CRM
   const { getLeadsCountForMonth } = useCRMLeadsCount();
-  const [totalLeads, setTotalLeads] = useState<number>(0);
+  const { getLeadsForMonth } = useMarketingCosts(user?.id, role === 'marketing' || role === 'manager');
+  const [crmLeadsCount, setCrmLeadsCount] = useState<number>(0);
   
   const fetchCRMLeadsCount = useCallback(async () => {
     const count = await getLeadsCountForMonth(currentGoalMonth, currentGoalYear);
-    setTotalLeads(count);
+    setCrmLeadsCount(count);
   }, [currentGoalMonth, currentGoalYear, getLeadsCountForMonth]);
   
   useEffect(() => {
     fetchCRMLeadsCount();
   }, [fetchCRMLeadsCount]);
+
+  // Priority: manual leads from marketing_costs > CRM count
+  const manualLeads = getLeadsForMonth(currentGoalMonth, currentGoalYear);
+  const totalLeads = manualLeads > 0 ? manualLeads : crmLeadsCount;
 
   const conversionRate = totalLeads > 0 ? (metrics.totalNegocios / totalLeads) * 100 : 0;
 
