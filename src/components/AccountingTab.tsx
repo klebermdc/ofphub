@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef } from "react";
 import { Plus, Trash2, Edit2, Save, X, Download, Upload, FileText, File } from "lucide-react";
 import { InterBankBalance } from "@/components/InterBankBalance";
+import { BankStatementImportDialog } from "@/components/BankStatementImportDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -414,13 +415,33 @@ export function AccountingTab({ userId }: AccountingTabProps) {
         </div>
       </div>
 
-      {/* Add Button */}
-      {!isAdding && (
-        <Button onClick={() => setIsAdding(true)} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Novo Lançamento
-        </Button>
-      )}
+      {/* Action Buttons */}
+      <div className="flex flex-wrap gap-2">
+        {!isAdding && (
+          <Button onClick={() => setIsAdding(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Novo Lançamento
+          </Button>
+        )}
+        <BankStatementImportDialog
+          onImport={async (entries) => {
+            for (const entry of entries) {
+              await addEntry({
+                data: entry.data,
+                valor_recebido: entry.valor_recebido,
+                valor_enviado: entry.valor_enviado,
+                movimentacao: entry.movimentacao || null,
+                cliente: entry.cliente || null,
+                nf: null,
+                plano_de_contas: entry.plano_de_contas || null,
+                justificativa: entry.justificativa || null,
+                forma_de_pagamento: entry.forma_de_pagamento || null,
+                banco: entry.banco || null,
+              });
+            }
+          }}
+        />
+      </div>
 
       {/* Add Form */}
       {isAdding && (
