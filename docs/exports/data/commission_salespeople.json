@@ -1,0 +1,13 @@
+[
+  {"id":"7835057d-2753-42c4-b3f2-e2bb4def7828","report_id":"3c313acb-1309-4e33-b9ee-1648b942060c","name":"Rafael","total_vendas":355021.90,"total_comissao":15966.16,"total_negocios":48,"created_at":"2025-12-02T13:53:58.588306+00:00"},
+  {"id":"ccbb55b5-5598-4e02-9748-ff9c8452dee6","report_id":"3c313acb-1309-4e33-b9ee-1648b942060c","name":"Marcella","total_vendas":429704.16,"total_comissao":3646.16,"total_negocios":49,"created_at":"2025-12-02T13:53:58.96335+00:00"},
+  {"id":"5086e855-863d-4683-a4d4-1d5bf9ac0f64","report_id":"3c313acb-1309-4e33-b9ee-1648b942060c","name":"Renata","total_vendas":543065.27,"total_comissao":0.00,"total_negocios":74,"created_at":"2025-12-02T13:53:59.296711+00:00"},
+  {"id":"9900055d-a147-469f-80c6-37b0c5cd8218","report_id":"3c313acb-1309-4e33-b9ee-1648b942060c","name":"Suelen","total_vendas":254048.41,"total_comissao":2279.84,"total_negocios":42,"created_at":"2025-12-02T13:53:59.643331+00:00"},
+  {"id":"732057ad-872b-4d52-9432-31f7a5f9c039","report_id":"3c313acb-1309-4e33-b9ee-1648b942060c","name":"Pedro","total_vendas":673834.76,"total_comissao":5576.79,"total_negocios":62,"created_at":"2025-12-02T13:53:59.985673+00:00"},
+  {"id":"1bc2e9ca-4c1d-4323-be3e-ad584213186f","report_id":"3c313acb-1309-4e33-b9ee-1648b942060c","name":"Site","total_vendas":87165.66,"total_comissao":119.82,"total_negocios":18,"created_at":"2025-12-02T13:54:00.331689+00:00"},
+  {"id":"a577e4c0-1a7b-4496-b279-76f8445ef7f5","report_id":"3c313acb-1309-4e33-b9ee-1648b942060c","name":"Carolina","total_vendas":478783.42,"total_comissao":4450.54,"total_negocios":56,"created_at":"2025-12-02T13:54:00.667668+00:00"},
+  {"id":"1606d052-db1a-400d-93b1-1e8b96183cfb","report_id":"3c313acb-1309-4e33-b9ee-1648b942060c","name":"Kleber","total_vendas":372152.29,"total_comissao":697.84,"total_negocios":32,"created_at":"2025-12-02T13:54:01.004252+00:00"},
+  {"id":"05b82619-f46d-450f-8e23-63b4b73a4ded","report_id":"3c313acb-1309-4e33-b9ee-1648b942060c","name":"Simone","total_vendas":32893.27,"total_comissao":363.45,"total_negocios":5,"created_at":"2025-12-02T13:54:01.356355+00:00"},
+  {"id":"4c972d78-b5b1-4eba-a351-fdfebb0d1278","report_id":"3c313acb-1309-4e33-b9ee-1648b942060c","name":"Victor","total_vendas":24557.23,"total_comissao":368.36,"total_negocios":1,"created_at":"2025-12-02T13:54:01.714054+00:00"},
+  {"id":"872c874b-431a-4853-8d5a-18eb26aaa925","report_id":"3c313acb-1309-4e33-b9ee-1648b942060c","name":"Gabriela","total_vendas":41802.43,"total_comissao":463.58,"total_negocios":4,"created_at":"2025-12-02T13:54:02.066804+00:00"}
+]
