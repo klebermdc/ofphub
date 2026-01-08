@@ -1,6 +1,5 @@
 import { jsPDF } from "jspdf";
 import { SalesRep } from "@/types/sales";
-import { getSalary } from "@/config/salaries";
 
 const formatCurrency = (value: number) => {
   return `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -44,7 +43,7 @@ const loadImage = (url: string): Promise<string> => {
   });
 };
 
-export const generateSalesRepPDF = async (rep: SalesRep) => {
+export const generateSalesRepPDF = async (rep: SalesRep, getSalary: (name: string) => number) => {
   const doc = new jsPDF({ orientation: 'landscape' });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
