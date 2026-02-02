@@ -603,6 +603,42 @@ export type Database = {
         }
         Relationships: []
       }
+      salesperson_discounts: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          id: string
+          period_month: number
+          period_year: number
+          salesperson_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          period_month: number
+          period_year: number
+          salesperson_name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          period_month?: number
+          period_year?: number
+          salesperson_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       salesperson_goals: {
         Row: {
           created_at: string

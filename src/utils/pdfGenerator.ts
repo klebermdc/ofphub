@@ -43,7 +43,11 @@ const loadImage = (url: string): Promise<string> => {
   });
 };
 
-export const generateSalesRepPDF = async (rep: SalesRep, getSalary: (name: string) => number) => {
+export const generateSalesRepPDF = async (
+  rep: SalesRep, 
+  getSalary: (name: string) => number,
+  getDiscount: (name: string) => number = () => 0
+) => {
   const doc = new jsPDF({ orientation: 'landscape' });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -103,12 +107,13 @@ export const generateSalesRepPDF = async (rep: SalesRep, getSalary: (name: strin
   
   currentY += 20;
 
-  // Get salary for this salesperson
+  // Get salary and discount for this salesperson
   const salary = getSalary(rep.name);
-  const totalReceiver = salary + rep.commission;
+  const discount = getDiscount(rep.name);
+  const totalReceiver = salary + rep.commission - discount;
 
-  // Summary Cards - 4 cards in a row with orange theme
-  const cardWidth = (pageWidth - margin * 2 - 30) / 4;
+  // Summary Cards - 5 cards in a row with orange theme
+  const cardWidth = (pageWidth - margin * 2 - 40) / 5;
   const cardHeight = 24;
 
   // Card 1 - Total Vendas
@@ -118,14 +123,14 @@ export const generateSalesRepPDF = async (rep: SalesRep, getSalary: (name: strin
   doc.setLineWidth(0.5);
   doc.roundedRect(margin, currentY, cardWidth, cardHeight, 3, 3, 'S');
   
-  doc.setFontSize(8);
+  doc.setFontSize(7);
   doc.setTextColor(COLORS.gray.r, COLORS.gray.g, COLORS.gray.b);
   doc.setFont("helvetica", "normal");
-  doc.text("Total de Vendas", margin + 6, currentY + 9);
-  doc.setFontSize(12);
+  doc.text("Total de Vendas", margin + 4, currentY + 9);
+  doc.setFontSize(10);
   doc.setTextColor(COLORS.primary.r, COLORS.primary.g, COLORS.primary.b);
   doc.setFont("helvetica", "bold");
-  doc.text(formatCurrency(rep.sales), margin + 6, currentY + 19);
+  doc.text(formatCurrency(rep.sales), margin + 4, currentY + 19);
 
   // Card 2 - Comissão
   doc.setFillColor(240, 255, 240);
@@ -133,14 +138,14 @@ export const generateSalesRepPDF = async (rep: SalesRep, getSalary: (name: strin
   doc.setDrawColor(COLORS.green.r, COLORS.green.g, COLORS.green.b);
   doc.roundedRect(margin + cardWidth + 10, currentY, cardWidth, cardHeight, 3, 3, 'S');
   
-  doc.setFontSize(8);
+  doc.setFontSize(7);
   doc.setTextColor(COLORS.gray.r, COLORS.gray.g, COLORS.gray.b);
   doc.setFont("helvetica", "normal");
-  doc.text("Comissão", margin + cardWidth + 16, currentY + 9);
-  doc.setFontSize(12);
+  doc.text("Comissão", margin + cardWidth + 14, currentY + 9);
+  doc.setFontSize(10);
   doc.setTextColor(COLORS.green.r, COLORS.green.g, COLORS.green.b);
   doc.setFont("helvetica", "bold");
-  doc.text(formatCurrency(rep.commission), margin + cardWidth + 16, currentY + 19);
+  doc.text(formatCurrency(rep.commission), margin + cardWidth + 14, currentY + 19);
 
   // Card 3 - Salário Fixo
   doc.setFillColor(240, 245, 255);
@@ -148,29 +153,44 @@ export const generateSalesRepPDF = async (rep: SalesRep, getSalary: (name: strin
   doc.setDrawColor(70, 130, 180);
   doc.roundedRect(margin + (cardWidth + 10) * 2, currentY, cardWidth, cardHeight, 3, 3, 'S');
   
-  doc.setFontSize(8);
+  doc.setFontSize(7);
   doc.setTextColor(COLORS.gray.r, COLORS.gray.g, COLORS.gray.b);
   doc.setFont("helvetica", "normal");
-  doc.text("Salário Fixo", margin + (cardWidth + 10) * 2 + 6, currentY + 9);
-  doc.setFontSize(12);
+  doc.text("Salário Fixo", margin + (cardWidth + 10) * 2 + 4, currentY + 9);
+  doc.setFontSize(10);
   doc.setTextColor(70, 130, 180);
   doc.setFont("helvetica", "bold");
-  doc.text(formatCurrency(salary), margin + (cardWidth + 10) * 2 + 6, currentY + 19);
+  doc.text(formatCurrency(salary), margin + (cardWidth + 10) * 2 + 4, currentY + 19);
 
-  // Card 4 - Total a Receber
-  doc.setFillColor(255, 240, 245);
+  // Card 4 - Descontos (if any)
+  doc.setFillColor(255, 235, 235);
   doc.roundedRect(margin + (cardWidth + 10) * 3, currentY, cardWidth, cardHeight, 3, 3, 'F');
-  doc.setDrawColor(180, 50, 100);
+  doc.setDrawColor(200, 50, 50);
   doc.roundedRect(margin + (cardWidth + 10) * 3, currentY, cardWidth, cardHeight, 3, 3, 'S');
   
-  doc.setFontSize(8);
+  doc.setFontSize(7);
   doc.setTextColor(COLORS.gray.r, COLORS.gray.g, COLORS.gray.b);
   doc.setFont("helvetica", "normal");
-  doc.text("Total a Receber", margin + (cardWidth + 10) * 3 + 6, currentY + 9);
-  doc.setFontSize(12);
+  doc.text("Descontos", margin + (cardWidth + 10) * 3 + 4, currentY + 9);
+  doc.setFontSize(10);
+  doc.setTextColor(200, 50, 50);
+  doc.setFont("helvetica", "bold");
+  doc.text(discount > 0 ? `- ${formatCurrency(discount)}` : formatCurrency(0), margin + (cardWidth + 10) * 3 + 4, currentY + 19);
+
+  // Card 5 - Total a Receber
+  doc.setFillColor(255, 240, 245);
+  doc.roundedRect(margin + (cardWidth + 10) * 4, currentY, cardWidth, cardHeight, 3, 3, 'F');
+  doc.setDrawColor(180, 50, 100);
+  doc.roundedRect(margin + (cardWidth + 10) * 4, currentY, cardWidth, cardHeight, 3, 3, 'S');
+  
+  doc.setFontSize(7);
+  doc.setTextColor(COLORS.gray.r, COLORS.gray.g, COLORS.gray.b);
+  doc.setFont("helvetica", "normal");
+  doc.text("Total a Receber", margin + (cardWidth + 10) * 4 + 4, currentY + 9);
+  doc.setFontSize(10);
   doc.setTextColor(180, 50, 100);
   doc.setFont("helvetica", "bold");
-  doc.text(formatCurrency(totalReceiver), margin + (cardWidth + 10) * 3 + 6, currentY + 19);
+  doc.text(formatCurrency(totalReceiver), margin + (cardWidth + 10) * 4 + 4, currentY + 19);
 
   currentY += cardHeight + 12;
 
@@ -306,57 +326,69 @@ export const generateSalesRepPDF = async (rep: SalesRep, getSalary: (name: strin
          colWidths.fornecedor + colWidths.produto + colWidths.comissao + colWidths.comissaoTotal + colWidths.porcVendedor;
   doc.text(formatCurrency(rep.commission), colX, currentY + 3);
 
-  // Final Summary Box - Salary + Commission = Total
+  // Final Summary Box - Salary + Commission - Discount = Total
   currentY += 18;
-  addNewPageIfNeeded(35);
+  addNewPageIfNeeded(40);
   
   doc.setFillColor(250, 250, 250);
-  doc.roundedRect(margin, currentY, pageWidth - margin * 2, 28, 4, 4, 'F');
+  doc.roundedRect(margin, currentY, pageWidth - margin * 2, 32, 4, 4, 'F');
   doc.setDrawColor(COLORS.primary.r, COLORS.primary.g, COLORS.primary.b);
   doc.setLineWidth(1);
-  doc.roundedRect(margin, currentY, pageWidth - margin * 2, 28, 4, 4, 'S');
+  doc.roundedRect(margin, currentY, pageWidth - margin * 2, 32, 4, 4, 'S');
   
   doc.setFontSize(10);
   doc.setTextColor(COLORS.dark.r, COLORS.dark.g, COLORS.dark.b);
   doc.setFont("helvetica", "bold");
   doc.text("RESUMO FINANCEIRO", margin + 10, currentY + 8);
   
-  const summaryY = currentY + 18;
-  const colSpacing = (pageWidth - margin * 2 - 20) / 4;
+  const summaryY = currentY + 20;
+  const colSpacing = (pageWidth - margin * 2 - 20) / 5;
   
   // Salário
-  doc.setFontSize(8);
+  doc.setFontSize(7);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(COLORS.gray.r, COLORS.gray.g, COLORS.gray.b);
-  doc.text("Salário Fixo:", margin + 10, summaryY);
+  doc.text("Salário:", margin + 10, summaryY);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(70, 130, 180);
-  doc.text(formatCurrency(salary), margin + 10 + 35, summaryY);
+  doc.text(formatCurrency(salary), margin + 10 + 22, summaryY);
   
   // + symbol
   doc.setTextColor(COLORS.dark.r, COLORS.dark.g, COLORS.dark.b);
-  doc.text("+", margin + 10 + colSpacing, summaryY);
+  doc.text("+", margin + 10 + colSpacing - 5, summaryY);
   
   // Comissão
   doc.setFont("helvetica", "normal");
   doc.setTextColor(COLORS.gray.r, COLORS.gray.g, COLORS.gray.b);
-  doc.text("Comissão:", margin + 10 + colSpacing + 10, summaryY);
+  doc.text("Comissão:", margin + 10 + colSpacing, summaryY);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(COLORS.green.r, COLORS.green.g, COLORS.green.b);
-  doc.text(formatCurrency(rep.commission), margin + 10 + colSpacing + 40, summaryY);
+  doc.text(formatCurrency(rep.commission), margin + 10 + colSpacing + 28, summaryY);
+  
+  // - symbol
+  doc.setTextColor(COLORS.dark.r, COLORS.dark.g, COLORS.dark.b);
+  doc.text("-", margin + 10 + colSpacing * 2 - 5, summaryY);
+  
+  // Descontos
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(COLORS.gray.r, COLORS.gray.g, COLORS.gray.b);
+  doc.text("Descontos:", margin + 10 + colSpacing * 2, summaryY);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(200, 50, 50);
+  doc.text(formatCurrency(discount), margin + 10 + colSpacing * 2 + 30, summaryY);
   
   // = symbol
   doc.setTextColor(COLORS.dark.r, COLORS.dark.g, COLORS.dark.b);
-  doc.text("=", margin + 10 + colSpacing * 2, summaryY);
+  doc.text("=", margin + 10 + colSpacing * 3 - 5, summaryY);
   
   // Total a Receber
   doc.setFont("helvetica", "normal");
   doc.setTextColor(COLORS.gray.r, COLORS.gray.g, COLORS.gray.b);
-  doc.text("Total a Receber:", margin + 10 + colSpacing * 2 + 10, summaryY);
-  doc.setFontSize(11);
+  doc.text("Total a Receber:", margin + 10 + colSpacing * 3, summaryY);
+  doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(180, 50, 100);
-  doc.text(formatCurrency(totalReceiver), margin + 10 + colSpacing * 2 + 55, summaryY);
+  doc.text(formatCurrency(totalReceiver), margin + 10 + colSpacing * 3 + 45, summaryY);
 
   // Footer with orange accent
   doc.setFillColor(COLORS.primary.r, COLORS.primary.g, COLORS.primary.b);
