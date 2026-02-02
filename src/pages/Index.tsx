@@ -21,6 +21,7 @@ import { useCRMLeadsCount } from "@/hooks/useCRMLeadsCount";
 import { useFilteredSalesReps, useDashboardMetrics } from "@/hooks/useSalesData";
 import { useSalesGoals } from "@/hooks/useSheetData";
 import { useCostCalculation } from "@/hooks/useCostCalculation";
+import { useDiscounts } from "@/hooks/useDiscounts";
 import { getCurrentMonthKey, getMonthName } from "@/utils/dateUtils";
 import { 
   DashboardSkeleton, 
@@ -39,6 +40,7 @@ const GoalsKPICard = lazy(() => import("@/components/GoalsKPICard").then(m => ({
 const SalesVelocityKPI = lazy(() => import("@/components/SalesVelocityKPI").then(m => ({ default: m.SalesVelocityKPI })));
 const SalesRanking = lazy(() => import("@/components/SalesRanking").then(m => ({ default: m.SalesRanking })));
 const SalaryManagementDialog = lazy(() => import("@/components/SalaryManagementDialog").then(m => ({ default: m.SalaryManagementDialog })));
+const DiscountManagementDialog = lazy(() => import("@/components/DiscountManagementDialog").then(m => ({ default: m.DiscountManagementDialog })));
 const RevenueForecastChart = lazy(() => import("@/components/RevenueForecastChart").then(m => ({ default: m.RevenueForecastChart })));
 const SalespersonROI = lazy(() => import("@/components/SalespersonROI").then(m => ({ default: m.SalespersonROI })));
 const DailySalesTracker = lazy(() => import("@/components/DailySalesTracker").then(m => ({ default: m.DailySalesTracker })));
@@ -100,6 +102,9 @@ const Index = () => {
 
   const { data: goalsData, refetch: refetchGoals } = useSalesGoals(user?.id, currentGoalMonth, currentGoalYear);
   const monthlyGoal = goalsData?.goal_vendas || 0;
+
+  // Discounts
+  const { discounts, saveDiscounts, getDiscount } = useDiscounts(currentGoalMonth, currentGoalYear);
 
   // Costs
   const marketingCost = getTotalForMonth(currentGoalMonth, currentGoalYear);
@@ -230,7 +235,7 @@ const Index = () => {
     });
 
     try {
-      await generateSalesRepPDF(rep, getSalary);
+      await generateSalesRepPDF(rep, getSalary, getDiscount);
       toast({
         title: "PDF pronto!",
         description: `Relatório de ${rep.name} baixado com sucesso.`,
@@ -476,6 +481,13 @@ const Index = () => {
                       <div className="flex items-center gap-2 flex-wrap">
                         <Suspense fallback={null}>
                           <SalaryManagementDialog salaries={salaries} onSave={saveSalaries} />
+                          <DiscountManagementDialog
+                            discounts={discounts}
+                            onSave={saveDiscounts}
+                            salespeople={filteredSalesReps.map(r => r.name)}
+                            month={currentGoalMonth}
+                            year={currentGoalYear}
+                          />
                           <GoalsManagementDialog
                             userId={user.id}
                             month={currentGoalMonth}
