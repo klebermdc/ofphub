@@ -9,7 +9,7 @@ export const SALESPERSON_SALARIES: Record<string, number> = {
 };
 
 // Nomes que devem ser excluídos das listas de vendedores (parceiros/sócios)
-export const EXCLUDED_NAMES = ["Site", "Renata", "Kleber"];
+export const EXCLUDED_NAMES = ["Site", "Renata", "Kleber", "contato@orlandofastpass.com.br", "atendimento@orlandofastpass.com.br"];
 
 export const isExcludedName = (name: string): boolean => {
   const normalizedName = name.trim().toLowerCase();

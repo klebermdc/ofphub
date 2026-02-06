@@ -22,6 +22,7 @@ interface CostCalculationParams {
   operationalCost: number;
   getSalary: (name: string) => number;
   selectedMonth: string;
+  totalDiscounts?: number;
 }
 
 /**
@@ -36,6 +37,7 @@ export function useCostCalculation({
   operationalCost,
   getSalary,
   selectedMonth,
+  totalDiscounts = 0,
 }: CostCalculationParams): CostCalculationResult {
   return useMemo(() => {
     // Total salaries
@@ -44,11 +46,11 @@ export function useCostCalculation({
       0
     );
 
-    // Custo Equipe Comercial (Comissão Vendedores + Salários) - excluding partners
+    // Custo Equipe Comercial (Salários + Comissões - Descontos) - excluding partners
     const nonPartnerReps = filteredSalesReps.filter(rep => !isExcludedName(rep.name));
     const nonPartnerCommissions = nonPartnerReps.reduce((sum, rep) => sum + rep.commission, 0);
     const nonPartnerSalaries = nonPartnerReps.reduce((sum, rep) => sum + getSalary(rep.name), 0);
-    const custoEquipeComercial = nonPartnerCommissions + nonPartnerSalaries;
+    const custoEquipeComercial = nonPartnerSalaries + nonPartnerCommissions - totalDiscounts;
 
     // Imposto estimado (12% of Comissão Total)
     const impostoEstimado = totalComissaoTotal * 0.12;
@@ -86,5 +88,6 @@ export function useCostCalculation({
     operationalCost,
     getSalary,
     selectedMonth,
+    totalDiscounts,
   ]);
 }
