@@ -39,7 +39,8 @@ export function DiscountManagementDialog({
   }, [open, discounts]);
 
   const handleAddEntry = () => {
-    setEntries([...entries, { salesperson_name: '', amount: 0, description: '' }]);
+    const firstAvailable = availableSalespeople[0] || '';
+    setEntries([...entries, { salesperson_name: firstAvailable, amount: 0, description: '' }]);
   };
 
   const handleRemoveEntry = (index: number) => {
