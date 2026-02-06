@@ -104,7 +104,7 @@ const Index = () => {
   const monthlyGoal = goalsData?.goal_vendas || 0;
 
   // Discounts
-  const { discounts, saveDiscounts, getDiscount } = useDiscounts(currentGoalMonth, currentGoalYear);
+  const { discounts, saveDiscounts, getDiscount, getDiscountDescription } = useDiscounts(currentGoalMonth, currentGoalYear);
 
   // Costs
   const marketingCost = getTotalForMonth(currentGoalMonth, currentGoalYear);
@@ -235,7 +235,7 @@ const Index = () => {
     });
 
     try {
-      await generateSalesRepPDF(rep, getSalary, getDiscount);
+      await generateSalesRepPDF(rep, getSalary, getDiscount, getDiscountDescription);
       toast({
         title: "PDF pronto!",
         description: `Relatório de ${rep.name} baixado com sucesso.`,

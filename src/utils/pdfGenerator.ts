@@ -46,7 +46,8 @@ const loadImage = (url: string): Promise<string> => {
 export const generateSalesRepPDF = async (
   rep: SalesRep, 
   getSalary: (name: string) => number,
-  getDiscount: (name: string) => number = () => 0
+  getDiscount: (name: string) => number = () => 0,
+  getDiscountDescription: (name: string) => string = () => ''
 ) => {
   const doc = new jsPDF({ orientation: 'landscape' });
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -110,6 +111,7 @@ export const generateSalesRepPDF = async (
   // Get salary and discount for this salesperson
   const salary = getSalary(rep.name);
   const discount = getDiscount(rep.name);
+  const discountDescription = getDiscountDescription(rep.name);
   const totalReceiver = salary + rep.commission - discount;
 
   // Summary Cards - 5 cards in a row with orange theme
@@ -330,11 +332,12 @@ export const generateSalesRepPDF = async (
   currentY += 18;
   addNewPageIfNeeded(40);
   
+  const summaryBoxHeight = discountDescription ? 42 : 32;
   doc.setFillColor(250, 250, 250);
-  doc.roundedRect(margin, currentY, pageWidth - margin * 2, 32, 4, 4, 'F');
+  doc.roundedRect(margin, currentY, pageWidth - margin * 2, summaryBoxHeight, 4, 4, 'F');
   doc.setDrawColor(COLORS.primary.r, COLORS.primary.g, COLORS.primary.b);
   doc.setLineWidth(1);
-  doc.roundedRect(margin, currentY, pageWidth - margin * 2, 32, 4, 4, 'S');
+  doc.roundedRect(margin, currentY, pageWidth - margin * 2, summaryBoxHeight, 4, 4, 'S');
   
   doc.setFontSize(10);
   doc.setTextColor(COLORS.dark.r, COLORS.dark.g, COLORS.dark.b);
@@ -389,6 +392,14 @@ export const generateSalesRepPDF = async (
   doc.setFont("helvetica", "bold");
   doc.setTextColor(180, 50, 100);
   doc.text(formatCurrency(totalReceiver), margin + 10 + colSpacing * 3 + 45, summaryY);
+
+  // Discount observation
+  if (discountDescription) {
+    doc.setFontSize(7);
+    doc.setFont("helvetica", "italic");
+    doc.setTextColor(COLORS.gray.r, COLORS.gray.g, COLORS.gray.b);
+    doc.text(`Obs: ${discountDescription}`, margin + 10, summaryY + 10);
+  }
 
   // Footer with orange accent
   doc.setFillColor(COLORS.primary.r, COLORS.primary.g, COLORS.primary.b);
