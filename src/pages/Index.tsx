@@ -484,7 +484,7 @@ const Index = () => {
                           <DiscountManagementDialog
                             discounts={discounts}
                             onSave={saveDiscounts}
-                            salespeople={filteredSalesReps.map(r => r.name)}
+                            salespeople={salesReps.map(r => r.name)}
                             month={currentGoalMonth}
                             year={currentGoalYear}
                           />
