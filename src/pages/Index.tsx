@@ -104,7 +104,7 @@ const Index = () => {
   const monthlyGoal = goalsData?.goal_vendas || 0;
 
   // Discounts
-  const { discounts, saveDiscounts, getDiscount, getDiscountDescription } = useDiscounts(currentGoalMonth, currentGoalYear);
+  const { discounts, saveDiscounts, getDiscount, getDiscountDescription, getTotalDiscounts } = useDiscounts(currentGoalMonth, currentGoalYear);
 
   // Costs
   const marketingCost = getTotalForMonth(currentGoalMonth, currentGoalYear);
@@ -119,6 +119,7 @@ const Index = () => {
     operationalCost,
     getSalary,
     selectedMonth: dashboardMonth,
+    totalDiscounts: getTotalDiscounts(),
   });
 
   // CRM Leads - Use manual value from marketing_costs if available, otherwise count from CRM
