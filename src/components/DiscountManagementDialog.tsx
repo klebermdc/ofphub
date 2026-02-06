@@ -38,8 +38,17 @@ export function DiscountManagementDialog({
     }
   }, [open, discounts]);
 
+  // Get salespeople that are not yet added
+  const availableSalespeople = salespeople.filter(
+    sp => !entries.some(e => e.salesperson_name === sp)
+  );
+
   const handleAddEntry = () => {
     const firstAvailable = availableSalespeople[0] || '';
+    if (!firstAvailable) {
+      toast.error('Todos os vendedores já possuem desconto lançado');
+      return;
+    }
     setEntries([...entries, { salesperson_name: firstAvailable, amount: 0, description: '' }]);
   };
 
@@ -78,11 +87,6 @@ export function DiscountManagementDialog({
       currency: 'BRL'
     }).format(value);
   };
-
-  // Get salespeople that are not yet added
-  const availableSalespeople = salespeople.filter(
-    sp => !entries.some(e => e.salesperson_name === sp)
-  );
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
