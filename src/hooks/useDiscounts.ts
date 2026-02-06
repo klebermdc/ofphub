@@ -90,15 +90,23 @@ export function useDiscounts(month: number, year: number) {
     }
   };
 
-  const getDiscount = useCallback((salespersonName: string): number => {
-    const discount = discounts.find(d => d.salesperson_name === salespersonName);
-    return discount?.amount || 0;
+  const findDiscount = useCallback((salespersonName: string): Discount | undefined => {
+    const normalized = salespersonName.trim().toLowerCase();
+    return discounts.find(d => {
+      const dName = d.salesperson_name.trim().toLowerCase();
+      return dName === normalized || 
+             dName.includes(normalized) || 
+             normalized.includes(dName);
+    });
   }, [discounts]);
 
+  const getDiscount = useCallback((salespersonName: string): number => {
+    return findDiscount(salespersonName)?.amount || 0;
+  }, [findDiscount]);
+
   const getDiscountDescription = useCallback((salespersonName: string): string => {
-    const discount = discounts.find(d => d.salesperson_name === salespersonName);
-    return discount?.description || '';
-  }, [discounts]);
+    return findDiscount(salespersonName)?.description || '';
+  }, [findDiscount]);
 
   const getTotalDiscounts = useCallback((): number => {
     return discounts.reduce((sum, d) => sum + d.amount, 0);
