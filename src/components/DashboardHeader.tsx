@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { SalespersonAccountsDialog } from "./SalespersonAccountsDialog";
+import { SettingsDialog } from "./SettingsDialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,12 +22,14 @@ export function DashboardHeader({ availableSalespeople = [] }: DashboardHeaderPr
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [usersDialogOpen, setUsersDialogOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
   };
 
   return (
+    <>
     <header className="border-b border-border bg-background/80 backdrop-blur-md sticky top-0 z-50">
       <div className="container mx-auto px-3 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
         <div className="flex items-center gap-2 sm:gap-3">
@@ -69,7 +72,7 @@ export function DashboardHeader({ availableSalespeople = [] }: DashboardHeaderPr
                 <Users className="h-4 w-4" />
                 Gerenciar Usuários
               </DropdownMenuItem>
-              <DropdownMenuItem className="gap-2">
+              <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => setSettingsOpen(true)}>
                 <Settings className="h-4 w-4" />
                 Configurações
               </DropdownMenuItem>
@@ -83,5 +86,13 @@ export function DashboardHeader({ availableSalespeople = [] }: DashboardHeaderPr
         </div>
       </div>
     </header>
+      <SalespersonAccountsDialog 
+        userId={user?.id}
+        open={usersDialogOpen} 
+        onOpenChange={setUsersDialogOpen}
+        availableSalespeople={availableSalespeople}
+      />
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} userId={user?.id} />
+    </>
   );
 }
