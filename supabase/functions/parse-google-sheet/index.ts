@@ -319,10 +319,15 @@ serve(async (req) => {
       if (!vendedor) continue;
       
       const venda = vendasIdx >= 0 ? parseNumber(row[vendasIdx]) : 0;
-      const comissaoVendedor = comissaoVendedorIdx >= 0 ? parseNumber(row[comissaoVendedorIdx]) : 0;
       const comissaoTotal = comissaoTotalIdx >= 0 ? parseNumber(row[comissaoTotalIdx]) : 0;
       const comissao = comissaoIdx >= 0 ? parsePercentage(row[comissaoIdx]) : 0;
       const porcentagemVendedor = porcentagemIdx >= 0 ? parsePercentage(row[porcentagemIdx]) : 0;
+      let comissaoVendedor = comissaoVendedorIdx >= 0 ? parseNumber(row[comissaoVendedorIdx]) : 0;
+      
+      // Fallback: if comissaoVendedor is 0 but we have porcentagemVendedor and comissaoTotal, calculate it
+      if (comissaoVendedor === 0 && porcentagemVendedor > 0 && comissaoTotal > 0) {
+        comissaoVendedor = Math.round((comissaoTotal * porcentagemVendedor / 100) * 100) / 100;
+      }
 
       // Create order detail with all columns (i + 1 because row index in sheet is 1-based and header is row 1)
       const orderDetail: OrderDetail = {
