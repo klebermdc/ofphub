@@ -195,9 +195,10 @@ const Index = () => {
         return;
       }
 
+      const { resolveSalespersonName } = await import('@/config/salaries');
       const transformedData: SalesRep[] = data.data.map((item: any, index: number) => ({
         id: String(index + 1),
-        name: item.vendedor,
+        name: resolveSalespersonName(item.vendedor),
         sales: item.vendas,
         commission: item.comissao,
         deals: item.negocios,
