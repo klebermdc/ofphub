@@ -101,6 +101,42 @@ export type Database = {
         }
         Relationships: []
       }
+      api_integrations: {
+        Row: {
+          api_key: string
+          api_url: string
+          created_at: string
+          id: string
+          integration_name: string
+          is_active: boolean
+          last_sync_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          api_key: string
+          api_url: string
+          created_at?: string
+          id?: string
+          integration_name?: string
+          is_active?: boolean
+          last_sync_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          api_key?: string
+          api_url?: string
+          created_at?: string
+          id?: string
+          integration_name?: string
+          is_active?: boolean
+          last_sync_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       commission_orders: {
         Row: {
           cliente: string | null
