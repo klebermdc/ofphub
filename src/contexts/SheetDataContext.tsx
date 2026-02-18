@@ -4,6 +4,7 @@ import { SalesRep, SalesTotals } from "@/types/sales";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useSheetSettings } from "@/hooks/useSheetSettings";
+import { resolveSalespersonName } from "@/config/salaries";
 
 interface SheetDataContextType {
   salesReps: SalesRep[];
@@ -41,7 +42,7 @@ export function SheetDataProvider({ children }: { children: ReactNode }) {
       if (data.success && data.data) {
         const reps: SalesRep[] = data.data.map((item: any, index: number) => ({
           id: `rep-${index}`,
-          name: item.vendedor,
+          name: resolveSalespersonName(item.vendedor),
           sales: item.vendas,
           commission: item.comissao,
           deals: item.negocios,

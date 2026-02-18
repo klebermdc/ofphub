@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { SalesRep, SalesTotals } from '@/types/sales';
+import { resolveSalespersonName } from '@/config/salaries';
 
 interface SheetData {
   salesReps: SalesRep[];
@@ -31,7 +32,7 @@ export function useSheetData(userId: string | undefined) {
 
       const transformedData: SalesRep[] = data.data.map((item: any, index: number) => ({
         id: String(index + 1),
-        name: item.vendedor,
+        name: resolveSalespersonName(item.vendedor),
         sales: item.vendas,
         commission: item.comissao,
         deals: item.negocios,

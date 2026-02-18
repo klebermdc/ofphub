@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from '@/hooks/use-toast';
+import { resolveSalespersonName } from '@/config/salaries';
 
 export interface Discount {
   id?: string;
@@ -91,12 +92,12 @@ export function useDiscounts(month: number, year: number) {
   };
 
   const findDiscount = useCallback((salespersonName: string): Discount | undefined => {
-    const normalized = salespersonName.trim().toLowerCase();
+    const resolved = resolveSalespersonName(salespersonName).trim().toLowerCase();
     return discounts.find(d => {
-      const dName = d.salesperson_name.trim().toLowerCase();
-      return dName === normalized || 
-             dName.includes(normalized) || 
-             normalized.includes(dName);
+      const dResolved = resolveSalespersonName(d.salesperson_name).trim().toLowerCase();
+      return dResolved === resolved || 
+             dResolved.includes(resolved) || 
+             resolved.includes(dResolved);
     });
   }, [discounts]);
 

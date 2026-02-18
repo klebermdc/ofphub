@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { SALESPERSON_SALARIES } from '@/config/salaries';
+import { SALESPERSON_SALARIES, resolveSalespersonName } from '@/config/salaries';
 
 interface SalaryEntry {
   id?: string;
@@ -87,10 +87,15 @@ export function useSalespersonSalaries(userId: string | undefined) {
   };
 
   const getSalary = useCallback((name: string): number => {
-    const normalizedName = name.trim().toLowerCase();
+    const resolved = resolveSalespersonName(name);
+    const normalizedName = resolved.trim().toLowerCase();
     
     for (const entry of salaries) {
-      if (normalizedName.includes(entry.salesperson_name.toLowerCase()) || 
+      const entryResolved = resolveSalespersonName(entry.salesperson_name).toLowerCase();
+      if (normalizedName === entryResolved ||
+          normalizedName.includes(entryResolved) || 
+          entryResolved.includes(normalizedName) ||
+          normalizedName.includes(entry.salesperson_name.toLowerCase()) ||
           entry.salesperson_name.toLowerCase().includes(normalizedName)) {
         return entry.salary;
       }
