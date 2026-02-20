@@ -22,6 +22,7 @@ import { useFilteredSalesReps, useDashboardMetrics } from "@/hooks/useSalesData"
 import { useSalesGoals } from "@/hooks/useSheetData";
 import { useCostCalculation } from "@/hooks/useCostCalculation";
 import { useDiscounts } from "@/hooks/useDiscounts";
+import { useApiIntegrations } from "@/hooks/useApiIntegrations";
 import { getCurrentMonthKey, getMonthName } from "@/utils/dateUtils";
 import { 
   DashboardSkeleton, 
@@ -105,6 +106,7 @@ const Index = () => {
 
   // Discounts
   const { discounts, saveDiscounts, getDiscount, getDiscountDescription, getTotalDiscounts } = useDiscounts(currentGoalMonth, currentGoalYear);
+  const { getAccountingIntegration } = useApiIntegrations(user?.id);
 
   // Costs
   const marketingCost = getTotalForMonth(currentGoalMonth, currentGoalYear);
@@ -337,6 +339,8 @@ const Index = () => {
                       savedUrl={savedUrl}
                       onSaveOperationalCosts={saveOperationalCosts}
                       getCostForMonth={getCostForMonth}
+                      userId={user?.id}
+                      hasApiIntegration={!!getAccountingIntegration()}
                     />
 
                     <DailySalesTracker
