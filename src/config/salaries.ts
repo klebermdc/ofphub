@@ -8,6 +8,10 @@ export const SALESPERSON_EMAIL_MAP: Record<string, string> = {
   "marketing@orlandofastpass.com.br": "Rafael",
   "contato@orlandofastpass.com.br": "Renata Santos",
   "comercial@orlandofastpass.com.br": "Suelen",
+  "thayna@orlandofastpass.com.br": "Thayna",
+  "simone@orlandofastpass.com.br": "Simone",
+  "site@orlandofastpass.com.br": "Site",
+  "maria gabriela@orlandofastpass.com.br": "Maria Gabriela",
 };
 
 /**

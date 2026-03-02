@@ -112,6 +112,33 @@ function validateSheetUrl(url: string): { valid: boolean; error?: string } {
   return { valid: true };
 }
 
+// Email-to-name mapping for salespeople
+const SALESPERSON_EMAIL_MAP: Record<string, string> = {
+  "vendas@orlandofastpass.com.br": "Carolina",
+  "gabriela@orlandofastpass.com.br": "Gabriela",
+  "atendimento@orlandofastpass.com.br": "Kleber Augusto",
+  "marcella@orlandofastpass.com.br": "Marcella",
+  "pedro@orlandofastpass.com.br": "Pedro",
+  "marketing@orlandofastpass.com.br": "Rafael",
+  "contato@orlandofastpass.com.br": "Renata Santos",
+  "comercial@orlandofastpass.com.br": "Suelen",
+  "thayna@orlandofastpass.com.br": "Thayna",
+  "simone@orlandofastpass.com.br": "Simone",
+  "site@orlandofastpass.com.br": "Site",
+  "maria gabriela@orlandofastpass.com.br": "Maria Gabriela",
+};
+
+function resolveSalespersonName(nameOrEmail: string): string {
+  const trimmed = nameOrEmail.trim();
+  const lower = trimmed.toLowerCase();
+  for (const [email, name] of Object.entries(SALESPERSON_EMAIL_MAP)) {
+    if (lower === email.toLowerCase()) {
+      return name;
+    }
+  }
+  return trimmed;
+}
+
 // Sanitize string to prevent injection
 function sanitizeString(value: string, maxLength: number = 500): string {
   if (!value || typeof value !== 'string') return '';
@@ -290,7 +317,14 @@ serve(async (req) => {
       h === 'porcentagem vendedor' || h === 'porcentagem'
     );
     const pedidoIdx = headers.findIndex(h => h === 'pedido');
-    const clienteIdx = headers.findIndex(h => h === 'cliente');
+    // Cliente column: try "cliente" first, fallback to first column (index 0)
+    // since many sheets use an arbitrary name for the client column
+    let clienteIdx = headers.findIndex(h => h === 'cliente' || h === 'nome' || h === 'nome do cliente');
+    if (clienteIdx === -1) {
+      // First column is typically the client name even if header differs
+      clienteIdx = 0;
+      console.log('Cliente column not found by name, using first column (index 0) as fallback');
+    }
     const dataIdx = headers.findIndex(h => h === 'data');
     const produtoIdx = headers.findIndex(h => h === 'produto');
     const fornecedorIdx = headers.findIndex(h => h === 'fornecedor');
@@ -315,8 +349,11 @@ serve(async (req) => {
       
       if (row.every(cell => !cell)) continue;
       
-      const vendedor = vendedorIdx >= 0 ? sanitizeString(row[vendedorIdx], 100) : null;
-      if (!vendedor) continue;
+      const rawVendedor = vendedorIdx >= 0 ? sanitizeString(row[vendedorIdx], 100) : null;
+      if (!rawVendedor) continue;
+      
+      // Resolve email to friendly name
+      const vendedor = resolveSalespersonName(rawVendedor);
       
       const venda = vendasIdx >= 0 ? parseNumber(row[vendasIdx]) : 0;
       const comissaoTotal = comissaoTotalIdx >= 0 ? parseNumber(row[comissaoTotalIdx]) : 0;
