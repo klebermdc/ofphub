@@ -361,6 +361,25 @@ serve(async (req) => {
       const porcentagemVendedor = porcentagemIdx >= 0 ? parsePercentage(row[porcentagemIdx]) : 0;
       let comissaoVendedor = comissaoVendedorIdx >= 0 ? parseNumber(row[comissaoVendedorIdx]) : 0;
       
+      // Debug: log raw values for first 3 data rows
+      if (i <= 3) {
+        console.log(`Row ${i} raw values:`, {
+          rawVendedor,
+          vendedor,
+          rawVenda: row[vendasIdx],
+          rawComissaoTotal: row[comissaoTotalIdx],
+          rawComissao: row[comissaoIdx],
+          rawPorcentagem: row[porcentagemIdx],
+          rawComissaoVendedor: row[comissaoVendedorIdx],
+          parsedVenda: venda,
+          parsedComissaoTotal: comissaoTotal,
+          parsedComissao: comissao,
+          parsedPorcentagem: porcentagemVendedor,
+          parsedComissaoVendedor: comissaoVendedor,
+          rowLength: row.length,
+        });
+      }
+      
       // Fallback: if comissaoVendedor is 0 but we have porcentagemVendedor and comissaoTotal, calculate it
       if (comissaoVendedor === 0 && porcentagemVendedor > 0 && comissaoTotal > 0) {
         comissaoVendedor = Math.round((comissaoTotal * porcentagemVendedor / 100) * 100) / 100;
