@@ -47,6 +47,7 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
     
     return [...filteredSalesReps, ...salaryOnlyPeople];
   }, [salesReps]);
+  const [previewRep, setPreviewRep] = useState<SalesRep | null>(null);
   const [receiptDialog, setReceiptDialog] = useState<{ open: boolean; url: string; name: string }>({
     open: false,
     url: '',
