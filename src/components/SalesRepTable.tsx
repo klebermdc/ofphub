@@ -19,9 +19,11 @@ interface SalesRepTableProps {
   selectedMonth: number;
   selectedYear: number;
   getSalary: (name: string) => number;
+  getDiscount?: (name: string) => number;
+  getDiscountDescription?: (name: string) => string;
 }
 
-export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selectedYear, getSalary }: SalesRepTableProps) {
+export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selectedYear, getSalary, getDiscount, getDiscountDescription }: SalesRepTableProps) {
   const { isPaid, togglePayment, uploadReceipt, getReceiptUrl, loading } = useCommissionPayments(selectedMonth, selectedYear);
   
   // Filter out excluded names (partners) but add salary-only people (like Henrique TI)
@@ -102,7 +104,9 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
   };
 
   const previewSalary = previewRep ? getSalary(previewRep.name) : 0;
-  const previewTotal = previewRep ? previewRep.commission + previewSalary : 0;
+  const previewDiscount = previewRep && getDiscount ? getDiscount(previewRep.name) : 0;
+  const previewDiscountDesc = previewRep && getDiscountDescription ? getDiscountDescription(previewRep.name) : '';
+  const previewTotal = previewRep ? previewRep.commission + previewSalary - previewDiscount : 0;
 
   return (
     <>
@@ -114,7 +118,7 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
           </DialogHeader>
           {previewRep && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                 <div className="bg-secondary/30 rounded-lg p-3 text-center">
                   <p className="text-xs text-muted-foreground">Vendas</p>
                   <p className="font-mono font-semibold text-sm">R$ {previewRep.sales.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
@@ -127,6 +131,13 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
                   <p className="text-xs text-muted-foreground">Salário</p>
                   <p className="font-mono font-semibold text-sm">R$ {previewSalary.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                 </div>
+                {previewDiscount > 0 && (
+                  <div className="bg-destructive/10 rounded-lg p-3 text-center border border-destructive/20">
+                    <p className="text-xs text-muted-foreground">Desconto</p>
+                    <p className="font-mono font-semibold text-sm text-destructive">- R$ {previewDiscount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                    {previewDiscountDesc && <p className="text-[10px] text-muted-foreground mt-1 truncate">{previewDiscountDesc}</p>}
+                  </div>
+                )}
                 <div className="bg-primary/10 rounded-lg p-3 text-center border border-primary/20">
                   <p className="text-xs text-muted-foreground">Total a Receber</p>
                   <p className="font-mono font-bold text-sm text-primary">R$ {previewTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
@@ -252,7 +263,8 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
             <tbody>
               {allPeopleForPayment.map((rep, index) => {
                 const salary = getSalary(rep.name);
-                const totalToReceive = rep.commission + salary;
+                const discount = getDiscount ? getDiscount(rep.name) : 0;
+                const totalToReceive = rep.commission + salary - discount;
                 const receiptUrl = getReceiptUrl(rep.name);
 
                 return (
@@ -283,6 +295,7 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
                           <div className="text-xs space-y-1">
                             <p>Comissão: R$ {rep.commission.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                             <p>Salário: R$ {salary.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                            {discount > 0 && <p className="text-destructive">Desconto: - R$ {discount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>}
                           </div>
                         </TooltipContent>
                       </Tooltip>
@@ -391,7 +404,7 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
                   R$ {allPeopleForPayment.reduce((sum, rep) => sum + rep.sales, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </td>
                 <td className="p-3 sm:p-4 text-right font-mono text-success text-xs sm:text-sm">
-                  R$ {allPeopleForPayment.reduce((sum, rep) => sum + rep.commission + getSalary(rep.name), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  R$ {allPeopleForPayment.reduce((sum, rep) => sum + rep.commission + getSalary(rep.name) - (getDiscount ? getDiscount(rep.name) : 0), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </td>
                 <td className="p-3 sm:p-4 text-right font-mono text-xs sm:text-sm hidden sm:table-cell">
                   {allPeopleForPayment.reduce((sum, rep) => sum + rep.deals, 0)}
