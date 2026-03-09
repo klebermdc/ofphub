@@ -351,16 +351,34 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
                       </div>
                     </td>
                     <td className="p-3 sm:p-4 text-center">
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => onGeneratePDF(rep)}
-                        className="gap-1 sm:gap-2 text-xs sm:text-sm"
-                      >
-                        <FileDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                        <span className="hidden sm:inline">Baixar PDF</span>
-                        <span className="sm:hidden">PDF</span>
-                      </Button>
+                      <div className="flex items-center justify-center gap-1">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => setPreviewRep(rep)}
+                              className="h-7 w-7 sm:h-8 sm:w-8"
+                            >
+                              <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Visualizar relatório</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => onGeneratePDF(rep)}
+                              className="h-7 w-7 sm:h-8 sm:w-8"
+                            >
+                              <FileDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Baixar PDF</TooltipContent>
+                        </Tooltip>
+                      </div>
                     </td>
                   </tr>
                 );
