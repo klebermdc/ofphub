@@ -104,7 +104,9 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
   };
 
   const previewSalary = previewRep ? getSalary(previewRep.name) : 0;
-  const previewTotal = previewRep ? previewRep.commission + previewSalary : 0;
+  const previewDiscount = previewRep && getDiscount ? getDiscount(previewRep.name) : 0;
+  const previewDiscountDesc = previewRep && getDiscountDescription ? getDiscountDescription(previewRep.name) : '';
+  const previewTotal = previewRep ? previewRep.commission + previewSalary - previewDiscount : 0;
 
   return (
     <>
