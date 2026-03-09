@@ -404,7 +404,7 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
                   R$ {allPeopleForPayment.reduce((sum, rep) => sum + rep.sales, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </td>
                 <td className="p-3 sm:p-4 text-right font-mono text-success text-xs sm:text-sm">
-                  R$ {allPeopleForPayment.reduce((sum, rep) => sum + rep.commission + getSalary(rep.name), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  R$ {allPeopleForPayment.reduce((sum, rep) => sum + rep.commission + getSalary(rep.name) - (getDiscount ? getDiscount(rep.name) : 0), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </td>
                 <td className="p-3 sm:p-4 text-right font-mono text-xs sm:text-sm hidden sm:table-cell">
                   {allPeopleForPayment.reduce((sum, rep) => sum + rep.deals, 0)}
