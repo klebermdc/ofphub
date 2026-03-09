@@ -384,6 +384,21 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
                 );
               })}
             </tbody>
+            <tfoot>
+              <tr className="bg-secondary/40 border-t-2 border-border font-semibold">
+                <td className="p-3 sm:p-4 text-sm">Total</td>
+                <td className="p-3 sm:p-4 text-right font-mono text-xs sm:text-sm">
+                  R$ {allPeopleForPayment.reduce((sum, rep) => sum + rep.sales, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </td>
+                <td className="p-3 sm:p-4 text-right font-mono text-success text-xs sm:text-sm">
+                  R$ {allPeopleForPayment.reduce((sum, rep) => sum + rep.commission + getSalary(rep.name), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </td>
+                <td className="p-3 sm:p-4 text-right font-mono text-xs sm:text-sm hidden sm:table-cell">
+                  {allPeopleForPayment.reduce((sum, rep) => sum + rep.deals, 0)}
+                </td>
+                <td className="p-3 sm:p-4" colSpan={3}></td>
+              </tr>
+            </tfoot>
           </table>
         </div>
       </div>
