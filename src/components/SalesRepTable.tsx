@@ -118,7 +118,7 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
           </DialogHeader>
           {previewRep && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                 <div className="bg-secondary/30 rounded-lg p-3 text-center">
                   <p className="text-xs text-muted-foreground">Vendas</p>
                   <p className="font-mono font-semibold text-sm">R$ {previewRep.sales.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
@@ -131,6 +131,13 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
                   <p className="text-xs text-muted-foreground">Salário</p>
                   <p className="font-mono font-semibold text-sm">R$ {previewSalary.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                 </div>
+                {previewDiscount > 0 && (
+                  <div className="bg-destructive/10 rounded-lg p-3 text-center border border-destructive/20">
+                    <p className="text-xs text-muted-foreground">Desconto</p>
+                    <p className="font-mono font-semibold text-sm text-destructive">- R$ {previewDiscount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                    {previewDiscountDesc && <p className="text-[10px] text-muted-foreground mt-1 truncate">{previewDiscountDesc}</p>}
+                  </div>
+                )}
                 <div className="bg-primary/10 rounded-lg p-3 text-center border border-primary/20">
                   <p className="text-xs text-muted-foreground">Total a Receber</p>
                   <p className="font-mono font-bold text-sm text-primary">R$ {previewTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
