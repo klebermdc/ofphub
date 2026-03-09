@@ -19,6 +19,8 @@ interface SalesRepTableProps {
   selectedMonth: number;
   selectedYear: number;
   getSalary: (name: string) => number;
+  getDiscount?: (name: string) => number;
+  getDiscountDescription?: (name: string) => string;
 }
 
 export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selectedYear, getSalary }: SalesRepTableProps) {
