@@ -101,8 +101,80 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
     toast.success('Comprovante salvo com sucesso!');
   };
 
+  const previewSalary = previewRep ? getSalary(previewRep.name) : 0;
+  const previewTotal = previewRep ? previewRep.commission + previewSalary : 0;
+
   return (
     <>
+      {/* Dialog para preview do relatório */}
+      <Dialog open={!!previewRep} onOpenChange={(open) => !open && setPreviewRep(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle>Relatório - {previewRep?.name}</DialogTitle>
+          </DialogHeader>
+          {previewRep && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="bg-secondary/30 rounded-lg p-3 text-center">
+                  <p className="text-xs text-muted-foreground">Vendas</p>
+                  <p className="font-mono font-semibold text-sm">R$ {previewRep.sales.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                </div>
+                <div className="bg-secondary/30 rounded-lg p-3 text-center">
+                  <p className="text-xs text-muted-foreground">Comissão</p>
+                  <p className="font-mono font-semibold text-sm text-success">R$ {previewRep.commission.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                </div>
+                <div className="bg-secondary/30 rounded-lg p-3 text-center">
+                  <p className="text-xs text-muted-foreground">Salário</p>
+                  <p className="font-mono font-semibold text-sm">R$ {previewSalary.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                </div>
+                <div className="bg-primary/10 rounded-lg p-3 text-center border border-primary/20">
+                  <p className="text-xs text-muted-foreground">Total a Receber</p>
+                  <p className="font-mono font-bold text-sm text-primary">R$ {previewTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                </div>
+              </div>
+
+              <div className="text-sm text-muted-foreground">{previewRep.orders.length} pedido(s)</div>
+
+              <div className="overflow-x-auto border rounded-lg">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b bg-secondary/30">
+                      <th className="text-left p-2 font-medium">Cliente</th>
+                      <th className="text-left p-2 font-medium">Data</th>
+                      <th className="text-left p-2 font-medium">Pedido</th>
+                      <th className="text-left p-2 font-medium">Fornecedor</th>
+                      <th className="text-left p-2 font-medium">Produto</th>
+                      <th className="text-right p-2 font-medium">Venda</th>
+                      <th className="text-right p-2 font-medium">Comissão</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {previewRep.orders.map((order, i) => (
+                      <tr key={i} className="border-b border-border/30 hover:bg-secondary/10">
+                        <td className="p-2">{order.cliente}</td>
+                        <td className="p-2">{order.data}</td>
+                        <td className="p-2">{order.pedido}</td>
+                        <td className="p-2">{order.fornecedor}</td>
+                        <td className="p-2 max-w-[150px] truncate">{order.produto}</td>
+                        <td className="p-2 text-right font-mono">R$ {order.venda.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                        <td className="p-2 text-right font-mono text-success">R$ {order.comissaoVendedor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="flex justify-end">
+                <Button onClick={() => { onGeneratePDF(previewRep); setPreviewRep(null); }} className="gap-2">
+                  <FileDown className="h-4 w-4" />
+                  Baixar PDF
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Dialog para visualizar comprovante */}
       <Dialog open={receiptDialog.open} onOpenChange={(open) => setReceiptDialog(prev => ({ ...prev, open }))}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-auto">
