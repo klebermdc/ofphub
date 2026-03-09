@@ -263,7 +263,8 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
             <tbody>
               {allPeopleForPayment.map((rep, index) => {
                 const salary = getSalary(rep.name);
-                const totalToReceive = rep.commission + salary;
+                const discount = getDiscount ? getDiscount(rep.name) : 0;
+                const totalToReceive = rep.commission + salary - discount;
                 const receiptUrl = getReceiptUrl(rep.name);
 
                 return (
@@ -294,6 +295,7 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
                           <div className="text-xs space-y-1">
                             <p>Comissão: R$ {rep.commission.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                             <p>Salário: R$ {salary.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                            {discount > 0 && <p className="text-destructive">Desconto: - R$ {discount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>}
                           </div>
                         </TooltipContent>
                       </Tooltip>
