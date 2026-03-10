@@ -276,9 +276,10 @@ const AllOrders = () => {
     setSelectedVendedor('all');
     setSelectedProduto('all');
     setSelectedFornecedor('all');
+    setSearchPedido('');
   };
 
-  const hasActiveFilters = selectedMonth !== 'all' || selectedVendedor !== 'all' || selectedProduto !== 'all' || selectedFornecedor !== 'all';
+  const hasActiveFilters = selectedMonth !== 'all' || selectedVendedor !== 'all' || selectedProduto !== 'all' || selectedFornecedor !== 'all' || searchPedido.trim() !== '';
 
   if (loading || roleLoading || dataLoading) {
     return (
