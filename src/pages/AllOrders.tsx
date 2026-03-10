@@ -110,6 +110,7 @@ const AllOrders = () => {
   const [selectedVendedor, setSelectedVendedor] = useState<string>('all');
   const [selectedProduto, setSelectedProduto] = useState<string>('all');
   const [selectedFornecedor, setSelectedFornecedor] = useState<string>('all');
+  const [searchPedido, setSearchPedido] = useState<string>('');
 
   // Redirect if not manager
   useEffect(() => {
