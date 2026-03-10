@@ -146,10 +146,22 @@ export function OrderFormDialog({
       if (mode === 'add') {
         const { error } = await supabase.from('orders').insert(orderData);
         if (error) throw error;
-      } else if (order?.rowIndex) {
-        // For edit mode, we'd need the order ID - for now just insert as new
-        const { error } = await supabase.from('orders').insert(orderData);
-        if (error) throw error;
+      } else {
+        // Edit mode: update by matching pedido + vendedor, or insert if not found
+        const { data: existing } = await supabase
+          .from('orders')
+          .select('id')
+          .eq('pedido', formData.pedido)
+          .eq('vendedor', formData.vendedor)
+          .maybeSingle();
+
+        if (existing) {
+          const { error } = await supabase.from('orders').update(orderData).eq('id', existing.id);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase.from('orders').insert(orderData);
+          if (error) throw error;
+        }
       }
 
       toast({

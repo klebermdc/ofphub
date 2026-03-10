@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { DollarSign, TrendingUp, Package, Calendar, Filter, ArrowLeft, Users, ShoppingBag, Building, RefreshCw, Edit2, Wallet, Send } from "lucide-react";
+import { DollarSign, TrendingUp, Package, Calendar, Filter, ArrowLeft, Users, ShoppingBag, Building, RefreshCw, Edit2, Wallet, Send, Search, X } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
 import { OrderFormDialog } from "@/components/OrderFormDialog";
 import { useAuth } from "@/hooks/useAuth";
@@ -8,6 +8,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useSheetData } from "@/contexts/SheetDataContext";
 import { useSheetSettings } from "@/hooks/useSheetSettings";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -110,6 +111,7 @@ const AllOrders = () => {
   const [selectedVendedor, setSelectedVendedor] = useState<string>('all');
   const [selectedProduto, setSelectedProduto] = useState<string>('all');
   const [selectedFornecedor, setSelectedFornecedor] = useState<string>('all');
+  const [searchPedido, setSearchPedido] = useState<string>('');
 
   // Redirect if not manager
   useEffect(() => {
@@ -209,6 +211,14 @@ const AllOrders = () => {
   // Filter orders
   const filteredOrders = useMemo(() => {
     const filtered = allOrders.filter(order => {
+      // Search by pedido number
+      if (searchPedido.trim()) {
+        const search = searchPedido.trim().toLowerCase();
+        if (!order.pedido?.toLowerCase().includes(search)) {
+          return false;
+        }
+      }
+
       // Month filter
       if (selectedMonth !== 'all') {
         if (!order.data) return false;
@@ -247,7 +257,7 @@ const AllOrders = () => {
       const dateB = parseOrderDate(b.data);
       return dateB.getTime() - dateA.getTime();
     });
-  }, [allOrders, selectedMonth, selectedVendedor, selectedProduto, selectedFornecedor]);
+  }, [allOrders, selectedMonth, selectedVendedor, selectedProduto, selectedFornecedor, searchPedido]);
 
   // Calculate totals
   const totals = useMemo(() => {
@@ -267,9 +277,10 @@ const AllOrders = () => {
     setSelectedVendedor('all');
     setSelectedProduto('all');
     setSelectedFornecedor('all');
+    setSearchPedido('');
   };
 
-  const hasActiveFilters = selectedMonth !== 'all' || selectedVendedor !== 'all' || selectedProduto !== 'all' || selectedFornecedor !== 'all';
+  const hasActiveFilters = selectedMonth !== 'all' || selectedVendedor !== 'all' || selectedProduto !== 'all' || selectedFornecedor !== 'all' || searchPedido.trim() !== '';
 
   if (loading || roleLoading || dataLoading) {
     return (
@@ -359,6 +370,27 @@ const AllOrders = () => {
                 )}
               </div>
               
+              {/* Search by Pedido */}
+              <div className="mb-3 sm:mb-4">
+                <div className="relative max-w-xs">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar nº do pedido..."
+                    value={searchPedido}
+                    onChange={(e) => setSearchPedido(e.target.value)}
+                    className="pl-9 pr-8 h-9 text-xs sm:text-sm"
+                  />
+                  {searchPedido && (
+                    <button
+                      onClick={() => setSearchPedido('')}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 {/* Month Filter */}
                 <div className="space-y-1">
