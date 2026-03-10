@@ -369,6 +369,27 @@ const AllOrders = () => {
                 )}
               </div>
               
+              {/* Search by Pedido */}
+              <div className="mb-3 sm:mb-4">
+                <div className="relative max-w-xs">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar nº do pedido..."
+                    value={searchPedido}
+                    onChange={(e) => setSearchPedido(e.target.value)}
+                    className="pl-9 pr-8 h-9 text-xs sm:text-sm"
+                  />
+                  {searchPedido && (
+                    <button
+                      onClick={() => setSearchPedido('')}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 {/* Month Filter */}
                 <div className="space-y-1">
