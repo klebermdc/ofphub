@@ -256,7 +256,7 @@ const AllOrders = () => {
       const dateB = parseOrderDate(b.data);
       return dateB.getTime() - dateA.getTime();
     });
-  }, [allOrders, selectedMonth, selectedVendedor, selectedProduto, selectedFornecedor]);
+  }, [allOrders, selectedMonth, selectedVendedor, selectedProduto, selectedFornecedor, searchPedido]);
 
   // Calculate totals
   const totals = useMemo(() => {
