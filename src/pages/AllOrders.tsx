@@ -210,6 +210,14 @@ const AllOrders = () => {
   // Filter orders
   const filteredOrders = useMemo(() => {
     const filtered = allOrders.filter(order => {
+      // Search by pedido number
+      if (searchPedido.trim()) {
+        const search = searchPedido.trim().toLowerCase();
+        if (!order.pedido?.toLowerCase().includes(search)) {
+          return false;
+        }
+      }
+
       // Month filter
       if (selectedMonth !== 'all') {
         if (!order.data) return false;
