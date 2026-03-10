@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { DollarSign, TrendingUp, Package, Calendar, Filter, ArrowLeft, Users, ShoppingBag, Building, RefreshCw, Edit2, Wallet, Send } from "lucide-react";
+import { DollarSign, TrendingUp, Package, Calendar, Filter, ArrowLeft, Users, ShoppingBag, Building, RefreshCw, Edit2, Wallet, Send, Search, X } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
 import { OrderFormDialog } from "@/components/OrderFormDialog";
 import { useAuth } from "@/hooks/useAuth";
