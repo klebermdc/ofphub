@@ -8,6 +8,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useSheetData } from "@/contexts/SheetDataContext";
 import { useSheetSettings } from "@/hooks/useSheetSettings";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
