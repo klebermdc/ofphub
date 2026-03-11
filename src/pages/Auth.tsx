@@ -106,7 +106,7 @@ export default function Auth() {
           <img 
             src="/images/logo-branco.png" 
             alt="Orlando Fast Pass" 
-            className="h-12 sm:h-16 mx-auto mb-3 sm:mb-4"
+            className={`h-12 sm:h-16 mx-auto mb-3 sm:mb-4 ${theme !== 'dark' ? 'invert' : ''}`}
           />
           <h1 className="text-xl sm:text-2xl font-bold">
             <span className="gradient-text">Orlando Fast Pass</span>

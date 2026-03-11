@@ -357,7 +357,7 @@ const MarketingDashboard = () => {
             <img 
               src="/images/logo-branco.png" 
               alt="Orlando Fast Pass" 
-              className="h-10 w-auto cursor-pointer hover:opacity-80 transition-opacity"
+              className={`h-10 w-auto cursor-pointer hover:opacity-80 transition-opacity ${theme !== 'dark' ? 'invert' : ''}`}
               onClick={() => navigate("/")}
             />
             <div className="hidden md:block">
