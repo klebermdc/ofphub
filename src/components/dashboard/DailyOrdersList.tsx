@@ -1,8 +1,10 @@
-import { Plus, Package } from "lucide-react";
+import { useMemo } from "react";
+import { Plus, Package, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { OrderFormDialog } from "@/components/OrderFormDialog";
 import { formatCurrency } from "@/utils/formatters";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
 interface DailyOrder {
   cliente: string;
