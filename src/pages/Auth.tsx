@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, EyeOff, LogIn, UserPlus } from "lucide-react";
+import { Eye, EyeOff, LogIn, UserPlus, Sun, Moon } from "lucide-react";
+import { useTheme } from "@/components/ThemeProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +18,7 @@ export default function Auth() {
   
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
+  const { theme } = useTheme();
 
   useEffect(() => {
     if (user) {
@@ -105,7 +107,7 @@ export default function Auth() {
           <img 
             src="/images/logo-branco.png" 
             alt="Orlando Fast Pass" 
-            className="h-12 sm:h-16 mx-auto mb-3 sm:mb-4"
+            className={`h-12 sm:h-16 mx-auto mb-3 sm:mb-4 ${theme !== 'dark' ? 'invert' : ''}`}
           />
           <h1 className="text-xl sm:text-2xl font-bold">
             <span className="gradient-text">Orlando Fast Pass</span>

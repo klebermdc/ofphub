@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Megaphone, DollarSign, TrendingUp, Calendar, LogOut, UserPlus, Target, User, Settings, Upload, FileText, Download, Trash2, File, Banknote, Percent, Users, RefreshCw } from "lucide-react";
+import { Megaphone, DollarSign, TrendingUp, Calendar, LogOut, UserPlus, Target, User, Settings, Upload, FileText, Download, Trash2, File, Banknote, Percent, Users, RefreshCw, Sun, Moon } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,6 +17,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { getMonthName } from "@/hooks/useCommissionHistory";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, BarChart, Bar, LineChart, Line } from "recharts";
 import { useSheetData } from "@/contexts/SheetDataContext";
+import { useTheme } from "@/components/ThemeProvider";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -61,6 +62,7 @@ const MarketingDashboard = () => {
   const { user, loading, signOut } = useAuth();
   const { role, isLoading: roleLoading } = useUserRole(user?.id);
   const navigate = useNavigate();
+  const { theme } = useTheme();
   
   const { salesReps, isLoading: sheetLoading } = useSheetData();
   const { costs, isLoading: costsLoading, saveCost, getCostForMonth } = useMarketingCosts(user?.id, true);
@@ -356,7 +358,7 @@ const MarketingDashboard = () => {
             <img 
               src="/images/logo-branco.png" 
               alt="Orlando Fast Pass" 
-              className="h-10 w-auto cursor-pointer hover:opacity-80 transition-opacity"
+              className={`h-10 w-auto cursor-pointer hover:opacity-80 transition-opacity ${theme !== 'dark' ? 'invert' : ''}`}
               onClick={() => navigate("/")}
             />
             <div className="hidden md:block">

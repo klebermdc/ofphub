@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { DollarSign, TrendingUp, Package, Calendar, LogOut, User, Kanban, BarChart3, Sparkles, ArrowLeft, Send } from "lucide-react";
+import { DollarSign, TrendingUp, Package, Calendar, LogOut, User, Kanban, BarChart3, Sparkles, ArrowLeft, Send, Sun, Moon } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -18,6 +18,7 @@ import { SalespersonFollowUpAlerts } from "@/components/SalespersonFollowUpAlert
 import { SalespersonTopItems } from "@/components/SalespersonTopItems";
 import { CRMTab } from "@/components/crm/CRMTab";
 import { ProposalTab } from "@/components/proposals/ProposalTab";
+import { useTheme } from "@/components/ThemeProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -27,6 +28,7 @@ const SalespersonDashboard = () => {
   const { role, salespersonName: userSalespersonName, isLoading: roleLoading } = useUserRole(user?.id);
   const { salesReps, isLoading: sheetLoading } = useSheetData();
   const navigate = useNavigate();
+  const { theme } = useTheme();
   
   // If manager is viewing a specific salesperson, use URL param; otherwise use user's own name
   const isManagerViewing = role === 'manager' && urlSalespersonName;
@@ -261,7 +263,7 @@ const SalespersonDashboard = () => {
             <img 
               src="/images/logo-branco.png" 
               alt="Orlando Fast Pass" 
-              className="h-8 sm:h-10 w-auto cursor-pointer hover:opacity-80 transition-opacity"
+              className={`h-8 sm:h-10 w-auto cursor-pointer hover:opacity-80 transition-opacity ${theme !== 'dark' ? 'invert' : ''}`}
               onClick={() => navigate("/")}
             />
             <div className="hidden sm:block">

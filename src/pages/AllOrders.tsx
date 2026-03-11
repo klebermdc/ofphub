@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { DollarSign, TrendingUp, Package, Calendar, Filter, ArrowLeft, Users, ShoppingBag, Building, RefreshCw, Edit2, Wallet, Send, Search, X } from "lucide-react";
+import { DollarSign, TrendingUp, Package, Calendar, Filter, ArrowLeft, Users, ShoppingBag, Building, RefreshCw, Edit2, Wallet, Send, Search, X, Sun, Moon } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
 import { OrderFormDialog } from "@/components/OrderFormDialog";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,6 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { getMonthName } from "@/hooks/useCommissionHistory";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useTheme } from "@/components/ThemeProvider";
 
 interface Order {
   cliente: string;
@@ -48,6 +49,7 @@ const AllOrders = () => {
     }
   }, [user, hasData, dataLoading, refreshData]);
   const navigate = useNavigate();
+  const { theme } = useTheme();
   
   // Fetch enviado status from database
   const fetchEnviadoStatus = useCallback(async () => {
@@ -310,7 +312,7 @@ const AllOrders = () => {
               <img 
                 src="/images/logo-branco.png" 
                 alt="Orlando Fast Pass" 
-                className="h-8 sm:h-10 w-auto cursor-pointer hover:opacity-80 transition-opacity hidden sm:block"
+                className={`h-8 sm:h-10 w-auto cursor-pointer hover:opacity-80 transition-opacity hidden sm:block ${theme !== 'dark' ? 'invert' : ''}`}
                 onClick={() => navigate("/")}
               />
               <div>
