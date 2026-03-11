@@ -18,6 +18,7 @@ import { SalespersonFollowUpAlerts } from "@/components/SalespersonFollowUpAlert
 import { SalespersonTopItems } from "@/components/SalespersonTopItems";
 import { CRMTab } from "@/components/crm/CRMTab";
 import { ProposalTab } from "@/components/proposals/ProposalTab";
+import { useTheme } from "@/components/ThemeProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
