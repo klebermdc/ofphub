@@ -52,6 +52,7 @@ const CRMTab = lazy(() => import("@/components/crm/CRMTab").then(m => ({ default
 const NFSeTab = lazy(() => import("@/components/nfse/NFSeTab").then(m => ({ default: m.NFSeTab })));
 const DashboardMonthlyMetrics = lazy(() => import("@/components/dashboard/DashboardMonthlyMetrics").then(m => ({ default: m.DashboardMonthlyMetrics })));
 const DashboardFortnightMetrics = lazy(() => import("@/components/dashboard/DashboardFortnightMetrics").then(m => ({ default: m.DashboardFortnightMetrics })));
+const DailyOrdersList = lazy(() => import("@/components/dashboard/DailyOrdersList").then(m => ({ default: m.DailyOrdersList })));
 const DashboardOperationalMetrics = lazy(() => import("@/components/dashboard/DashboardOperationalMetrics").then(m => ({ default: m.DashboardOperationalMetrics })));
 const DashboardHeaderControls = lazy(() => import("@/components/dashboard/DashboardHeaderControls").then(m => ({ default: m.DashboardHeaderControls })));
 
@@ -349,6 +350,15 @@ const Index = () => {
                       totalSalaries={costCalc.totalSalaries}
                       marketingCosts={marketingCost}
                       operationalCosts={operationalCost}
+                    />
+
+                    <DailyOrdersList
+                      salesReps={salesReps}
+                      currentMonth={dashboardMonth !== 'all' ? dashboardMonth : getCurrentMonthKey()}
+                      availableVendedores={salesReps.map(r => r.name)}
+                      availableProdutos={[...new Set(salesReps.flatMap(r => r.orders?.map((o: any) => o.produto).filter(Boolean) || []))]}
+                      availableFornecedores={[...new Set(salesReps.flatMap(r => r.orders?.map((o: any) => o.fornecedor).filter(Boolean) || []))]}
+                      onOrderSuccess={() => handleAnalyze(savedUrl || '')}
                     />
 
                     <DashboardMonthlyMetrics
