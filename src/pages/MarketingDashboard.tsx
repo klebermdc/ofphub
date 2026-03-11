@@ -17,6 +17,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { getMonthName } from "@/hooks/useCommissionHistory";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, BarChart, Bar, LineChart, Line } from "recharts";
 import { useSheetData } from "@/contexts/SheetDataContext";
+import { useTheme } from "@/components/ThemeProvider";
 import {
   DropdownMenu,
   DropdownMenuContent,
