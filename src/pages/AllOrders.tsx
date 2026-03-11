@@ -15,6 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { getMonthName } from "@/hooks/useCommissionHistory";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useTheme } from "@/components/ThemeProvider";
 
 interface Order {
   cliente: string;
