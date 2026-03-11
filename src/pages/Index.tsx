@@ -352,6 +352,15 @@ const Index = () => {
                       operationalCosts={operationalCost}
                     />
 
+                    <DailyOrdersList
+                      salesReps={salesReps}
+                      currentMonth={dashboardMonth !== 'all' ? dashboardMonth : getCurrentMonthKey()}
+                      availableVendedores={salesReps.map(r => r.name)}
+                      availableProdutos={[...new Set(salesReps.flatMap(r => r.orders?.map((o: any) => o.produto).filter(Boolean) || []))]}
+                      availableFornecedores={[...new Set(salesReps.flatMap(r => r.orders?.map((o: any) => o.fornecedor).filter(Boolean) || []))]}
+                      onOrderSuccess={() => handleAnalyze(savedUrl || '')}
+                    />
+
                     <DashboardMonthlyMetrics
                       totalVendas={metrics.totalVendas}
                       totalComissaoTotal={metrics.totalComissaoTotal}
