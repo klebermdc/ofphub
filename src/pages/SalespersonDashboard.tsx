@@ -28,6 +28,7 @@ const SalespersonDashboard = () => {
   const { role, salespersonName: userSalespersonName, isLoading: roleLoading } = useUserRole(user?.id);
   const { salesReps, isLoading: sheetLoading } = useSheetData();
   const navigate = useNavigate();
+  const { theme } = useTheme();
   
   // If manager is viewing a specific salesperson, use URL param; otherwise use user's own name
   const isManagerViewing = role === 'manager' && urlSalespersonName;

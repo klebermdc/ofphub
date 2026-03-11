@@ -18,6 +18,7 @@ export default function Auth() {
   
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
+  const { theme } = useTheme();
 
   useEffect(() => {
     if (user) {

@@ -62,6 +62,7 @@ const MarketingDashboard = () => {
   const { user, loading, signOut } = useAuth();
   const { role, isLoading: roleLoading } = useUserRole(user?.id);
   const navigate = useNavigate();
+  const { theme } = useTheme();
   
   const { salesReps, isLoading: sheetLoading } = useSheetData();
   const { costs, isLoading: costsLoading, saveCost, getCostForMonth } = useMarketingCosts(user?.id, true);

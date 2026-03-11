@@ -49,6 +49,7 @@ const AllOrders = () => {
     }
   }, [user, hasData, dataLoading, refreshData]);
   const navigate = useNavigate();
+  const { theme } = useTheme();
   
   // Fetch enviado status from database
   const fetchEnviadoStatus = useCallback(async () => {
