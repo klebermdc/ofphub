@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { LogOut, User, Settings, Users } from "lucide-react";
+import { LogOut, User, Settings, Users, Sun, Moon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/components/ThemeProvider";
 import { SalespersonAccountsDialog } from "./SalespersonAccountsDialog";
 import { SettingsDialog } from "./SettingsDialog";
 import {
@@ -21,12 +22,15 @@ interface DashboardHeaderProps {
 export function DashboardHeader({ availableSalespeople = [] }: DashboardHeaderProps) {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
   const [usersDialogOpen, setUsersDialogOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
   };
+
+  const isDark = theme === "dark";
 
   return (
     <>
@@ -36,7 +40,7 @@ export function DashboardHeader({ availableSalespeople = [] }: DashboardHeaderPr
           <img 
             src="/images/logo-branco.png" 
             alt="Orlando Fast Pass" 
-            className="h-8 sm:h-10 w-auto cursor-pointer hover:opacity-80 transition-opacity"
+            className={`h-8 sm:h-10 w-auto cursor-pointer hover:opacity-80 transition-opacity ${!isDark ? 'invert' : ''}`}
             onClick={() => navigate("/")}
           />
           <div className="hidden sm:block">
@@ -46,6 +50,19 @@ export function DashboardHeader({ availableSalespeople = [] }: DashboardHeaderPr
         </div>
 
         <div className="flex items-center gap-2 sm:gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setTheme(isDark ? "light" : "dark")}
+            className="h-8 w-8 sm:h-9 sm:w-9"
+          >
+            {isDark ? (
+              <Sun className="h-4 w-4 text-warning" />
+            ) : (
+              <Moon className="h-4 w-4 text-muted-foreground" />
+            )}
+          </Button>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="gap-1 sm:gap-2 px-2 sm:px-3">
