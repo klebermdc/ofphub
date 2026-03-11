@@ -131,9 +131,9 @@ export function DailyOrdersList({
           <p className="text-sm text-muted-foreground">Nenhum pedido registrado hoje.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="space-y-4">
           {/* Orders Table */}
-          <div className="lg:col-span-2 glass rounded-xl overflow-hidden">
+          <div className="glass rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -171,12 +171,12 @@ export function DailyOrdersList({
           </div>
 
           {/* Top Seller Chart */}
-          <div className="glass rounded-xl p-4 flex flex-col">
+          <div className="glass rounded-xl p-4">
             <div className="flex items-center gap-2 mb-3">
               <Trophy className="h-4 w-4 text-warning" />
               <span className="text-sm font-semibold text-foreground">Vendas por Vendedor</span>
             </div>
-            <div className="flex-1 min-h-[180px]">
+            <div className="h-[200px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={salesByRep} layout="vertical" margin={{ left: 0, right: 8, top: 4, bottom: 4 }}>
                   <XAxis type="number" hide />
