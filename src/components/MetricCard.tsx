@@ -13,34 +13,34 @@ interface MetricCardProps {
 
 const variantStyles = {
   default: {
-    gradient: "from-slate-900/50 to-slate-800/30",
-    border: "border-slate-600/30",
-    iconColor: "text-slate-400",
+    gradient: "dark:from-slate-900/50 dark:to-slate-800/30 from-slate-100 to-slate-50",
+    border: "dark:border-slate-600/30 border-slate-200",
+    iconColor: "dark:text-slate-400 text-slate-500",
     valueColor: "text-foreground",
   },
   success: {
-    gradient: "from-emerald-950/50 to-emerald-900/20",
-    border: "border-emerald-500/40",
-    iconColor: "text-emerald-500",
-    valueColor: "text-emerald-500",
+    gradient: "dark:from-emerald-950/50 dark:to-emerald-900/20 from-emerald-50 to-emerald-100/50",
+    border: "dark:border-emerald-500/40 border-emerald-300",
+    iconColor: "dark:text-emerald-500 text-emerald-600",
+    valueColor: "dark:text-emerald-500 text-emerald-700",
   },
   danger: {
-    gradient: "from-red-950/50 to-red-900/20",
-    border: "border-red-500/40",
-    iconColor: "text-red-500",
-    valueColor: "text-red-500",
+    gradient: "dark:from-red-950/50 dark:to-red-900/20 from-red-50 to-red-100/50",
+    border: "dark:border-red-500/40 border-red-300",
+    iconColor: "dark:text-red-500 text-red-600",
+    valueColor: "dark:text-red-500 text-red-700",
   },
   warning: {
-    gradient: "from-amber-950/50 to-amber-900/20",
-    border: "border-amber-500/40",
-    iconColor: "text-amber-500",
-    valueColor: "text-amber-500",
+    gradient: "dark:from-amber-950/50 dark:to-amber-900/20 from-amber-50 to-orange-100/50",
+    border: "dark:border-amber-500/40 border-amber-300",
+    iconColor: "dark:text-amber-500 text-amber-600",
+    valueColor: "dark:text-amber-500 text-amber-700",
   },
   info: {
-    gradient: "from-blue-950/50 to-blue-900/20",
-    border: "border-blue-500/40",
-    iconColor: "text-blue-500",
-    valueColor: "text-blue-500",
+    gradient: "dark:from-blue-950/50 dark:to-blue-900/20 from-blue-50 to-blue-100/50",
+    border: "dark:border-blue-500/40 border-blue-300",
+    iconColor: "dark:text-blue-500 text-blue-600",
+    valueColor: "dark:text-blue-500 text-blue-700",
   },
 };
 
