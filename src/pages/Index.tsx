@@ -293,10 +293,6 @@ const Index = () => {
                 <Receipt className="h-3 w-3 sm:h-4 sm:w-4 hidden sm:block" />
                 Contabilidade
               </TabsTrigger>
-              <TabsTrigger value="nfse" className="gap-1 text-xs sm:text-sm py-2 hidden sm:flex">
-                <FileCheck className="h-3 w-3 sm:h-4 sm:w-4 hidden sm:block" />
-                NFS-e
-              </TabsTrigger>
             </TabsList>
 
             {/* Mobile additional tabs */}
