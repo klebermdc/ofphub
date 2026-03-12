@@ -171,6 +171,12 @@ export function DailyOrdersList({
 
   const calendarMonth = new Date(y, m - 1, 1);
 
+  const periodLabel = (() => {
+    if (mode === 'single' && singleDate) return 'do Dia';
+    if (mode === 'range' && dateRange?.from) return 'do Período';
+    return 'do Mês';
+  })();
+
   const getLabel = () => {
     if (mode === 'single' && singleDate) {
       return `Pedidos de ${format(singleDate, "dd 'de' MMMM", { locale: ptBR })}`;
