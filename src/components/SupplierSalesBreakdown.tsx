@@ -100,7 +100,16 @@ export function SupplierSalesBreakdown({ salesReps }: SupplierSalesBreakdownProp
         <div className="lg:col-span-2">
           <div className="h-[350px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} layout="vertical">
+              <BarChart
+                data={chartData}
+                layout="vertical"
+                onMouseMove={(state) => {
+                  if (state && state.activeTooltipIndex !== undefined && state.activeTooltipIndex !== null) {
+                    setActiveSupplier(chartData[state.activeTooltipIndex]?.name || null);
+                  }
+                }}
+                onMouseLeave={() => setActiveSupplier(null)}
+              >
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
                 <XAxis
                   type="number"
@@ -134,8 +143,6 @@ export function SupplierSalesBreakdown({ salesReps }: SupplierSalesBreakdownProp
                 <Bar
                   dataKey="vendas"
                   radius={[0, 4, 4, 0]}
-                  onMouseEnter={handleBarMouseEnter}
-                  onMouseLeave={handleBarMouseLeave}
                 >
                   {chartData.map((entry) => (
                     <Cell
