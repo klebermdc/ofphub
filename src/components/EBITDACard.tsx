@@ -45,10 +45,10 @@ export function EBITDACard({ receita, custoOperacional }: EBITDACardProps) {
           <div>
             <p className="text-sm sm:text-base text-muted-foreground font-medium">EBITDA</p>
             <div className="flex items-center gap-2 sm:gap-3">
-              {!isPositive && <span className={cn("text-3xl sm:text-4xl lg:text-5xl font-bold", isPositive ? "text-emerald-400" : "text-red-400")}>-</span>}
+              {!isPositive && <span className={cn("text-3xl sm:text-4xl lg:text-5xl font-bold", isPositive ? "dark:text-emerald-400 text-emerald-700" : "dark:text-red-400 text-red-700")}>-</span>}
               <span className={cn(
                 "text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight",
-                isPositive ? "text-emerald-400" : "text-red-400"
+                isPositive ? "dark:text-emerald-400 text-emerald-700" : "dark:text-red-400 text-red-700"
               )}>
                 {formatCurrency(ebitda)}
               </span>
