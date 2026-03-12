@@ -297,14 +297,10 @@ const Index = () => {
 
             {/* Mobile additional tabs */}
             <div className="flex sm:hidden gap-2">
-              <TabsList className="grid grid-cols-2 gap-1 w-full h-auto p-1">
+              <TabsList className="grid grid-cols-1 gap-1 w-full h-auto p-1">
                 <TabsTrigger value="contabilidade" className="gap-1 text-xs py-2">
                   <Receipt className="h-3 w-3" />
                   Contabilidade
-                </TabsTrigger>
-                <TabsTrigger value="nfse" className="gap-1 text-xs py-2">
-                  <FileCheck className="h-3 w-3" />
-                  NFS-e
                 </TabsTrigger>
               </TabsList>
             </div>
