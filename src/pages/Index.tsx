@@ -35,6 +35,7 @@ import {
 const SalesChart = lazy(() => import("@/components/SalesChart").then(m => ({ default: m.SalesChart })));
 const ProductChart = lazy(() => import("@/components/ProductChart").then(m => ({ default: m.ProductChart })));
 const SupplierChart = lazy(() => import("@/components/SupplierChart").then(m => ({ default: m.SupplierChart })));
+const SupplierSalesBreakdown = lazy(() => import("@/components/SupplierSalesBreakdown").then(m => ({ default: m.SupplierSalesBreakdown })));
 const SalesRepTable = lazy(() => import("@/components/SalesRepTable").then(m => ({ default: m.SalesRepTable })));
 const GoalsManagementDialog = lazy(() => import("@/components/GoalsManagementDialog").then(m => ({ default: m.GoalsManagementDialog })));
 const GoalsKPICard = lazy(() => import("@/components/GoalsKPICard").then(m => ({ default: m.GoalsKPICard })));
