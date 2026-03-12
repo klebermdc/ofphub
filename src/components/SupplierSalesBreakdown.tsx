@@ -21,7 +21,9 @@ interface SalespersonBreakdown {
 }
 
 export function SupplierSalesBreakdown({ salesReps }: SupplierSalesBreakdownProps) {
-  const [activeSupplier, setActiveSupplier] = useState<string | null>(null);
+  const [hoveredSupplier, setHoveredSupplier] = useState<string | null>(null);
+  const [lockedSupplier, setLockedSupplier] = useState<string | null>(null);
+  const activeSupplier = lockedSupplier || hoveredSupplier;
 
   const { chartData, supplierByRep } = useMemo(() => {
     const supplierSales: Record<string, { vendas: number; pedidos: number }> = {};
