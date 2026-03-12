@@ -65,13 +65,7 @@ export function SupplierSalesBreakdown({ salesReps }: SupplierSalesBreakdownProp
     return supplierByRep[activeSupplier];
   }, [activeSupplier, supplierByRep]);
 
-  const handleBarMouseEnter = useCallback((_: unknown, index: number) => {
-    setActiveSupplier(chartData[index]?.name || null);
-  }, [chartData]);
-
-  const handleBarMouseLeave = useCallback(() => {
-    setActiveSupplier(null);
-  }, []);
+  // Removed unused handlers
 
   if (chartData.length === 0) {
     return (
