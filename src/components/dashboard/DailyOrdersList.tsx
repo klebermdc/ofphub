@@ -67,13 +67,12 @@ export function DailyOrdersList({
   const now = new Date();
   const today = now.getDate();
 
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [singleDate, setSingleDate] = useState<Date | undefined>(undefined);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [mode, setMode] = useState<'single' | 'range'>('single');
 
-  const isFilteringByDate = !!selectedDate;
-  const filterDay = selectedDate ? selectedDate.getDate() : null;
-  const filterMonth = selectedDate ? selectedDate.getMonth() + 1 : null;
-  const filterYear = selectedDate ? selectedDate.getFullYear() : null;
+  const isFiltering = mode === 'single' ? !!singleDate : !!(dateRange?.from);
 
   // All orders for the current month
   const allMonthOrders: DailyOrder[] = useMemo(() => {
@@ -98,7 +97,6 @@ export function DailyOrdersList({
         }
       });
     });
-    // Sort by day descending (most recent first)
     return orders.sort((a, b) => {
       const dayA = parseInt(a.dia.split('/')[0], 10);
       const dayB = parseInt(b.dia.split('/')[0], 10);
@@ -108,12 +106,27 @@ export function DailyOrdersList({
 
   // Filtered orders
   const displayOrders = useMemo(() => {
-    if (!isFilteringByDate) return allMonthOrders;
-    return allMonthOrders.filter(o => {
-      const dayNum = parseInt(o.dia.split('/')[0], 10);
-      return dayNum === filterDay;
-    });
-  }, [allMonthOrders, isFilteringByDate, filterDay]);
+    if (!isFiltering) return allMonthOrders;
+
+    if (mode === 'single' && singleDate) {
+      const filterDay = singleDate.getDate();
+      return allMonthOrders.filter(o => {
+        const dayNum = parseInt(o.dia.split('/')[0], 10);
+        return dayNum === filterDay;
+      });
+    }
+
+    if (mode === 'range' && dateRange?.from) {
+      const fromDay = dateRange.from.getDate();
+      const toDay = dateRange.to ? dateRange.to.getDate() : fromDay;
+      return allMonthOrders.filter(o => {
+        const dayNum = parseInt(o.dia.split('/')[0], 10);
+        return dayNum >= fromDay && dayNum <= toDay;
+      });
+    }
+
+    return allMonthOrders;
+  }, [allMonthOrders, isFiltering, mode, singleDate, dateRange]);
 
   // Chart data
   const salesByRep = useMemo(() => {
@@ -135,18 +148,39 @@ export function DailyOrdersList({
   ];
 
   const handleSelectToday = () => {
-    setSelectedDate(new Date(y, m - 1, today));
+    setMode('single');
+    setSingleDate(new Date(y, m - 1, today));
+    setDateRange(undefined);
   };
 
   const handleClearFilter = () => {
-    setSelectedDate(undefined);
+    setSingleDate(undefined);
+    setDateRange(undefined);
   };
 
   const calendarMonth = new Date(y, m - 1, 1);
 
-  const label = isFilteringByDate
-    ? `Pedidos de ${format(selectedDate!, "dd 'de' MMMM", { locale: ptBR })}`
-    : `Pedidos do Mês`;
+  const getLabel = () => {
+    if (mode === 'single' && singleDate) {
+      return `Pedidos de ${format(singleDate, "dd 'de' MMMM", { locale: ptBR })}`;
+    }
+    if (mode === 'range' && dateRange?.from) {
+      if (dateRange.to) {
+        return `Pedidos de ${format(dateRange.from, "dd/MM")} a ${format(dateRange.to, "dd/MM")}`;
+      }
+      return `Pedidos a partir de ${format(dateRange.from, "dd/MM")}`;
+    }
+    return `Pedidos do Mês`;
+  };
+
+  const getButtonLabel = () => {
+    if (mode === 'single' && singleDate) return format(singleDate, "dd/MM");
+    if (mode === 'range' && dateRange?.from) {
+      if (dateRange.to) return `${format(dateRange.from, "dd/MM")} - ${format(dateRange.to, "dd/MM")}`;
+      return format(dateRange.from, "dd/MM");
+    }
+    return "Filtrar data";
+  };
 
   return (
     <div className="space-y-3">
