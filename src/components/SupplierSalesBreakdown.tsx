@@ -100,11 +100,11 @@ export function SupplierSalesBreakdown({ salesReps }: SupplierSalesBreakdownProp
                 data={chartData}
                 layout="vertical"
                 onMouseMove={(state) => {
-                  if (!lockedSupplier && state && state.activeTooltipIndex !== undefined && state.activeTooltipIndex !== null) {
+                  if (state && state.activeTooltipIndex !== undefined && state.activeTooltipIndex !== null) {
                     setHoveredSupplier(chartData[state.activeTooltipIndex]?.name || null);
                   }
                 }}
-                onMouseLeave={() => !lockedSupplier && setHoveredSupplier(null)}
+                onMouseLeave={() => setHoveredSupplier(null)}
                 onClick={(state) => {
                   if (state && state.activeTooltipIndex !== undefined && state.activeTooltipIndex !== null) {
                     const clicked = chartData[state.activeTooltipIndex]?.name || null;
