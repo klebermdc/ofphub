@@ -62,13 +62,13 @@ export function EBITDACard({ receita, custoOperacional }: EBITDACardProps) {
             <span className="text-xs sm:text-sm text-muted-foreground">Margem EBITDA</span>
             <div className="flex items-center gap-1.5">
               {isPositive ? (
-                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-400" />
+                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 dark:text-emerald-400 text-emerald-600" />
               ) : (
-                <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 text-red-400" />
+                <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 dark:text-red-400 text-red-600" />
               )}
               <span className={cn(
                 "text-xl sm:text-2xl font-bold",
-                isPositive ? "text-emerald-400" : "text-red-400"
+                isPositive ? "dark:text-emerald-400 text-emerald-700" : "dark:text-red-400 text-red-700"
               )}>
                 {Math.abs(margemEbitda).toFixed(1)}%
               </span>
