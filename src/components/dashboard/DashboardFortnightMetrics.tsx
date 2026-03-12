@@ -31,6 +31,7 @@ export function DashboardFortnightMetrics({
           icon={Calendar}
           delay={175}
           variant="warning"
+          formula="Soma das comissões totais dos pedidos com data entre dia 1 e 15 do mês"
         />
         <MetricCard
           title="1ª Quinzena - Ganho Bruto"
@@ -38,6 +39,8 @@ export function DashboardFortnightMetrics({
           icon={Calendar}
           delay={185}
           variant={primeiraQuinzena.ganhoBruto >= 0 ? "success" : "danger"}
+          formula="Comissão Total (1ª quinzena) − Comissão Vendedor (1ª quinzena)
+= Lucro bruto da empresa nos dias 1-15"
         />
         <MetricCard
           title="2ª Quinzena - Comissão Total"
@@ -45,6 +48,7 @@ export function DashboardFortnightMetrics({
           icon={Calendar}
           delay={195}
           variant="warning"
+          formula="Soma das comissões totais dos pedidos com data entre dia 16 e fim do mês"
         />
         <MetricCard
           title="2ª Quinzena - Ganho Bruto"
@@ -52,6 +56,8 @@ export function DashboardFortnightMetrics({
           icon={Calendar}
           delay={200}
           variant={segundaQuinzena.ganhoBruto >= 0 ? "success" : "danger"}
+          formula="Comissão Total (2ª quinzena) − Comissão Vendedor (2ª quinzena)
+= Lucro bruto da empresa nos dias 16-31"
         />
       </div>
     </div>
