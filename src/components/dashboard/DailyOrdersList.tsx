@@ -371,7 +371,7 @@ export function DailyOrdersList({
             </div>
             {salesByRep.length > 0 && (
               <div className="mt-2 pt-2 border-t border-border/30 text-center">
-                <p className="text-[10px] text-muted-foreground">🏆 Líder {isFilteringByDate ? 'do dia' : 'do mês'}</p>
+                <p className="text-[10px] text-muted-foreground">🏆 Líder {isFiltering ? 'do período' : 'do mês'}</p>
                 <p className="text-sm font-bold text-foreground">{salesByRep[0].name}</p>
                 <p className="text-xs text-primary font-medium">{formatCurrency(salesByRep[0].total)}</p>
               </div>
