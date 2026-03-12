@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
-import { Plus, Package, Trophy, CalendarIcon, RotateCcw } from "lucide-react";
+import { Plus, Package, Trophy, CalendarIcon, RotateCcw, DollarSign, TrendingUp, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { OrderFormDialog } from "@/components/OrderFormDialog";
+import { MetricCard } from "@/components/MetricCard";
 import { formatCurrency } from "@/utils/formatters";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { ptBR } from "date-fns/locale";
@@ -128,6 +129,16 @@ export function DailyOrdersList({
     return allMonthOrders;
   }, [allMonthOrders, isFiltering, mode, singleDate, dateRange]);
 
+  // Period KPI metrics
+  const periodMetrics = useMemo(() => {
+    const totalVenda = displayOrders.reduce((sum, o) => sum + o.venda, 0);
+    const totalComissao = displayOrders.reduce((sum, o) => sum + o.comissaoTotal, 0);
+    const totalComissaoVendedor = displayOrders.reduce((sum, o) => sum + o.comissaoVendedor, 0);
+    const ganho = totalComissao - totalComissaoVendedor;
+    const resultado = ganho - totalComissaoVendedor;
+    return { totalVenda, totalComissao, totalComissaoVendedor, ganho, resultado };
+  }, [displayOrders]);
+
   // Chart data
   const salesByRep = useMemo(() => {
     const map: Record<string, number> = {};
@@ -159,6 +170,12 @@ export function DailyOrdersList({
   };
 
   const calendarMonth = new Date(y, m - 1, 1);
+
+  const periodLabel = (() => {
+    if (mode === 'single' && singleDate) return 'do Dia';
+    if (mode === 'range' && dateRange?.from) return 'do Período';
+    return 'do Mês';
+  })();
 
   const getLabel = () => {
     if (mode === 'single' && singleDate) {
@@ -376,6 +393,48 @@ export function DailyOrdersList({
                 <p className="text-xs text-primary font-medium">{formatCurrency(salesByRep[0].total)}</p>
               </div>
             )}
+          </div>
+
+          {/* Period KPI Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <MetricCard
+              title={`Venda ${periodLabel}`}
+              value={formatCurrency(periodMetrics.totalVenda)}
+              icon={DollarSign}
+              delay={50}
+              formula="Soma de todas as vendas no período filtrado"
+            />
+            <MetricCard
+              title={`Comissão ${periodLabel}`}
+              value={formatCurrency(periodMetrics.totalComissao)}
+              icon={TrendingUp}
+              delay={100}
+              formula="Soma de todas as comissões totais no período filtrado"
+            />
+            <MetricCard
+              title="Comissão Vend."
+              value={formatCurrency(periodMetrics.totalComissaoVendedor)}
+              icon={Wallet}
+              variant="warning"
+              delay={150}
+              formula="Soma das comissões pagas aos vendedores no período"
+            />
+            <MetricCard
+              title={`Ganho ${periodLabel}`}
+              value={formatCurrency(periodMetrics.ganho)}
+              icon={TrendingUp}
+              variant="success"
+              delay={200}
+              formula="Comissão Total - Comissão Vendedor"
+            />
+            <MetricCard
+              title={`Resultado ${periodLabel}`}
+              value={formatCurrency(periodMetrics.resultado)}
+              icon={TrendingUp}
+              variant={periodMetrics.resultado >= 0 ? "success" : "danger"}
+              delay={250}
+              formula="Ganho - Comissão Vendedor"
+            />
           </div>
         </div>
       )}
