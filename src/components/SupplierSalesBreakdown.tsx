@@ -21,7 +21,9 @@ interface SalespersonBreakdown {
 }
 
 export function SupplierSalesBreakdown({ salesReps }: SupplierSalesBreakdownProps) {
-  const [activeSupplier, setActiveSupplier] = useState<string | null>(null);
+  const [hoveredSupplier, setHoveredSupplier] = useState<string | null>(null);
+  const [lockedSupplier, setLockedSupplier] = useState<string | null>(null);
+  const activeSupplier = lockedSupplier || hoveredSupplier;
 
   const { chartData, supplierByRep } = useMemo(() => {
     const supplierSales: Record<string, { vendas: number; pedidos: number }> = {};
@@ -63,13 +65,7 @@ export function SupplierSalesBreakdown({ salesReps }: SupplierSalesBreakdownProp
     return supplierByRep[activeSupplier];
   }, [activeSupplier, supplierByRep]);
 
-  const handleBarMouseEnter = useCallback((_: unknown, index: number) => {
-    setActiveSupplier(chartData[index]?.name || null);
-  }, [chartData]);
-
-  const handleBarMouseLeave = useCallback(() => {
-    setActiveSupplier(null);
-  }, []);
+  // Removed unused handlers
 
   if (chartData.length === 0) {
     return (
@@ -104,11 +100,17 @@ export function SupplierSalesBreakdown({ salesReps }: SupplierSalesBreakdownProp
                 data={chartData}
                 layout="vertical"
                 onMouseMove={(state) => {
-                  if (state && state.activeTooltipIndex !== undefined && state.activeTooltipIndex !== null) {
-                    setActiveSupplier(chartData[state.activeTooltipIndex]?.name || null);
+                  if (!lockedSupplier && state && state.activeTooltipIndex !== undefined && state.activeTooltipIndex !== null) {
+                    setHoveredSupplier(chartData[state.activeTooltipIndex]?.name || null);
                   }
                 }}
-                onMouseLeave={() => setActiveSupplier(null)}
+                onMouseLeave={() => !lockedSupplier && setHoveredSupplier(null)}
+                onClick={(state) => {
+                  if (state && state.activeTooltipIndex !== undefined && state.activeTooltipIndex !== null) {
+                    const clicked = chartData[state.activeTooltipIndex]?.name || null;
+                    setLockedSupplier(prev => prev === clicked ? null : clicked);
+                  }
+                }}
               >
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
                 <XAxis
