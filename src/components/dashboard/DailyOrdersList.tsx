@@ -257,7 +257,7 @@ export function DailyOrdersList({
             </PopoverContent>
           </Popover>
 
-          {isFilteringByDate && (
+          {isFiltering && (
             <Button
               size="sm"
               variant="ghost"
