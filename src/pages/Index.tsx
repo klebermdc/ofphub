@@ -49,7 +49,7 @@ const EBITDACard = lazy(() => import("@/components/EBITDACard").then(m => ({ def
 const AccountingTab = lazy(() => import("@/components/AccountingTab").then(m => ({ default: m.AccountingTab })));
 const MarketingTab = lazy(() => import("@/components/MarketingTab").then(m => ({ default: m.MarketingTab })));
 const CRMTab = lazy(() => import("@/components/crm/CRMTab").then(m => ({ default: m.CRMTab })));
-const NFSeTab = lazy(() => import("@/components/nfse/NFSeTab").then(m => ({ default: m.NFSeTab })));
+
 const DashboardMonthlyMetrics = lazy(() => import("@/components/dashboard/DashboardMonthlyMetrics").then(m => ({ default: m.DashboardMonthlyMetrics })));
 const DashboardFortnightMetrics = lazy(() => import("@/components/dashboard/DashboardFortnightMetrics").then(m => ({ default: m.DashboardFortnightMetrics })));
 const DailyOrdersList = lazy(() => import("@/components/dashboard/DailyOrdersList").then(m => ({ default: m.DailyOrdersList })));
