@@ -21,8 +21,8 @@ export function EBITDACard({ receita, custoOperacional }: EBITDACardProps) {
       "relative overflow-hidden rounded-2xl p-6 sm:p-8 animate-slide-up",
       "bg-gradient-to-br border-2",
       isPositive 
-        ? "from-emerald-950/60 via-emerald-900/40 to-emerald-950/60 border-emerald-500/50" 
-        : "from-red-950/60 via-red-900/40 to-red-950/60 border-red-500/50"
+        ? "dark:from-emerald-950/60 dark:via-emerald-900/40 dark:to-emerald-950/60 from-emerald-50 via-emerald-100/50 to-emerald-50 border-emerald-500/50 dark:border-emerald-500/50 border-emerald-300" 
+        : "dark:from-red-950/60 dark:via-red-900/40 dark:to-red-950/60 from-red-50 via-red-100/50 to-red-50 border-red-500/50 dark:border-red-500/50 border-red-300"
     )}>
       {/* Background decoration */}
       <div className={cn(
@@ -39,16 +39,16 @@ export function EBITDACard({ receita, custoOperacional }: EBITDACardProps) {
           )}>
             <BarChart3 className={cn(
               "h-7 w-7 sm:h-8 sm:w-8",
-              isPositive ? "text-emerald-400" : "text-red-400"
+              isPositive ? "dark:text-emerald-400 text-emerald-600" : "dark:text-red-400 text-red-600"
             )} />
           </div>
           <div>
             <p className="text-sm sm:text-base text-muted-foreground font-medium">EBITDA</p>
             <div className="flex items-center gap-2 sm:gap-3">
-              {!isPositive && <span className={cn("text-3xl sm:text-4xl lg:text-5xl font-bold", isPositive ? "text-emerald-400" : "text-red-400")}>-</span>}
+              {!isPositive && <span className={cn("text-3xl sm:text-4xl lg:text-5xl font-bold", isPositive ? "dark:text-emerald-400 text-emerald-700" : "dark:text-red-400 text-red-700")}>-</span>}
               <span className={cn(
                 "text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight",
-                isPositive ? "text-emerald-400" : "text-red-400"
+                isPositive ? "dark:text-emerald-400 text-emerald-700" : "dark:text-red-400 text-red-700"
               )}>
                 {formatCurrency(ebitda)}
               </span>
@@ -62,13 +62,13 @@ export function EBITDACard({ receita, custoOperacional }: EBITDACardProps) {
             <span className="text-xs sm:text-sm text-muted-foreground">Margem EBITDA</span>
             <div className="flex items-center gap-1.5">
               {isPositive ? (
-                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-400" />
+                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 dark:text-emerald-400 text-emerald-600" />
               ) : (
-                <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 text-red-400" />
+                <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 dark:text-red-400 text-red-600" />
               )}
               <span className={cn(
                 "text-xl sm:text-2xl font-bold",
-                isPositive ? "text-emerald-400" : "text-red-400"
+                isPositive ? "dark:text-emerald-400 text-emerald-700" : "dark:text-red-400 text-red-700"
               )}>
                 {Math.abs(margemEbitda).toFixed(1)}%
               </span>
