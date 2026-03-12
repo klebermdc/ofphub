@@ -21,8 +21,8 @@ export function EBITDACard({ receita, custoOperacional }: EBITDACardProps) {
       "relative overflow-hidden rounded-2xl p-6 sm:p-8 animate-slide-up",
       "bg-gradient-to-br border-2",
       isPositive 
-        ? "from-emerald-950/60 via-emerald-900/40 to-emerald-950/60 border-emerald-500/50" 
-        : "from-red-950/60 via-red-900/40 to-red-950/60 border-red-500/50"
+        ? "dark:from-emerald-950/60 dark:via-emerald-900/40 dark:to-emerald-950/60 from-emerald-50 via-emerald-100/50 to-emerald-50 border-emerald-500/50 dark:border-emerald-500/50 border-emerald-300" 
+        : "dark:from-red-950/60 dark:via-red-900/40 dark:to-red-950/60 from-red-50 via-red-100/50 to-red-50 border-red-500/50 dark:border-red-500/50 border-red-300"
     )}>
       {/* Background decoration */}
       <div className={cn(
