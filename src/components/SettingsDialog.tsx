@@ -3,8 +3,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Settings, Save, TestTube, Trash2, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Settings, Save, TestTube, Trash2, Eye, EyeOff, Loader2, Bot, Plug } from 'lucide-react';
 import { useApiIntegrations } from '@/hooks/useApiIntegrations';
+import { useOpenClaw } from '@/hooks/useOpenClaw';
+import { Badge } from '@/components/ui/badge';
 
 interface SettingsDialogProps {
   open: boolean;
