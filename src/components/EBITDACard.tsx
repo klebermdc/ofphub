@@ -39,7 +39,7 @@ export function EBITDACard({ receita, custoOperacional }: EBITDACardProps) {
           )}>
             <BarChart3 className={cn(
               "h-7 w-7 sm:h-8 sm:w-8",
-              isPositive ? "text-emerald-400" : "text-red-400"
+              isPositive ? "dark:text-emerald-400 text-emerald-600" : "dark:text-red-400 text-red-600"
             )} />
           </div>
           <div>
