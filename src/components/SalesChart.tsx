@@ -22,7 +22,6 @@ const COLORS = [
 export function SalesChart({ salesReps }: SalesChartProps) {
   const totalSales = salesReps.reduce((sum, rep) => sum + rep.sales, 0);
   
-  // Sort by sales descending for bar chart
   const chartData = [...salesReps]
     .sort((a, b) => b.sales - a.sales)
     .map(rep => ({
@@ -44,10 +43,10 @@ export function SalesChart({ salesReps }: SalesChartProps) {
         <div className="h-[350px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(222, 30%, 18%)" />
+              <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
               <XAxis 
                 type="number"
-                stroke="hsl(215, 20%, 55%)" 
+                tick={{ fill: 'hsl(var(--muted-foreground))' }}
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
@@ -56,7 +55,7 @@ export function SalesChart({ salesReps }: SalesChartProps) {
               <YAxis 
                 type="category"
                 dataKey="name"
-                stroke="hsl(215, 20%, 55%)" 
+                tick={{ fill: 'hsl(var(--muted-foreground))' }}
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
@@ -64,10 +63,10 @@ export function SalesChart({ salesReps }: SalesChartProps) {
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: 'hsl(222, 47%, 8%)',
-                  border: '1px solid hsl(222, 30%, 18%)',
+                  backgroundColor: 'hsl(var(--popover))',
+                  border: '1px solid hsl(var(--border))',
                   borderRadius: '8px',
-                  color: 'hsl(210, 40%, 98%)'
+                  color: 'hsl(var(--foreground))'
                 }}
                 formatter={(value: number) => [
                   `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 
@@ -101,7 +100,7 @@ export function SalesChart({ salesReps }: SalesChartProps) {
                 dataKey="value"
                 nameKey="name"
                 label={({ name, percentage }) => `${name}: ${percentage}%`}
-                labelLine={{ stroke: 'hsl(215, 20%, 55%)' }}
+                labelLine={{ stroke: 'hsl(var(--muted-foreground))' }}
               >
                 {pieData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -109,10 +108,10 @@ export function SalesChart({ salesReps }: SalesChartProps) {
               </Pie>
               <Tooltip
                 contentStyle={{
-                  backgroundColor: 'hsl(222, 47%, 8%)',
-                  border: '1px solid hsl(222, 30%, 18%)',
+                  backgroundColor: 'hsl(var(--popover))',
+                  border: '1px solid hsl(var(--border))',
                   borderRadius: '8px',
-                  color: 'hsl(210, 40%, 98%)'
+                  color: 'hsl(var(--foreground))'
                 }}
                 formatter={(value: number, name: string, props: any) => [
                   `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} (${props.payload.percentage}%)`,
@@ -123,7 +122,7 @@ export function SalesChart({ salesReps }: SalesChartProps) {
                 verticalAlign="bottom"
                 height={36}
                 formatter={(value) => (
-                  <span style={{ color: 'hsl(210, 40%, 98%)' }}>{value}</span>
+                  <span style={{ color: 'hsl(var(--foreground))' }}>{value}</span>
                 )}
               />
             </PieChart>
