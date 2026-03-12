@@ -207,20 +207,53 @@ export function DailyOrdersList({
             <PopoverTrigger asChild>
               <Button size="sm" variant="outline" className="gap-1.5 text-xs">
                 <CalendarIcon className="h-3.5 w-3.5" />
-                {isFilteringByDate ? format(selectedDate!, "dd/MM") : "Filtrar data"}
+                {getButtonLabel()}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="end">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={(date) => {
-                  setSelectedDate(date);
-                  setCalendarOpen(false);
-                }}
-                defaultMonth={calendarMonth}
-                locale={ptBR}
-              />
+              <div className="flex gap-1 p-2 border-b border-border">
+                <Button
+                  size="sm"
+                  variant={mode === 'single' ? 'default' : 'ghost'}
+                  className="text-xs h-7 flex-1"
+                  onClick={() => { setMode('single'); setDateRange(undefined); }}
+                >
+                  Dia
+                </Button>
+                <Button
+                  size="sm"
+                  variant={mode === 'range' ? 'default' : 'ghost'}
+                  className="text-xs h-7 flex-1"
+                  onClick={() => { setMode('range'); setSingleDate(undefined); }}
+                >
+                  Período
+                </Button>
+              </div>
+              {mode === 'single' ? (
+                <Calendar
+                  mode="single"
+                  selected={singleDate}
+                  onSelect={(date) => {
+                    setSingleDate(date);
+                    setCalendarOpen(false);
+                  }}
+                  defaultMonth={calendarMonth}
+                  locale={ptBR}
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              ) : (
+                <Calendar
+                  mode="range"
+                  selected={dateRange}
+                  onSelect={(range) => {
+                    setDateRange(range);
+                    if (range?.to) setCalendarOpen(false);
+                  }}
+                  defaultMonth={calendarMonth}
+                  locale={ptBR}
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              )}
             </PopoverContent>
           </Popover>
 
