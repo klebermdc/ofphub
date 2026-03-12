@@ -38,10 +38,10 @@ export function ProductChart({ salesReps }: ProductChartProps) {
       <div className="h-[250px]">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chartData} layout="vertical">
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(222, 30%, 18%)" />
+            <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
             <XAxis 
               type="number"
-              stroke="hsl(215, 20%, 55%)" 
+              tick={{ fill: 'hsl(var(--muted-foreground))' }}
               fontSize={11}
               tickLine={false}
               axisLine={false}
@@ -50,19 +50,18 @@ export function ProductChart({ salesReps }: ProductChartProps) {
             <YAxis 
               type="category"
               dataKey="name"
-              stroke="hsl(215, 20%, 55%)" 
+              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
               fontSize={10}
               tickLine={false}
               axisLine={false}
               width={100}
-              tick={{ fontSize: 10 }}
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: 'hsl(222, 47%, 8%)',
-                border: '1px solid hsl(222, 30%, 18%)',
+                backgroundColor: 'hsl(var(--popover))',
+                border: '1px solid hsl(var(--border))',
                 borderRadius: '8px',
-                color: 'hsl(210, 40%, 98%)'
+                color: 'hsl(var(--foreground))'
               }}
               formatter={(value: number) => [
                 `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 
