@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Plus, Package, Trophy, CalendarIcon, RotateCcw, DollarSign, TrendingUp, Wallet } from "lucide-react";
+import { Plus, Package, Trophy, CalendarIcon, RotateCcw, DollarSign, TrendingUp, Wallet, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -315,36 +315,66 @@ export function DailyOrdersList({
             <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="border-border/50">
-                    <TableHead className="text-xs">Data</TableHead>
-                    <TableHead className="text-xs">Pedido</TableHead>
-                    <TableHead className="text-xs">Cliente</TableHead>
-                    <TableHead className="text-xs">Vendedor</TableHead>
-                    <TableHead className="text-xs">Produto</TableHead>
-                    <TableHead className="text-xs text-right">Venda</TableHead>
-                    <TableHead className="text-xs text-right">Comissão</TableHead>
-                    <TableHead className="text-xs text-right">Ganho</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {displayOrders.map((order, idx) => (
-                    <TableRow key={idx} className="border-border/30">
-                      <TableCell className="text-xs text-muted-foreground">{order.dia}</TableCell>
-                      <TableCell className="text-xs font-medium">{order.pedido}</TableCell>
-                      <TableCell className="text-xs">{order.cliente}</TableCell>
-                      <TableCell className="text-xs">{order.vendedor}</TableCell>
-                      <TableCell className="text-xs">{order.produto}</TableCell>
-                      <TableCell className="text-xs text-right font-medium">
-                        {formatCurrency(order.venda)}
-                      </TableCell>
-                      <TableCell className="text-xs text-right text-warning">
-                        {formatCurrency(order.comissaoTotal)}
-                      </TableCell>
-                      <TableCell className="text-xs text-right text-success">
-                        {formatCurrency(order.comissaoTotal - order.comissaoVendedor)}
-                      </TableCell>
+                    <TableRow className="border-border/50">
+                      <TableHead className="text-xs w-8"></TableHead>
+                      <TableHead className="text-xs">Data</TableHead>
+                      <TableHead className="text-xs">Pedido</TableHead>
+                      <TableHead className="text-xs">Cliente</TableHead>
+                      <TableHead className="text-xs">Vendedor</TableHead>
+                      <TableHead className="text-xs">Produto</TableHead>
+                      <TableHead className="text-xs text-right">Venda</TableHead>
+                      <TableHead className="text-xs text-right">Comissão</TableHead>
+                      <TableHead className="text-xs text-right">Ganho</TableHead>
                     </TableRow>
-                  ))}
+                  </TableHeader>
+                  <TableBody>
+                    {displayOrders.map((order, idx) => (
+                      <TableRow key={idx} className="border-border/30">
+                        <TableCell className="p-1">
+                          <OrderFormDialog
+                            mode="edit"
+                            order={{
+                              cliente: order.cliente,
+                              emailCliente: '',
+                              data: `${order.dia}/${y}`,
+                              pedido: order.pedido,
+                              venda: order.venda,
+                              fornecedor: order.fornecedor,
+                              produto: order.produto,
+                              comissao: 0,
+                              comissaoTotal: order.comissaoTotal,
+                              porcentagemVendedor: 0,
+                              comissaoVendedor: order.comissaoVendedor,
+                              vendedor: order.vendedor,
+                              status: 'Pendente',
+                            }}
+                            availableVendedores={availableVendedores}
+                            availableProdutos={availableProdutos}
+                            availableFornecedores={availableFornecedores}
+                            onSuccess={onOrderSuccess}
+                            trigger={
+                              <Button variant="ghost" size="icon" className="h-6 w-6">
+                                <Pencil className="h-3 w-3 text-muted-foreground hover:text-primary" />
+                              </Button>
+                            }
+                          />
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{order.dia}</TableCell>
+                        <TableCell className="text-xs font-medium">{order.pedido}</TableCell>
+                        <TableCell className="text-xs">{order.cliente}</TableCell>
+                        <TableCell className="text-xs">{order.vendedor}</TableCell>
+                        <TableCell className="text-xs">{order.produto}</TableCell>
+                        <TableCell className="text-xs text-right font-medium">
+                          {formatCurrency(order.venda)}
+                        </TableCell>
+                        <TableCell className="text-xs text-right text-warning">
+                          {formatCurrency(order.comissaoTotal)}
+                        </TableCell>
+                        <TableCell className="text-xs text-right text-success">
+                          {formatCurrency(order.comissaoTotal - order.comissaoVendedor)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
                 </TableBody>
               </Table>
             </div>
