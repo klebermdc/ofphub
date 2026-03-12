@@ -9,6 +9,8 @@ import { formatCurrency } from "@/utils/formatters";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { ptBR } from "date-fns/locale";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { DateRange } from "react-day-picker";
 
 interface DailyOrder {
   cliente: string;
@@ -65,13 +67,12 @@ export function DailyOrdersList({
   const now = new Date();
   const today = now.getDate();
 
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [singleDate, setSingleDate] = useState<Date | undefined>(undefined);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [mode, setMode] = useState<'single' | 'range'>('single');
 
-  const isFilteringByDate = !!selectedDate;
-  const filterDay = selectedDate ? selectedDate.getDate() : null;
-  const filterMonth = selectedDate ? selectedDate.getMonth() + 1 : null;
-  const filterYear = selectedDate ? selectedDate.getFullYear() : null;
+  const isFiltering = mode === 'single' ? !!singleDate : !!(dateRange?.from);
 
   // All orders for the current month
   const allMonthOrders: DailyOrder[] = useMemo(() => {
@@ -96,7 +97,6 @@ export function DailyOrdersList({
         }
       });
     });
-    // Sort by day descending (most recent first)
     return orders.sort((a, b) => {
       const dayA = parseInt(a.dia.split('/')[0], 10);
       const dayB = parseInt(b.dia.split('/')[0], 10);
@@ -106,12 +106,27 @@ export function DailyOrdersList({
 
   // Filtered orders
   const displayOrders = useMemo(() => {
-    if (!isFilteringByDate) return allMonthOrders;
-    return allMonthOrders.filter(o => {
-      const dayNum = parseInt(o.dia.split('/')[0], 10);
-      return dayNum === filterDay;
-    });
-  }, [allMonthOrders, isFilteringByDate, filterDay]);
+    if (!isFiltering) return allMonthOrders;
+
+    if (mode === 'single' && singleDate) {
+      const filterDay = singleDate.getDate();
+      return allMonthOrders.filter(o => {
+        const dayNum = parseInt(o.dia.split('/')[0], 10);
+        return dayNum === filterDay;
+      });
+    }
+
+    if (mode === 'range' && dateRange?.from) {
+      const fromDay = dateRange.from.getDate();
+      const toDay = dateRange.to ? dateRange.to.getDate() : fromDay;
+      return allMonthOrders.filter(o => {
+        const dayNum = parseInt(o.dia.split('/')[0], 10);
+        return dayNum >= fromDay && dayNum <= toDay;
+      });
+    }
+
+    return allMonthOrders;
+  }, [allMonthOrders, isFiltering, mode, singleDate, dateRange]);
 
   // Chart data
   const salesByRep = useMemo(() => {
@@ -133,25 +148,46 @@ export function DailyOrdersList({
   ];
 
   const handleSelectToday = () => {
-    setSelectedDate(new Date(y, m - 1, today));
+    setMode('single');
+    setSingleDate(new Date(y, m - 1, today));
+    setDateRange(undefined);
   };
 
   const handleClearFilter = () => {
-    setSelectedDate(undefined);
+    setSingleDate(undefined);
+    setDateRange(undefined);
   };
 
   const calendarMonth = new Date(y, m - 1, 1);
 
-  const label = isFilteringByDate
-    ? `Pedidos de ${format(selectedDate!, "dd 'de' MMMM", { locale: ptBR })}`
-    : `Pedidos do Mês`;
+  const getLabel = () => {
+    if (mode === 'single' && singleDate) {
+      return `Pedidos de ${format(singleDate, "dd 'de' MMMM", { locale: ptBR })}`;
+    }
+    if (mode === 'range' && dateRange?.from) {
+      if (dateRange.to) {
+        return `Pedidos de ${format(dateRange.from, "dd/MM")} a ${format(dateRange.to, "dd/MM")}`;
+      }
+      return `Pedidos a partir de ${format(dateRange.from, "dd/MM")}`;
+    }
+    return `Pedidos do Mês`;
+  };
+
+  const getButtonLabel = () => {
+    if (mode === 'single' && singleDate) return format(singleDate, "dd/MM");
+    if (mode === 'range' && dateRange?.from) {
+      if (dateRange.to) return `${format(dateRange.from, "dd/MM")} - ${format(dateRange.to, "dd/MM")}`;
+      return format(dateRange.from, "dd/MM");
+    }
+    return "Filtrar data";
+  };
 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-3">
           <div className="h-8 w-1 bg-primary rounded-full" />
-          <h3 className="text-lg sm:text-xl font-semibold text-foreground">{label}</h3>
+          <h3 className="text-lg sm:text-xl font-semibold text-foreground">{getLabel()}</h3>
           <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
             {displayOrders.length} {displayOrders.length === 1 ? 'pedido' : 'pedidos'}
           </span>
@@ -171,24 +207,57 @@ export function DailyOrdersList({
             <PopoverTrigger asChild>
               <Button size="sm" variant="outline" className="gap-1.5 text-xs">
                 <CalendarIcon className="h-3.5 w-3.5" />
-                {isFilteringByDate ? format(selectedDate!, "dd/MM") : "Filtrar data"}
+                {getButtonLabel()}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="end">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={(date) => {
-                  setSelectedDate(date);
-                  setCalendarOpen(false);
-                }}
-                defaultMonth={calendarMonth}
-                locale={ptBR}
-              />
+              <div className="flex gap-1 p-2 border-b border-border">
+                <Button
+                  size="sm"
+                  variant={mode === 'single' ? 'default' : 'ghost'}
+                  className="text-xs h-7 flex-1"
+                  onClick={() => { setMode('single'); setDateRange(undefined); }}
+                >
+                  Dia
+                </Button>
+                <Button
+                  size="sm"
+                  variant={mode === 'range' ? 'default' : 'ghost'}
+                  className="text-xs h-7 flex-1"
+                  onClick={() => { setMode('range'); setSingleDate(undefined); }}
+                >
+                  Período
+                </Button>
+              </div>
+              {mode === 'single' ? (
+                <Calendar
+                  mode="single"
+                  selected={singleDate}
+                  onSelect={(date) => {
+                    setSingleDate(date);
+                    setCalendarOpen(false);
+                  }}
+                  defaultMonth={calendarMonth}
+                  locale={ptBR}
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              ) : (
+                <Calendar
+                  mode="range"
+                  selected={dateRange}
+                  onSelect={(range) => {
+                    setDateRange(range);
+                    if (range?.to) setCalendarOpen(false);
+                  }}
+                  defaultMonth={calendarMonth}
+                  locale={ptBR}
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              )}
             </PopoverContent>
           </Popover>
 
-          {isFilteringByDate && (
+          {isFiltering && (
             <Button
               size="sm"
               variant="ghost"
@@ -220,7 +289,7 @@ export function DailyOrdersList({
         <div className="glass rounded-xl p-6 text-center">
           <Package className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
-            {isFilteringByDate ? "Nenhum pedido nesta data." : "Nenhum pedido registrado neste mês."}
+            {isFiltering ? "Nenhum pedido neste período." : "Nenhum pedido registrado neste mês."}
           </p>
         </div>
       ) : (
@@ -302,7 +371,7 @@ export function DailyOrdersList({
             </div>
             {salesByRep.length > 0 && (
               <div className="mt-2 pt-2 border-t border-border/30 text-center">
-                <p className="text-[10px] text-muted-foreground">🏆 Líder {isFilteringByDate ? 'do dia' : 'do mês'}</p>
+                <p className="text-[10px] text-muted-foreground">🏆 Líder {isFiltering ? 'do período' : 'do mês'}</p>
                 <p className="text-sm font-bold text-foreground">{salesByRep[0].name}</p>
                 <p className="text-xs text-primary font-medium">{formatCurrency(salesByRep[0].total)}</p>
               </div>
