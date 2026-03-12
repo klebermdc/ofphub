@@ -129,6 +129,16 @@ export function DailyOrdersList({
     return allMonthOrders;
   }, [allMonthOrders, isFiltering, mode, singleDate, dateRange]);
 
+  // Period KPI metrics
+  const periodMetrics = useMemo(() => {
+    const totalVenda = displayOrders.reduce((sum, o) => sum + o.venda, 0);
+    const totalComissao = displayOrders.reduce((sum, o) => sum + o.comissaoTotal, 0);
+    const totalComissaoVendedor = displayOrders.reduce((sum, o) => sum + o.comissaoVendedor, 0);
+    const ganho = totalComissao - totalComissaoVendedor;
+    const resultado = ganho - totalComissaoVendedor;
+    return { totalVenda, totalComissao, totalComissaoVendedor, ganho, resultado };
+  }, [displayOrders]);
+
   // Chart data
   const salesByRep = useMemo(() => {
     const map: Record<string, number> = {};
