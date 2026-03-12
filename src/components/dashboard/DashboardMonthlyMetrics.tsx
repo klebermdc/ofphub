@@ -46,6 +46,7 @@ export function DashboardMonthlyMetrics({
           icon={DollarSign}
           delay={0}
           variant="success"
+          formula="Soma de todas as vendas (valor de venda) de todos os vendedores no período"
         />
         <MetricCard
           title="Comissão Total"
@@ -53,12 +54,14 @@ export function DashboardMonthlyMetrics({
           icon={TrendingUp}
           delay={50}
           variant="warning"
+          formula="Soma de todas as comissões geradas por cada pedido (percentual aplicado sobre a venda)"
         />
         <MetricCard
           title="Comissão Vendedor"
           value={formatCurrency(totalComissao)}
           icon={TrendingUp}
           delay={75}
+          formula="Soma das comissões pagas aos vendedores (parte do vendedor na comissão de cada pedido)"
         />
         <MetricCard
           title="Ganho Bruto"
@@ -66,6 +69,8 @@ export function DashboardMonthlyMetrics({
           icon={TrendingUp}
           delay={85}
           variant="success"
+          formula="Comissão Total − Comissão Vendedor
+= Lucro bruto da empresa antes dos custos operacionais"
         />
       </div>
 
@@ -77,6 +82,7 @@ export function DashboardMonthlyMetrics({
           icon={Users}
           delay={75}
           variant="warning"
+          formula="Soma dos salários fixos de todos os vendedores cadastrados"
         />
         <MetricCard
           title="Marketing"
@@ -84,6 +90,7 @@ export function DashboardMonthlyMetrics({
           icon={Megaphone}
           delay={85}
           variant="warning"
+          formula="Meta Ads + Google Ads + Software + Telefonia + Outros custos de marketing do período"
         />
         <MetricCard
           title="Custos Operacionais"
@@ -91,6 +98,7 @@ export function DashboardMonthlyMetrics({
           icon={Briefcase}
           delay={95}
           variant="warning"
+          formula="Soma de todos os custos operacionais cadastrados para o período (aluguel, ferramentas, etc.)"
         />
         <MetricCard
           title="Imposto Estimado (12%)"
@@ -98,6 +106,8 @@ export function DashboardMonthlyMetrics({
           icon={Receipt}
           delay={105}
           variant="warning"
+          formula="Comissão Total × 12%
+= Estimativa de imposto sobre a receita de comissões"
         />
       </div>
 
@@ -109,6 +119,8 @@ export function DashboardMonthlyMetrics({
           icon={Wallet}
           delay={115}
           variant="danger"
+          formula="Comissão Vendedor + Salários + Marketing + Custos Operacionais + Imposto Estimado
+= Soma de todos os custos da operação"
         />
         <MetricCard
           title="Ticket Médio"
@@ -116,6 +128,8 @@ export function DashboardMonthlyMetrics({
           icon={Target}
           delay={120}
           variant="info"
+          formula="Faturamento Total ÷ Número de Pedidos
+= Valor médio por pedido"
         />
         <MetricCard
           title="Resultado Parcial"
@@ -123,6 +137,8 @@ export function DashboardMonthlyMetrics({
           icon={TrendingUp}
           delay={125}
           variant={resultadoParcial >= 0 ? "success" : "danger"}
+          formula="Ganho Bruto − Custos Proporcionais ao Dia
+= Lucro considerando apenas custos incorridos até hoje (custos mensais ÷ dias úteis × dias úteis passados)"
         />
         <MetricCard
           title="Resultado Final"
@@ -130,6 +146,8 @@ export function DashboardMonthlyMetrics({
           icon={CircleDollarSign}
           delay={130}
           variant={resultado >= 0 ? "success" : "danger"}
+          formula="Comissão Total − Custo Total
+= Comissão Total − (Comissão Vendedor + Salários + Marketing + Custos Op. + Imposto 12%)"
         />
       </div>
     </div>

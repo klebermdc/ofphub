@@ -22,18 +22,21 @@ export function DashboardOperationalMetrics({
         value={String(vendedoresAtivos)}
         icon={Users}
         delay={150}
+        formula="Quantidade de vendedores com pelo menos 1 pedido no período"
       />
       <MetricCard
         title="Pedidos"
         value={String(totalNegocios)}
         icon={Package}
         delay={200}
+        formula="Total de pedidos registrados no período selecionado"
       />
       <MetricCard
         title="Leads"
         value={String(totalLeads)}
         icon={UserPlus}
         delay={225}
+        formula="Total de leads cadastrados na planilha de leads do período"
       />
       <MetricCard
         title="Taxa de Conversão"
@@ -41,6 +44,8 @@ export function DashboardOperationalMetrics({
         icon={Percent}
         delay={250}
         variant={conversionRate >= 10 ? "success" : conversionRate >= 5 ? "warning" : "danger"}
+        formula="(Pedidos ÷ Leads) × 100
+= Percentual de leads que se tornaram pedidos"
       />
     </div>
   );

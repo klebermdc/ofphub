@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
-import { LucideIcon } from "lucide-react";
+import { LucideIcon, Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface MetricCardProps {
   title: string;
@@ -9,6 +10,7 @@ interface MetricCardProps {
   icon: LucideIcon;
   delay?: number;
   variant?: "default" | "success" | "danger" | "warning" | "info";
+  formula?: string;
 }
 
 const variantStyles = {
@@ -51,23 +53,28 @@ export function MetricCard({
   changeType = "neutral", 
   icon: Icon,
   delay = 0,
-  variant = "default"
+  variant = "default",
+  formula
 }: MetricCardProps) {
   const styles = variantStyles[variant];
 
-  return (
+  const cardContent = (
     <div 
       className={cn(
-        "rounded-xl p-4 sm:p-6 animate-slide-up h-full",
+        "rounded-xl p-4 sm:p-6 animate-slide-up h-full relative group",
         "bg-gradient-to-br border",
         styles.gradient,
-        styles.border
+        styles.border,
+        formula && "cursor-help"
       )}
       style={{ animationDelay: `${delay}ms` }}
     >
       <div className="flex items-center gap-2 mb-3">
         <Icon className={cn("h-4 w-4 sm:h-5 sm:w-5", styles.iconColor)} />
-        <p className="text-xs sm:text-sm text-muted-foreground">{title}</p>
+        <p className="text-xs sm:text-sm text-muted-foreground flex-1">{title}</p>
+        {formula && (
+          <Info className="h-3 w-3 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors" />
+        )}
       </div>
       <p className={cn("text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight", styles.valueColor)}>{value}</p>
       {change && (
@@ -81,5 +88,19 @@ export function MetricCard({
         </p>
       )}
     </div>
+  );
+
+  if (!formula) return cardContent;
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        {cardContent}
+      </TooltipTrigger>
+      <TooltipContent side="bottom" className="max-w-[280px] text-xs leading-relaxed">
+        <p className="font-semibold mb-1">📐 Cálculo:</p>
+        <p className="whitespace-pre-line">{formula}</p>
+      </TooltipContent>
+    </Tooltip>
   );
 }
