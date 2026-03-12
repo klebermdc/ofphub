@@ -568,13 +568,6 @@ const Index = () => {
               </ErrorBoundary>
             </TabsContent>
 
-            <TabsContent value="nfse" className="space-y-6">
-              <ErrorBoundary>
-                <Suspense fallback={<TableSkeleton rows={6} columns={6} />}>
-                  <NFSeTab />
-                </Suspense>
-              </ErrorBoundary>
-            </TabsContent>
           </Tabs>
         </main>
       </div>
