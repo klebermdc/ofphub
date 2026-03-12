@@ -9,6 +9,8 @@ import { formatCurrency } from "@/utils/formatters";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { ptBR } from "date-fns/locale";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { DateRange } from "react-day-picker";
 
 interface DailyOrder {
   cliente: string;
