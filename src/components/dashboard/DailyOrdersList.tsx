@@ -289,7 +289,7 @@ export function DailyOrdersList({
         <div className="glass rounded-xl p-6 text-center">
           <Package className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
-            {isFilteringByDate ? "Nenhum pedido nesta data." : "Nenhum pedido registrado neste mês."}
+            {isFiltering ? "Nenhum pedido neste período." : "Nenhum pedido registrado neste mês."}
           </p>
         </div>
       ) : (
