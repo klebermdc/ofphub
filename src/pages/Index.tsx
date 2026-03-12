@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { FileSpreadsheet, Users, Megaphone, Receipt, FileCheck, Kanban, Calendar, ClipboardList } from "lucide-react";
+import { FileSpreadsheet, Users, Megaphone, Receipt, Kanban, Calendar, ClipboardList } from "lucide-react";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { SheetInput } from "@/components/SheetInput";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -49,7 +49,7 @@ const EBITDACard = lazy(() => import("@/components/EBITDACard").then(m => ({ def
 const AccountingTab = lazy(() => import("@/components/AccountingTab").then(m => ({ default: m.AccountingTab })));
 const MarketingTab = lazy(() => import("@/components/MarketingTab").then(m => ({ default: m.MarketingTab })));
 const CRMTab = lazy(() => import("@/components/crm/CRMTab").then(m => ({ default: m.CRMTab })));
-const NFSeTab = lazy(() => import("@/components/nfse/NFSeTab").then(m => ({ default: m.NFSeTab })));
+
 const DashboardMonthlyMetrics = lazy(() => import("@/components/dashboard/DashboardMonthlyMetrics").then(m => ({ default: m.DashboardMonthlyMetrics })));
 const DashboardFortnightMetrics = lazy(() => import("@/components/dashboard/DashboardFortnightMetrics").then(m => ({ default: m.DashboardFortnightMetrics })));
 const DailyOrdersList = lazy(() => import("@/components/dashboard/DailyOrdersList").then(m => ({ default: m.DailyOrdersList })));
@@ -293,22 +293,14 @@ const Index = () => {
                 <Receipt className="h-3 w-3 sm:h-4 sm:w-4 hidden sm:block" />
                 Contabilidade
               </TabsTrigger>
-              <TabsTrigger value="nfse" className="gap-1 text-xs sm:text-sm py-2 hidden sm:flex">
-                <FileCheck className="h-3 w-3 sm:h-4 sm:w-4 hidden sm:block" />
-                NFS-e
-              </TabsTrigger>
             </TabsList>
 
             {/* Mobile additional tabs */}
             <div className="flex sm:hidden gap-2">
-              <TabsList className="grid grid-cols-2 gap-1 w-full h-auto p-1">
+              <TabsList className="grid grid-cols-1 gap-1 w-full h-auto p-1">
                 <TabsTrigger value="contabilidade" className="gap-1 text-xs py-2">
                   <Receipt className="h-3 w-3" />
                   Contabilidade
-                </TabsTrigger>
-                <TabsTrigger value="nfse" className="gap-1 text-xs py-2">
-                  <FileCheck className="h-3 w-3" />
-                  NFS-e
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -576,13 +568,6 @@ const Index = () => {
               </ErrorBoundary>
             </TabsContent>
 
-            <TabsContent value="nfse" className="space-y-6">
-              <ErrorBoundary>
-                <Suspense fallback={<TableSkeleton rows={6} columns={6} />}>
-                  <NFSeTab />
-                </Suspense>
-              </ErrorBoundary>
-            </TabsContent>
           </Tabs>
         </main>
       </div>
