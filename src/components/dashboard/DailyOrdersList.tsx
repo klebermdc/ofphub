@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { OrderFormDialog } from "@/components/OrderFormDialog";
+import { MetricCard } from "@/components/MetricCard";
 import { formatCurrency } from "@/utils/formatters";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { ptBR } from "date-fns/locale";
