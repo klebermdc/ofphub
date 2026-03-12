@@ -394,6 +394,48 @@ export function DailyOrdersList({
               </div>
             )}
           </div>
+
+          {/* Period KPI Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <MetricCard
+              title={`Venda ${periodLabel}`}
+              value={formatCurrency(periodMetrics.totalVenda)}
+              icon={DollarSign}
+              delay={50}
+              formula="Soma de todas as vendas no período filtrado"
+            />
+            <MetricCard
+              title={`Comissão ${periodLabel}`}
+              value={formatCurrency(periodMetrics.totalComissao)}
+              icon={TrendingUp}
+              delay={100}
+              formula="Soma de todas as comissões totais no período filtrado"
+            />
+            <MetricCard
+              title="Comissão Vend."
+              value={formatCurrency(periodMetrics.totalComissaoVendedor)}
+              icon={Wallet}
+              variant="warning"
+              delay={150}
+              formula="Soma das comissões pagas aos vendedores no período"
+            />
+            <MetricCard
+              title={`Ganho ${periodLabel}`}
+              value={formatCurrency(periodMetrics.ganho)}
+              icon={TrendingUp}
+              variant="success"
+              delay={200}
+              formula="Comissão Total - Comissão Vendedor"
+            />
+            <MetricCard
+              title={`Resultado ${periodLabel}`}
+              value={formatCurrency(periodMetrics.resultado)}
+              icon={TrendingUp}
+              variant={periodMetrics.resultado >= 0 ? "success" : "danger"}
+              delay={250}
+              formula="Ganho - Comissão Vendedor"
+            />
+          </div>
         </div>
       )}
     </div>
