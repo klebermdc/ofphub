@@ -8,6 +8,47 @@ const corsHeaders = {
 
 const ALLOWED_TABLES = ['orders', 'crm_leads', 'accounting_entries', 'commission_reports'];
 
+/**
+ * Parse various date formats into ISO YYYY-MM-DD.
+ * Supports: D/M/YY, DD/MM/YY, D/M/YYYY, DD/MM/YYYY, YYYY-MM-DD
+ */
+function normalizeDateToISO(dateStr: string): string {
+  if (!dateStr) return dateStr;
+  const trimmed = dateStr.trim();
+
+  if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(trimmed)) {
+    const [y, m, d] = trimmed.split('-').map(Number);
+    return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  }
+
+  if (/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(trimmed)) {
+    const [d, m, rawY] = trimmed.split('/').map(Number);
+    const y = rawY < 100 ? 2000 + rawY : rawY;
+    return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  }
+
+  return dateStr;
+}
+
+/** Normalize date fields in data before writing to DB */
+function normalizeDataDates(table: string, data: any): any {
+  if (!data || typeof data !== 'object') return data;
+  const dateFields: Record<string, string[]> = {
+    orders: ['data'],
+    commission_orders: ['data'],
+  };
+  const fields = dateFields[table];
+  if (!fields) return data;
+  
+  const normalized = { ...data };
+  for (const field of fields) {
+    if (normalized[field] && typeof normalized[field] === 'string') {
+      normalized[field] = normalizeDateToISO(normalized[field]);
+    }
+  }
+  return normalized;
+}
+
 function jsonResponse(data: unknown, status = 200) {
   return new Response(JSON.stringify(data, null, 2), {
     status,
@@ -69,10 +110,12 @@ serve(async (req) => {
     let result;
 
     if (action === 'insert') {
-      const rows = Array.isArray(data) ? data : [data];
+      const rawRows = Array.isArray(data) ? data : [data];
+      const rows = rawRows.map(r => normalizeDataDates(table, r));
       result = await supabase.from(table).insert(rows).select();
     } else if (action === 'update') {
-      let query = supabase.from(table).update(data);
+      const normalizedData = normalizeDataDates(table, data);
+      let query = supabase.from(table).update(normalizedData);
       for (const [key, value] of Object.entries(match!)) {
         query = query.eq(key, value as string);
       }
