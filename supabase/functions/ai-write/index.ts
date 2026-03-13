@@ -6,7 +6,19 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const ALLOWED_TABLES = ['orders', 'crm_leads', 'accounting_entries', 'commission_reports', 'salesperson_discounts'];
+const ALLOWED_TABLES = [
+  'orders', 'crm_leads', 'accounting_entries', 'commission_reports', 'salesperson_discounts',
+  'marketing_costs', 'marketing_files', 'commission_orders', 'commission_payments',
+  'salesperson_goals', 'salesperson_salaries', 'api_integrations', 'nfse_history',
+  'profiles', 'user_roles', 'user_sheet_settings', 'sales_goals',
+];
+
+/** Map incoming field names to actual DB column names per table */
+const FIELD_MAPPINGS: Record<string, Record<string, string>> = {
+  marketing_costs: {
+    other: 'other_marketing',
+  },
+};
 
 /**
  * Parse various date formats into ISO YYYY-MM-DD.
@@ -156,6 +168,37 @@ serve(async (req) => {
         }
       } else {
         Object.assign(data, await resolve({ ...data }));
+      }
+    }
+
+    // === APPLY FIELD MAPPINGS ===
+    const applyMappings = (row: any) => {
+      const mappings = FIELD_MAPPINGS[table];
+      if (!mappings) return row;
+      const mapped = { ...row };
+      for (const [from, to] of Object.entries(mappings)) {
+        if (from in mapped && !(to in mapped)) {
+          mapped[to] = mapped[from];
+          delete mapped[from];
+        }
+      }
+      return mapped;
+    };
+
+    if (data && typeof data === 'object') {
+      if (Array.isArray(data)) {
+        for (let i = 0; i < data.length; i++) {
+          data[i] = applyMappings(data[i]);
+        }
+      } else {
+        Object.assign(data, applyMappings({ ...data }));
+        // clean old keys
+        const mappings = FIELD_MAPPINGS[table];
+        if (mappings) {
+          for (const from of Object.keys(mappings)) {
+            if (from in data && from !== mappings[from]) delete data[from];
+          }
+        }
       }
     }
 
