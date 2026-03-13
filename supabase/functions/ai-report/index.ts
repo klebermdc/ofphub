@@ -13,6 +13,40 @@ function jsonResponse(data: unknown, status = 200) {
   });
 }
 
+/**
+ * Parse various date formats into ISO YYYY-MM-DD.
+ * Supports: D/M/YY, DD/MM/YY, D/M/YYYY, DD/MM/YYYY, YYYY-MM-DD
+ */
+function parseDateToISO(dateStr: string): string | null {
+  if (!dateStr) return null;
+  const trimmed = dateStr.trim();
+
+  // Already ISO
+  if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(trimmed)) {
+    const [y, m, d] = trimmed.split('-').map(Number);
+    return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  }
+
+  // D/M/YY or DD/MM/YYYY variants
+  if (/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(trimmed)) {
+    const [d, m, rawY] = trimmed.split('/').map(Number);
+    const y = rawY < 100 ? 2000 + rawY : rawY;
+    return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  }
+
+  return null;
+}
+
+/**
+ * Extract month and year from a date string (any supported format).
+ */
+function extractMonthYear(dateStr: string): { month: number; year: number } | null {
+  const iso = parseDateToISO(dateStr);
+  if (!iso) return null;
+  const [y, m] = iso.split('-').map(Number);
+  return { month: m, year: y };
+}
+
 function mapOrder(o: any) {
   return {
     pedido: o.pedido, cliente: o.cliente, vendedor: o.vendedor,
@@ -48,7 +82,7 @@ serve(async (req) => {
     const yearParam = url.searchParams.get('year');
     const vendedorParam = url.searchParams.get('vendedor');
     const statusParam = url.searchParams.get('status');
-    const limitParam = Math.min(Math.max(parseInt(url.searchParams.get('limit') || '1000') || 1000, 1), 1000);
+    const limitParam = Math.min(Math.max(parseInt(url.searchParams.get('limit') || '5000') || 5000, 1), 5000);
 
     const hasDateFilters = dateParam || (startDateParam && endDateParam);
     const hasMonthFilter = monthParam || yearParam;
@@ -56,59 +90,95 @@ serve(async (req) => {
 
     // === FILTERED MODE ===
     if (hasSpecificFilters) {
+      // Build base query — we'll fetch and filter in-memory for date robustness
       let query = supabase.from('orders').select('*');
 
-      // Date range or single date
-      let rangeStart: string | null = null;
-      let rangeEnd: string | null = null;
-
-      if (dateParam) {
-        rangeStart = dateParam;
-        rangeEnd = dateParam;
-        query = query.eq('data', dateParam);
-      } else if (startDateParam && endDateParam) {
-        rangeStart = startDateParam;
-        rangeEnd = endDateParam;
-        query = query.gte('data', startDateParam).lte('data', endDateParam);
-      } else if (hasMonthFilter) {
-        // Month/year filter — compute ISO date range for the month
-        const now = new Date();
-        const m = parseInt(monthParam || String(now.getMonth() + 1));
-        const y = parseInt(yearParam || String(now.getFullYear()));
-        const firstDay = `${y}-${String(m).padStart(2, '0')}-01`;
-        const lastDay = new Date(y, m, 0); // last day of month
-        const lastDayStr = `${y}-${String(m).padStart(2, '0')}-${String(lastDay.getDate()).padStart(2, '0')}`;
-        rangeStart = firstDay;
-        rangeEnd = lastDayStr;
-        query = query.gte('data', firstDay).lte('data', lastDayStr);
-      }
-
-      // Vendedor filter
+      // Vendedor filter (can be done at DB level)
       if (vendedorParam) {
         query = query.ilike('vendedor', `%${vendedorParam}%`);
       }
-
       // Status filter
       if (statusParam) {
         query = query.ilike('status', `%${statusParam}%`);
       }
 
-      const { data: orders, error } = await query.order('data', { ascending: false }).limit(limitParam);
+      // For date filtering, we use the DB function normalize_date_to_iso for comparison
+      // Since we already normalized existing data, ISO comparison should work
+      // But we also parse the incoming params to handle any format
+      let filterStartISO: string | null = null;
+      let filterEndISO: string | null = null;
+      let filterMonth: number | null = null;
+      let filterYear: number | null = null;
+
+      if (dateParam) {
+        const iso = parseDateToISO(dateParam);
+        if (iso) {
+          filterStartISO = iso;
+          filterEndISO = iso;
+          query = query.eq('data', iso);
+        }
+      } else if (startDateParam && endDateParam) {
+        filterStartISO = parseDateToISO(startDateParam);
+        filterEndISO = parseDateToISO(endDateParam);
+        if (filterStartISO && filterEndISO) {
+          query = query.gte('data', filterStartISO).lte('data', filterEndISO);
+        }
+      } else if (hasMonthFilter) {
+        const now = new Date();
+        filterMonth = parseInt(monthParam || String(now.getMonth() + 1));
+        filterYear = parseInt(yearParam || String(now.getFullYear()));
+        const firstDay = `${filterYear}-${String(filterMonth).padStart(2, '0')}-01`;
+        const lastDay = new Date(filterYear, filterMonth, 0);
+        const lastDayStr = `${filterYear}-${String(filterMonth).padStart(2, '0')}-${String(lastDay.getDate()).padStart(2, '0')}`;
+        filterStartISO = firstDay;
+        filterEndISO = lastDayStr;
+        query = query.gte('data', firstDay).lte('data', lastDayStr);
+      }
+
+      const { data: dbOrders, error } = await query.order('data', { ascending: false }).limit(limitParam);
       if (error) throw error;
 
-      const ordersList = orders || [];
+      // Secondary in-memory filter for any dates that weren't normalized yet
+      let ordersList = dbOrders || [];
+      if (filterStartISO && filterEndISO && !dateParam) {
+        // Also fetch orders that might have non-ISO dates and were missed by DB filter
+        const { data: allOrders } = await supabase.from('orders').select('*')
+          .order('data', { ascending: false }).limit(5000);
+        
+        if (allOrders) {
+          const existingIds = new Set(ordersList.map(o => o.id));
+          const extraOrders = allOrders.filter(o => {
+            if (existingIds.has(o.id)) return false;
+            const iso = parseDateToISO(o.data);
+            if (!iso) return false;
+            if (iso < filterStartISO! || iso > filterEndISO!) return false;
+            if (vendedorParam && !o.vendedor?.toLowerCase().includes(vendedorParam.toLowerCase())) return false;
+            if (statusParam && !o.status?.toLowerCase().includes(statusParam.toLowerCase())) return false;
+            return true;
+          });
+          ordersList = [...ordersList, ...extraOrders];
+        }
+
+        // Sort by normalized date descending
+        ordersList.sort((a, b) => {
+          const da = parseDateToISO(a.data) || a.data;
+          const db = parseDateToISO(b.data) || b.data;
+          return db.localeCompare(da);
+        });
+      }
+
       const totalRevenue = ordersList.reduce((sum, o) => sum + Number(o.venda || 0), 0);
       const totalCommission = ordersList.reduce((sum, o) => sum + Number(o.comissao_total || 0), 0);
 
-      // Build month_summary if month filter is active
+      // Build month_summary
       let monthSummary = null;
-      if (hasMonthFilter || (rangeStart && rangeEnd)) {
+      if (filterStartISO && filterEndISO) {
         const dateMap: Record<string, { orders: number; revenue: number }> = {};
         ordersList.forEach(o => {
-          const d = o.data;
-          if (!dateMap[d]) dateMap[d] = { orders: 0, revenue: 0 };
-          dateMap[d].orders += 1;
-          dateMap[d].revenue += Number(o.venda || 0);
+          const iso = parseDateToISO(o.data) || o.data;
+          if (!dateMap[iso]) dateMap[iso] = { orders: 0, revenue: 0 };
+          dateMap[iso].orders += 1;
+          dateMap[iso].revenue += Number(o.venda || 0);
         });
 
         const ordersByDate = Object.entries(dateMap)
@@ -144,14 +214,14 @@ serve(async (req) => {
         filters_applied: {
           ...(dateParam && { date: dateParam }),
           ...(startDateParam && endDateParam && { start_date: startDateParam, end_date: endDateParam }),
-          ...(hasMonthFilter && { month: parseInt(monthParam || '0'), year: parseInt(yearParam || '0') }),
+          ...(hasMonthFilter && { month: filterMonth, year: filterYear }),
           ...(vendedorParam && { vendedor: vendedorParam }),
           ...(statusParam && { status: statusParam }),
         },
         total_revenue: totalRevenue,
         total_commission: totalCommission,
         total_orders: ordersList.length,
-        ...(rangeStart && rangeEnd && { date_range: { start: rangeStart, end: rangeEnd } }),
+        ...(filterStartISO && filterEndISO && { date_range: { start: filterStartISO, end: filterEndISO } }),
         ...(monthSummary && { month_summary: monthSummary }),
         sellers_breakdown: sellers,
         orders: ordersList.map(mapOrder),
