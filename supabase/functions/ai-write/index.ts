@@ -114,7 +114,8 @@ serve(async (req) => {
       const rows = rawRows.map(r => normalizeDataDates(table, r));
       result = await supabase.from(table).insert(rows).select();
     } else if (action === 'update') {
-      let query = supabase.from(table).update(data);
+      const normalizedData = normalizeDataDates(table, data);
+      let query = supabase.from(table).update(normalizedData);
       for (const [key, value] of Object.entries(match!)) {
         query = query.eq(key, value as string);
       }
