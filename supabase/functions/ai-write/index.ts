@@ -109,8 +109,21 @@ serve(async (req) => {
     // === RESOLVE user_id FOR salesperson_discounts ===
     if (table === 'salesperson_discounts' && (action === 'insert' || action === 'update')) {
       const resolve = async (row: any) => {
+        // Lookup by salesperson_email first (direct auth.users lookup)
+        if (!row.user_id && row.salesperson_email) {
+          const { data: authData } = await supabase.auth.admin.listUsers();
+          const matchedUser = authData?.users?.find(
+            (u: any) => u.email?.toLowerCase() === row.salesperson_email.toLowerCase()
+          );
+          if (matchedUser) {
+            row.user_id = matchedUser.id;
+          }
+          if (!row.user_id) {
+            throw new Error(`Could not resolve user_id for salesperson_email "${row.salesperson_email}". No matching auth user found.`);
+          }
+        }
+        // Fallback: lookup by salesperson_name
         if (!row.user_id && row.salesperson_name) {
-          // Lookup user_id from profiles by matching salesperson_name to full_name or email
           const { data: profile } = await supabase
             .from('profiles')
             .select('id')
@@ -120,7 +133,6 @@ serve(async (req) => {
           if (profile) {
             row.user_id = profile.id;
           } else {
-            // Try user_roles table as fallback
             const { data: role } = await supabase
               .from('user_roles')
               .select('user_id')
