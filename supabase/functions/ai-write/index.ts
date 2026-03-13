@@ -6,7 +6,19 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const ALLOWED_TABLES = ['orders', 'crm_leads', 'accounting_entries', 'commission_reports', 'salesperson_discounts'];
+const ALLOWED_TABLES = [
+  'orders', 'crm_leads', 'accounting_entries', 'commission_reports', 'salesperson_discounts',
+  'marketing_costs', 'marketing_files', 'commission_orders', 'commission_payments',
+  'salesperson_goals', 'salesperson_salaries', 'api_integrations', 'nfse_history',
+  'profiles', 'user_roles', 'user_sheet_settings', 'sales_goals',
+];
+
+/** Map incoming field names to actual DB column names per table */
+const FIELD_MAPPINGS: Record<string, Record<string, string>> = {
+  marketing_costs: {
+    other: 'other_marketing',
+  },
+};
 
 /**
  * Parse various date formats into ISO YYYY-MM-DD.
