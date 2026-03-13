@@ -118,6 +118,32 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
+    // === AUTO-FILL user_id FOR marketing_costs ===
+    if (table === 'marketing_costs' && (action === 'insert' || action === 'update')) {
+      const fillUserId = async (row: any) => {
+        if (!row.user_id) {
+          const { data: authData } = await supabase.auth.admin.listUsers();
+          const systemUser = authData?.users?.find(
+            (u: any) => u.email?.toLowerCase() === 'comercial@orlandofastpass.com.br'
+          );
+          if (systemUser) {
+            row.user_id = systemUser.id;
+          } else {
+            throw new Error('Could not resolve system user_id for marketing_costs. No user found with email comercial@orlandofastpass.com.br');
+          }
+        }
+        return row;
+      };
+
+      if (Array.isArray(data)) {
+        for (let i = 0; i < data.length; i++) {
+          data[i] = await fillUserId(data[i]);
+        }
+      } else {
+        Object.assign(data, await fillUserId({ ...data }));
+      }
+    }
+
     // === RESOLVE user_id FOR salesperson_discounts ===
     if (table === 'salesperson_discounts' && (action === 'insert' || action === 'update')) {
       const resolve = async (row: any) => {
