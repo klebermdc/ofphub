@@ -115,7 +115,6 @@ serve(async (req) => {
         if (iso) {
           filterStartISO = iso;
           filterEndISO = iso;
-          query = query.eq('data', iso);
         }
       } else if (startDateParam && endDateParam) {
         filterStartISO = parseDateToISO(startDateParam);
@@ -135,13 +134,28 @@ serve(async (req) => {
         // All date filtering will be done in-memory below.
       }
 
-      const { data: dbOrders, error } = await query.order('data', { ascending: false }).limit(limitParam);
-      if (error) throw error;
+      // Fetch all matching rows with pagination (PostgREST can cap responses around 1000 rows)
+      const pageSize = 1000;
+      const pagedOrders: any[] = [];
+      for (let offset = 0; offset < limitParam; offset += pageSize) {
+        const rangeEnd = Math.min(offset + pageSize - 1, limitParam - 1);
+        const { data: page, error } = await query
+          .order('created_at', { ascending: false })
+          .range(offset, rangeEnd);
 
-      let ordersList = dbOrders || [];
+        if (error) throw error;
+        if (!page || page.length === 0) break;
 
-      // For month/year or date-range filters, do in-memory filtering by normalizing every date
-      if (filterStartISO && filterEndISO && !dateParam) {
+        pagedOrders.push(...page);
+
+        const expectedCount = rangeEnd - offset + 1;
+        if (page.length < expectedCount) break;
+      }
+
+      let ordersList = pagedOrders;
+
+      // For date filters, do in-memory filtering by normalizing every date
+      if (filterStartISO && filterEndISO) {
         ordersList = ordersList.filter(o => {
           const iso = parseDateToISO(o.data);
           if (!iso) return false;
