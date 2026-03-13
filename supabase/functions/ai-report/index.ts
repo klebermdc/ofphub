@@ -120,9 +120,8 @@ serve(async (req) => {
       } else if (startDateParam && endDateParam) {
         filterStartISO = parseDateToISO(startDateParam);
         filterEndISO = parseDateToISO(endDateParam);
-        if (filterStartISO && filterEndISO) {
-          query = query.gte('data', filterStartISO).lte('data', filterEndISO);
-        }
+        // Do NOT apply DB-level date filter — dates may be in mixed formats.
+        // All date filtering will be done in-memory below.
       } else if (hasMonthFilter) {
         const now = new Date();
         filterMonth = parseInt(monthParam || String(now.getMonth() + 1));
