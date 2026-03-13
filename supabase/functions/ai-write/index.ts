@@ -171,6 +171,37 @@ serve(async (req) => {
       }
     }
 
+    // === APPLY FIELD MAPPINGS ===
+    const applyMappings = (row: any) => {
+      const mappings = FIELD_MAPPINGS[table];
+      if (!mappings) return row;
+      const mapped = { ...row };
+      for (const [from, to] of Object.entries(mappings)) {
+        if (from in mapped && !(to in mapped)) {
+          mapped[to] = mapped[from];
+          delete mapped[from];
+        }
+      }
+      return mapped;
+    };
+
+    if (data && typeof data === 'object') {
+      if (Array.isArray(data)) {
+        for (let i = 0; i < data.length; i++) {
+          data[i] = applyMappings(data[i]);
+        }
+      } else {
+        Object.assign(data, applyMappings({ ...data }));
+        // clean old keys
+        const mappings = FIELD_MAPPINGS[table];
+        if (mappings) {
+          for (const from of Object.keys(mappings)) {
+            if (from in data && from !== mappings[from]) delete data[from];
+          }
+        }
+      }
+    }
+
     // === EXECUTE ===
     let result;
 
