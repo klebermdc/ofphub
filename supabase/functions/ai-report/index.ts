@@ -120,9 +120,8 @@ serve(async (req) => {
       } else if (startDateParam && endDateParam) {
         filterStartISO = parseDateToISO(startDateParam);
         filterEndISO = parseDateToISO(endDateParam);
-        if (filterStartISO && filterEndISO) {
-          query = query.gte('data', filterStartISO).lte('data', filterEndISO);
-        }
+        // Do NOT apply DB-level date filter — dates may be in mixed formats.
+        // All date filtering will be done in-memory below.
       } else if (hasMonthFilter) {
         const now = new Date();
         filterMonth = parseInt(monthParam || String(now.getMonth() + 1));
@@ -132,32 +131,22 @@ serve(async (req) => {
         const lastDayStr = `${filterYear}-${String(filterMonth).padStart(2, '0')}-${String(lastDay.getDate()).padStart(2, '0')}`;
         filterStartISO = firstDay;
         filterEndISO = lastDayStr;
-        query = query.gte('data', firstDay).lte('data', lastDayStr);
+        // Do NOT apply DB-level date filter here — dates may be in mixed formats.
+        // All date filtering will be done in-memory below.
       }
 
       const { data: dbOrders, error } = await query.order('data', { ascending: false }).limit(limitParam);
       if (error) throw error;
 
-      // Secondary in-memory filter for any dates that weren't normalized yet
       let ordersList = dbOrders || [];
+
+      // For month/year or date-range filters, do in-memory filtering by normalizing every date
       if (filterStartISO && filterEndISO && !dateParam) {
-        // Also fetch orders that might have non-ISO dates and were missed by DB filter
-        const { data: allOrders } = await supabase.from('orders').select('*')
-          .order('data', { ascending: false }).limit(5000);
-        
-        if (allOrders) {
-          const existingIds = new Set(ordersList.map(o => o.id));
-          const extraOrders = allOrders.filter(o => {
-            if (existingIds.has(o.id)) return false;
-            const iso = parseDateToISO(o.data);
-            if (!iso) return false;
-            if (iso < filterStartISO! || iso > filterEndISO!) return false;
-            if (vendedorParam && !o.vendedor?.toLowerCase().includes(vendedorParam.toLowerCase())) return false;
-            if (statusParam && !o.status?.toLowerCase().includes(statusParam.toLowerCase())) return false;
-            return true;
-          });
-          ordersList = [...ordersList, ...extraOrders];
-        }
+        ordersList = ordersList.filter(o => {
+          const iso = parseDateToISO(o.data);
+          if (!iso) return false;
+          return iso >= filterStartISO! && iso <= filterEndISO!;
+        });
 
         // Sort by normalized date descending
         ordersList.sort((a, b) => {
