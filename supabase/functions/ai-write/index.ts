@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const ALLOWED_TABLES = ['orders', 'crm_leads', 'accounting_entries', 'commission_reports'];
+const ALLOWED_TABLES = ['orders', 'crm_leads', 'accounting_entries', 'commission_reports', 'salesperson_discounts'];
 
 /**
  * Parse various date formats into ISO YYYY-MM-DD.
