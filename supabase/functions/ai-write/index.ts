@@ -106,6 +106,47 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
+    // === RESOLVE user_id FOR salesperson_discounts ===
+    if (table === 'salesperson_discounts' && (action === 'insert' || action === 'update')) {
+      const resolve = async (row: any) => {
+        if (!row.user_id && row.salesperson_name) {
+          // Lookup user_id from profiles by matching salesperson_name to full_name or email
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('id')
+            .or(`full_name.ilike.%${row.salesperson_name}%,email.ilike.%${row.salesperson_name}%`)
+            .limit(1)
+            .single();
+          if (profile) {
+            row.user_id = profile.id;
+          } else {
+            // Try user_roles table as fallback
+            const { data: role } = await supabase
+              .from('user_roles')
+              .select('user_id')
+              .ilike('salesperson_name', `%${row.salesperson_name}%`)
+              .limit(1)
+              .single();
+            if (role) {
+              row.user_id = role.user_id;
+            }
+          }
+          if (!row.user_id) {
+            throw new Error(`Could not resolve user_id for salesperson_name "${row.salesperson_name}". No matching profile found.`);
+          }
+        }
+        return row;
+      };
+
+      if (Array.isArray(data)) {
+        for (let i = 0; i < data.length; i++) {
+          data[i] = await resolve(data[i]);
+        }
+      } else {
+        Object.assign(data, await resolve({ ...data }));
+      }
+    }
+
     // === EXECUTE ===
     let result;
 
