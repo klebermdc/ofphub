@@ -110,7 +110,8 @@ serve(async (req) => {
     let result;
 
     if (action === 'insert') {
-      const rows = Array.isArray(data) ? data : [data];
+      const rawRows = Array.isArray(data) ? data : [data];
+      const rows = rawRows.map(r => normalizeDataDates(table, r));
       result = await supabase.from(table).insert(rows).select();
     } else if (action === 'update') {
       let query = supabase.from(table).update(data);
