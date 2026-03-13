@@ -803,6 +803,7 @@ export type Database = {
         Args: { _salesperson_name: string; _target_user_id: string }
         Returns: boolean
       }
+      normalize_date_to_iso: { Args: { date_str: string }; Returns: string }
     }
     Enums: {
       app_role: "manager" | "salesperson" | "marketing"
