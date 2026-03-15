@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { RefreshCw, Bot, Activity, AlertTriangle, CheckCircle2, Clock, Zap, Filter, ArrowLeft } from "lucide-react";
+import { RefreshCw, Bot, Activity, AlertTriangle, CheckCircle2, Clock, Zap, Filter, ArrowLeft, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -121,19 +122,24 @@ function SummaryBar({ agents }: { agents: AgentActivity[] }) {
   const healthy = agents.filter(a => a.status === "success").length;
   const lastAgent = agents.length
     ? [...agents].sort((a, b) =>
-        (b.last_run_at || "").localeCompare(a.last_run_at || "")
+        (b.updated_at || "").localeCompare(a.updated_at || "")
       )[0]
     : null;
+  const lastGlobalUpdate = lastAgent
+    ? new Date(lastAgent.updated_at).toLocaleString("pt-BR", {
+        day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit",
+      })
+    : "—";
 
   const items = [
-    { icon: Bot, label: "Agentes", value: total, color: "text-foreground" },
-    { icon: Zap, label: "Rodando", value: running, color: "text-blue-500" },
-    { icon: AlertTriangle, label: "Com Erro", value: errors, color: "text-destructive" },
-    { icon: CheckCircle2, label: "Saudáveis", value: healthy, color: "text-emerald-500" },
+    { icon: Bot, label: "Agentes", value: String(total), color: "text-foreground" },
+    { icon: Zap, label: "Rodando", value: String(running), color: "text-blue-500" },
+    { icon: CheckCircle2, label: "Saudáveis", value: String(healthy), color: "text-emerald-500" },
+    { icon: AlertTriangle, label: "Com Erro", value: String(errors), color: "text-destructive" },
   ];
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
       {items.map((item) => (
         <div key={item.label} className="rounded-xl border bg-card p-3 sm:p-4 flex items-center gap-3">
           <item.icon className={`h-5 w-5 ${item.color}`} />
@@ -143,17 +149,23 @@ function SummaryBar({ agents }: { agents: AgentActivity[] }) {
           </div>
         </div>
       ))}
-      <div className="rounded-xl border bg-card p-3 sm:p-4 flex items-center gap-3 col-span-2 sm:col-span-1">
+      <div className="rounded-xl border bg-card p-3 sm:p-4 flex items-center gap-3">
         <Clock className="h-5 w-5 text-muted-foreground" />
         <div className="min-w-0">
           <p className="text-sm font-semibold truncate">{lastAgent?.agent_name || "—"}</p>
-          <p className="text-xs text-muted-foreground">Último executado</p>
+          <p className="text-xs text-muted-foreground">Último atualizado</p>
+        </div>
+      </div>
+      <div className="rounded-xl border bg-card p-3 sm:p-4 flex items-center gap-3">
+        <Activity className="h-5 w-5 text-muted-foreground" />
+        <div className="min-w-0">
+          <p className="text-sm font-semibold truncate">{lastGlobalUpdate}</p>
+          <p className="text-xs text-muted-foreground">Última atualização</p>
         </div>
       </div>
     </div>
   );
 }
-
 function AgentDetailDrawer({
   agent,
   open,
@@ -260,15 +272,18 @@ export default function AgentsPage() {
   const [nameFilter, setNameFilter] = useState("all");
   const [selectedAgent, setSelectedAgent] = useState<AgentActivity | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [search, setSearch] = useState("");
 
   const filtered = useMemo(() => {
+    const q = search.toLowerCase();
     return agents.filter((a) => {
       if (areaFilter !== "all" && a.area !== areaFilter) return false;
       if (statusFilter !== "all" && a.status !== statusFilter) return false;
       if (nameFilter !== "all" && a.agent_key !== nameFilter) return false;
+      if (q && !a.agent_name.toLowerCase().includes(q) && !(a.last_action || "").toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [agents, areaFilter, statusFilter, nameFilter]);
+  }, [agents, areaFilter, statusFilter, nameFilter, search]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -319,7 +334,16 @@ export default function AgentsPage() {
 
             {/* Filters */}
             <div className="flex flex-wrap items-center gap-2">
-              <Filter className="h-4 w-4 text-muted-foreground" />
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar agente ou ação..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-8 h-9 w-[200px] text-sm"
+                />
+              </div>
+              <Filter className="h-4 w-4 text-muted-foreground ml-1" />
               <Select value={areaFilter} onValueChange={setAreaFilter}>
                 <SelectTrigger className="w-[140px] h-9 text-sm">
                   <SelectValue placeholder="Área" />

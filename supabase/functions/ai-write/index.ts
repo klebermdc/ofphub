@@ -10,7 +10,7 @@ const ALLOWED_TABLES = [
   'orders', 'crm_leads', 'accounting_entries', 'commission_reports', 'salesperson_discounts',
   'marketing_costs', 'marketing_files', 'commission_orders', 'commission_payments',
   'salesperson_goals', 'salesperson_salaries', 'api_integrations', 'nfse_history',
-  'profiles', 'user_roles', 'user_sheet_settings', 'sales_goals',
+  'profiles', 'user_roles', 'user_sheet_settings', 'sales_goals', 'agent_activity',
 ];
 
 /** Map incoming field names to actual DB column names per table */
@@ -100,13 +100,13 @@ serve(async (req) => {
     }
 
     // === VALIDATE ACTION ===
-    if (!action || !['insert', 'update', 'delete'].includes(action)) {
-      return jsonResponse({ error: 'Invalid action. Allowed: insert, update, delete' }, 400);
+    if (!action || !['insert', 'update', 'delete', 'upsert'].includes(action)) {
+      return jsonResponse({ error: 'Invalid action. Allowed: insert, update, delete, upsert' }, 400);
     }
 
     // === VALIDATE DATA/MATCH ===
-    if ((action === 'insert' || action === 'update') && (!data || typeof data !== 'object')) {
-      return jsonResponse({ error: '"data" object is required for insert/update' }, 400);
+    if ((action === 'insert' || action === 'update' || action === 'upsert') && (!data || typeof data !== 'object')) {
+      return jsonResponse({ error: '"data" object is required for insert/update/upsert' }, 400);
     }
 
     if ((action === 'update' || action === 'delete') && (!match || typeof match !== 'object' || Object.keys(match).length === 0)) {
@@ -235,6 +235,11 @@ serve(async (req) => {
       const rawRows = Array.isArray(data) ? data : [data];
       const rows = rawRows.map(r => normalizeDataDates(table, r));
       result = await supabase.from(table).insert(rows).select();
+    } else if (action === 'upsert') {
+      const rawRows = Array.isArray(data) ? data : [data];
+      const rows = rawRows.map(r => normalizeDataDates(table, r));
+      const onConflict = body.on_conflict || undefined;
+      result = await supabase.from(table).upsert(rows, { onConflict }).select();
     } else if (action === 'update') {
       const normalizedData = normalizeDataDates(table, data);
       let query = supabase.from(table).update(normalizedData);
