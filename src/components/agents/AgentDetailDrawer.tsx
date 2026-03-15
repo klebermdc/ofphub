@@ -86,6 +86,11 @@ export function AgentDetailDrawer({
                 <Shield className="h-2.5 w-2.5 mr-0.5" />{agent.experience_level}
               </Badge>
             )}
+            {showHealth && (
+              <Badge className={`text-[10px] ${healthCfg.bgClass} ${healthCfg.color} border-0`}>
+                <HeartPulse className="h-2.5 w-2.5 mr-0.5" />{healthCfg.label}
+              </Badge>
+            )}
           </DrawerDescription>
         </DrawerHeader>
         <div className="px-4 pb-6 overflow-y-auto">

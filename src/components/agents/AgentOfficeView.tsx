@@ -129,6 +129,11 @@ function AgentDesk({ agent, onClick }: { agent: AgentActivity; onClick: () => vo
           <div className="space-y-1">
             <p className="font-semibold text-xs">{agent.agent_name}</p>
             <p className={`text-[10px] ${cfg.color} font-medium`}>{cfg.label}</p>
+            {(isHealthWarning || isHealthCritical) && (
+              <p className={`text-[10px] font-medium ${isHealthCritical ? "text-red-500" : "text-yellow-500"}`}>
+                {isHealthCritical ? "🔴 Crítico" : "⚠️ Atenção"}{agent.health_reason ? `: ${agent.health_reason}` : ""}
+              </p>
+            )}
             {agent.last_action && (
               <p className="text-[10px] text-muted-foreground line-clamp-2">{agent.last_action}</p>
             )}
