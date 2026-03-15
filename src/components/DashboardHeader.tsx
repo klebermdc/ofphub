@@ -84,6 +84,13 @@ export function DashboardHeader({ availableSalespeople = [] }: DashboardHeaderPr
               <DropdownMenuSeparator />
               <DropdownMenuItem 
                 className="gap-2 cursor-pointer"
+                onClick={() => navigate('/agentes')}
+              >
+                <Bot className="h-4 w-4" />
+                Central de Agentes
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                className="gap-2 cursor-pointer"
                 onClick={() => setUsersDialogOpen(true)}
               >
                 <Users className="h-4 w-4" />
