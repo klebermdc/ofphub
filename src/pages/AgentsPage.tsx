@@ -181,6 +181,17 @@ export default function AgentsPage() {
                   ))}
                 </SelectContent>
               </Select>
+              <Select value={healthFilter} onValueChange={setHealthFilter}>
+                <SelectTrigger className="w-[120px] h-8 text-xs">
+                  <SelectValue placeholder="Saúde" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toda saúde</SelectItem>
+                  {HEALTH_LEVELS.filter(h => h !== "all").map((h) => (
+                    <SelectItem key={h} value={h}>{HEALTH_CONFIG[h]?.label || h}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Select value={nameFilter} onValueChange={setNameFilter}>
                 <SelectTrigger className="w-[130px] h-8 text-xs">
                   <SelectValue placeholder="Agente" />
