@@ -105,8 +105,8 @@ serve(async (req) => {
     }
 
     // === VALIDATE DATA/MATCH ===
-    if ((action === 'insert' || action === 'update') && (!data || typeof data !== 'object')) {
-      return jsonResponse({ error: '"data" object is required for insert/update' }, 400);
+    if ((action === 'insert' || action === 'update' || action === 'upsert') && (!data || typeof data !== 'object')) {
+      return jsonResponse({ error: '"data" object is required for insert/update/upsert' }, 400);
     }
 
     if ((action === 'update' || action === 'delete') && (!match || typeof match !== 'object' || Object.keys(match).length === 0)) {
