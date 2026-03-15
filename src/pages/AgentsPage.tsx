@@ -101,10 +101,28 @@ export default function AgentsPage() {
               </div>
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing} className="text-xs h-8">
-            <RefreshCw className={`h-3.5 w-3.5 mr-1 ${refreshing ? "animate-spin" : ""}`} />
-            Atualizar
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button
+              variant={viewMode === "office" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("office")}
+              className="text-xs h-8 px-2"
+            >
+              <Building2 className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant={viewMode === "cards" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("cards")}
+              className="text-xs h-8 px-2"
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing} className="text-xs h-8">
+              <RefreshCw className={`h-3.5 w-3.5 mr-1 ${refreshing ? "animate-spin" : ""}`} />
+              Atualizar
+            </Button>
+          </div>
         </div>
       </header>
 
