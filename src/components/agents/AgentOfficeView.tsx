@@ -94,6 +94,7 @@ function AgentDesk({ agent, onClick }: { agent: AgentActivity; onClick: () => vo
                   <ShieldAlert className="h-2.5 w-2.5 text-white" />
                 </div>
               )}
+            </div>
 
             {/* Desk base */}
             <div className={`w-20 sm:w-24 h-6 sm:h-7 rounded-md border flex items-center justify-center transition-colors ${
