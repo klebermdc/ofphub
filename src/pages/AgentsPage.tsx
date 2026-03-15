@@ -61,6 +61,7 @@ export default function AgentsPage() {
       if (areaFilter !== "all" && a.area !== areaFilter) return false;
       if (statusFilter !== "all" && a.status !== statusFilter) return false;
       if (expFilter !== "all" && a.experience_level !== expFilter) return false;
+      if (healthFilter !== "all" && (a.health_level || "healthy") !== healthFilter) return false;
       if (nameFilter !== "all" && a.agent_key !== nameFilter) return false;
       if (q && !a.agent_name.toLowerCase().includes(q)
         && !(a.last_action || "").toLowerCase().includes(q)
