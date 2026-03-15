@@ -12,7 +12,8 @@ import { SummaryBar } from "@/components/agents/SummaryBar";
 import { AgentDetailDrawer } from "@/components/agents/AgentDetailDrawer";
 import { AgentOfficeView } from "@/components/agents/AgentOfficeView";
 import {
-  AREAS, STATUSES, EXPERIENCE_LEVELS, AREA_LABELS, STATUS_CONFIG,
+  AREAS, STATUSES, EXPERIENCE_LEVELS, HEALTH_LEVELS, HEALTH_CONFIG,
+  AREA_LABELS, STATUS_CONFIG,
   SORT_OPTIONS, SortOption, sortAgents,
 } from "@/components/agents/agentUtils";
 
