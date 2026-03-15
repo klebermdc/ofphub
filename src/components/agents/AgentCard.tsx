@@ -8,6 +8,8 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 export function AgentCard({ agent, onClick }: { agent: AgentActivity; onClick: () => void }) {
   const cfg = STATUS_CONFIG[agent.status] || STATUS_CONFIG.idle;
+  const healthCfg = HEALTH_CONFIG[agent.health_level || "healthy"] || HEALTH_CONFIG.healthy;
+  const showHealth = agent.health_level && agent.health_level !== "healthy";
 
   return (
     <Card
