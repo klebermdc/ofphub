@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AgentCard } from "@/components/agents/AgentCard";
 import { SummaryBar } from "@/components/agents/SummaryBar";
 import { AgentDetailDrawer } from "@/components/agents/AgentDetailDrawer";
+import { AgentOfficeView } from "@/components/agents/AgentOfficeView";
 import {
   AREAS, STATUSES, EXPERIENCE_LEVELS, AREA_LABELS, STATUS_CONFIG,
   SORT_OPTIONS, SortOption, sortAgents,
