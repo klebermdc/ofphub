@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { LogOut, User, Settings, Users, Sun, Moon } from "lucide-react";
+import { LogOut, User, Settings, Users, Sun, Moon, Bot } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -82,6 +82,13 @@ export function DashboardHeader({ availableSalespeople = [] }: DashboardHeaderPr
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                className="gap-2 cursor-pointer"
+                onClick={() => navigate('/agentes')}
+              >
+                <Bot className="h-4 w-4" />
+                Central de Agentes
+              </DropdownMenuItem>
               <DropdownMenuItem 
                 className="gap-2 cursor-pointer"
                 onClick={() => setUsersDialogOpen(true)}
