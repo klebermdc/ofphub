@@ -1,7 +1,7 @@
 import { AgentActivity } from "@/hooks/useAgentActivity";
 import { AGENT_AVATARS } from "./agentAvatars";
-import { STATUS_CONFIG, AREA_LABELS, formatTimeAgo } from "./agentUtils";
-import { Monitor, Coffee, AlertTriangle, Zap } from "lucide-react";
+import { STATUS_CONFIG, AREA_LABELS, HEALTH_CONFIG, formatTimeAgo } from "./agentUtils";
+import { Monitor, Coffee, AlertTriangle, Zap, ShieldAlert } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 // Office desk positions in a grid layout
