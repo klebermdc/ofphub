@@ -51,6 +51,7 @@ export default function AgentsPage() {
   const [selectedAgent, setSelectedAgent] = useState<AgentActivity | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
+  const [viewMode, setViewMode] = useState<"cards" | "office">("office");
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
