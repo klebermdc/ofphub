@@ -1,5 +1,6 @@
 export const AREAS = ["all", "diretoria", "marketing", "atendimento", "comercial", "financeiro", "tech", "pricing"];
 export const STATUSES = ["all", "idle", "running", "success", "error"];
+export const EXPERIENCE_LEVELS = ["all", "Alta senioridade", "Especialista"];
 
 export const AREA_LABELS: Record<string, string> = {
   diretoria: "Diretoria",
@@ -11,12 +12,40 @@ export const AREA_LABELS: Record<string, string> = {
   pricing: "Pricing",
 };
 
-export const STATUS_CONFIG: Record<string, { color: string; label: string; dotClass: string }> = {
-  success: { color: "text-emerald-500", label: "Saudável", dotClass: "bg-emerald-500" },
-  running: { color: "text-blue-500", label: "Executando", dotClass: "bg-blue-500 animate-pulse" },
-  idle: { color: "text-muted-foreground", label: "Ocioso", dotClass: "bg-muted-foreground" },
-  error: { color: "text-destructive", label: "Erro", dotClass: "bg-destructive" },
+export const STATUS_CONFIG: Record<string, { color: string; label: string; dotClass: string; bgClass: string }> = {
+  success: { color: "text-emerald-500", label: "Saudável", dotClass: "bg-emerald-500", bgClass: "bg-emerald-500/10" },
+  running: { color: "text-blue-500", label: "Executando", dotClass: "bg-blue-500 animate-pulse", bgClass: "bg-blue-500/10" },
+  idle: { color: "text-muted-foreground", label: "Ocioso", dotClass: "bg-muted-foreground", bgClass: "bg-muted/50" },
+  error: { color: "text-destructive", label: "Erro", dotClass: "bg-destructive", bgClass: "bg-destructive/10" },
 };
+
+export type SortOption = "updated" | "status" | "area" | "name";
+
+export const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: "updated", label: "Atualização" },
+  { value: "status", label: "Status" },
+  { value: "area", label: "Área" },
+  { value: "name", label: "Nome" },
+];
+
+const STATUS_ORDER: Record<string, number> = { error: 0, running: 1, success: 2, idle: 3 };
+
+export function sortAgents(agents: any[], sort: SortOption) {
+  return [...agents].sort((a, b) => {
+    switch (sort) {
+      case "updated":
+        return (b.updated_at || "").localeCompare(a.updated_at || "");
+      case "status":
+        return (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9);
+      case "area":
+        return (a.area || "").localeCompare(b.area || "");
+      case "name":
+        return (a.agent_name || "").localeCompare(b.agent_name || "");
+      default:
+        return 0;
+    }
+  });
+}
 
 export function formatDuration(ms: number | null): string {
   if (!ms) return "—";
@@ -40,5 +69,13 @@ export function formatDateTime(dateStr: string | null): string {
   if (!dateStr) return "—";
   return new Date(dateStr).toLocaleString("pt-BR", {
     day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
+  });
+}
+
+export function formatFullDateTime(dateStr: string | null): string {
+  if (!dateStr) return "—";
+  return new Date(dateStr).toLocaleString("pt-BR", {
+    day: "2-digit", month: "2-digit", year: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
   });
 }
