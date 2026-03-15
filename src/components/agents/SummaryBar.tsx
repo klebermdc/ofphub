@@ -1,4 +1,4 @@
-import { Bot, Zap, CheckCircle2, AlertTriangle, Activity, TrendingUp, Flame, ShieldAlert } from "lucide-react";
+import { Bot, Zap, CheckCircle2, AlertTriangle, Activity, TrendingUp, Flame, ShieldAlert, HeartPulse, AlertCircle, XCircle } from "lucide-react";
 import { AgentActivity, ExecutionStats24h } from "@/hooks/useAgentActivity";
 
 interface SummaryBarProps {
