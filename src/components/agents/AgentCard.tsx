@@ -2,7 +2,9 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AgentActivity } from "@/hooks/useAgentActivity";
 import { AREA_LABELS, STATUS_CONFIG, formatDuration, formatTimeAgo } from "./agentUtils";
+import { AGENT_AVATARS } from "./agentAvatars";
 import { Clock, Timer, Sparkles, Shield } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 export function AgentCard({ agent, onClick }: { agent: AgentActivity; onClick: () => void }) {
   const cfg = STATUS_CONFIG[agent.status] || STATUS_CONFIG.idle;
@@ -19,7 +21,10 @@ export function AgentCard({ agent, onClick }: { agent: AgentActivity; onClick: (
         <div className="flex items-start justify-between gap-2">
           <div className="space-y-1 min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <div className={`h-2.5 w-2.5 rounded-full shrink-0 ${cfg.dotClass}`} />
+              <Avatar className="h-8 w-8 border-2" style={{ borderColor: cfg.dotClass.includes("emerald") ? "rgb(16 185 129)" : cfg.dotClass.includes("blue") ? "rgb(59 130 246)" : cfg.dotClass.includes("destructive") ? "hsl(var(--destructive))" : "hsl(var(--muted-foreground))" }}>
+                <AvatarImage src={AGENT_AVATARS[agent.agent_key]} alt={agent.agent_name} />
+                <AvatarFallback className="text-[10px] font-bold">{agent.agent_name[0]}</AvatarFallback>
+              </Avatar>
               <h3 className="font-semibold text-sm truncate">{agent.agent_name}</h3>
             </div>
             {agent.persona && (

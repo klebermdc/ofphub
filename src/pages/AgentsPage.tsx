@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { RefreshCw, Activity, Bot, ArrowLeft, Search, SortAsc } from "lucide-react";
+import { RefreshCw, Activity, Bot, ArrowLeft, Search, SortAsc, LayoutGrid, Building2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AgentCard } from "@/components/agents/AgentCard";
 import { SummaryBar } from "@/components/agents/SummaryBar";
 import { AgentDetailDrawer } from "@/components/agents/AgentDetailDrawer";
+import { AgentOfficeView } from "@/components/agents/AgentOfficeView";
 import {
   AREAS, STATUSES, EXPERIENCE_LEVELS, AREA_LABELS, STATUS_CONFIG,
   SORT_OPTIONS, SortOption, sortAgents,
@@ -50,6 +51,7 @@ export default function AgentsPage() {
   const [selectedAgent, setSelectedAgent] = useState<AgentActivity | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
+  const [viewMode, setViewMode] = useState<"cards" | "office">("office");
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
@@ -99,10 +101,28 @@ export default function AgentsPage() {
               </div>
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing} className="text-xs h-8">
-            <RefreshCw className={`h-3.5 w-3.5 mr-1 ${refreshing ? "animate-spin" : ""}`} />
-            Atualizar
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button
+              variant={viewMode === "office" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("office")}
+              className="text-xs h-8 px-2"
+            >
+              <Building2 className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant={viewMode === "cards" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("cards")}
+              className="text-xs h-8 px-2"
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing} className="text-xs h-8">
+              <RefreshCw className={`h-3.5 w-3.5 mr-1 ${refreshing ? "animate-spin" : ""}`} />
+              Atualizar
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -185,8 +205,13 @@ export default function AgentsPage() {
               </div>
             </div>
 
-            {/* Agent Cards */}
-            {filtered.length === 0 ? (
+            {/* Agent View */}
+            {viewMode === "office" ? (
+              <AgentOfficeView
+                agents={filtered}
+                onSelectAgent={setSelectedAgent}
+              />
+            ) : filtered.length === 0 ? (
               <div className="text-center py-16 space-y-3">
                 <Bot className="h-10 w-10 mx-auto text-muted-foreground/30" />
                 <p className="text-sm text-muted-foreground">
