@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { RefreshCw, Bot, Activity, AlertTriangle, CheckCircle2, Clock, Zap, Filter, ArrowLeft } from "lucide-react";
+import { RefreshCw, Bot, Activity, AlertTriangle, CheckCircle2, Clock, Zap, Filter, ArrowLeft, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
