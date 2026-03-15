@@ -13,11 +13,21 @@ export function SummaryBar({ agents, stats24h, statsLoading }: SummaryBarProps) 
   const errors = agents.filter(a => a.status === "error").length;
   const healthy = agents.filter(a => a.status === "success").length;
 
+  const healthHealthy = agents.filter(a => !a.health_level || a.health_level === "healthy").length;
+  const healthWarning = agents.filter(a => a.health_level === "warning").length;
+  const healthCritical = agents.filter(a => a.health_level === "critical").length;
+
   const items = [
     { icon: Bot, label: "Agentes", value: String(total), color: "text-foreground", sub: null },
     { icon: Zap, label: "Rodando", value: String(running), color: "text-blue-500", sub: null },
     { icon: CheckCircle2, label: "Saudáveis", value: String(healthy), color: "text-emerald-500", sub: null },
     { icon: AlertTriangle, label: "Com Erro", value: String(errors), color: "text-destructive", sub: null },
+  ];
+
+  const healthItems = [
+    { icon: HeartPulse, label: "Saúde OK", value: String(healthHealthy), color: "text-emerald-500" },
+    { icon: AlertCircle, label: "Atenção", value: String(healthWarning), color: "text-yellow-500" },
+    { icon: XCircle, label: "Crítico", value: String(healthCritical), color: "text-red-500" },
   ];
 
   const statsItems = [
