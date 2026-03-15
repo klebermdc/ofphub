@@ -272,15 +272,18 @@ export default function AgentsPage() {
   const [nameFilter, setNameFilter] = useState("all");
   const [selectedAgent, setSelectedAgent] = useState<AgentActivity | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [search, setSearch] = useState("");
 
   const filtered = useMemo(() => {
+    const q = search.toLowerCase();
     return agents.filter((a) => {
       if (areaFilter !== "all" && a.area !== areaFilter) return false;
       if (statusFilter !== "all" && a.status !== statusFilter) return false;
       if (nameFilter !== "all" && a.agent_key !== nameFilter) return false;
+      if (q && !a.agent_name.toLowerCase().includes(q) && !(a.last_action || "").toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [agents, areaFilter, statusFilter, nameFilter]);
+  }, [agents, areaFilter, statusFilter, nameFilter, search]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
