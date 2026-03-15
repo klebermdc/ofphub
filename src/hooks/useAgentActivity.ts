@@ -14,7 +14,28 @@ export interface AgentActivity {
   last_duration_ms: number | null;
   last_error: string | null;
   last_channel: string | null;
+  persona: string | null;
+  specialty: string | null;
+  mission: string | null;
+  style: string | null;
+  experience_level: string | null;
   updated_at: string;
+}
+
+export interface AgentExecution {
+  id: string;
+  agent_key: string;
+  agent_name: string;
+  area: string;
+  status: string;
+  action: string | null;
+  summary: string | null;
+  error: string | null;
+  channel: string | null;
+  duration_ms: number | null;
+  started_at: string | null;
+  finished_at: string | null;
+  created_at: string;
 }
 
 export function useAgentActivity() {
@@ -54,4 +75,34 @@ export function useAgentActivity() {
   }, [fetchAgents]);
 
   return { agents, loading, refetch: fetchAgents };
+}
+
+export function useAgentExecutionHistory(agentKey: string | null, limit = 20) {
+  const [executions, setExecutions] = useState<AgentExecution[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const fetchHistory = useCallback(async () => {
+    if (!agentKey) {
+      setExecutions([]);
+      return;
+    }
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("agent_execution_history" as any)
+      .select("*")
+      .eq("agent_key", agentKey)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+
+    if (!error && data) {
+      setExecutions(data as unknown as AgentExecution[]);
+    }
+    setLoading(false);
+  }, [agentKey, limit]);
+
+  useEffect(() => {
+    fetchHistory();
+  }, [fetchHistory]);
+
+  return { executions, loading, refetch: fetchHistory };
 }

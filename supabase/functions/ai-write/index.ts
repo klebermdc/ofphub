@@ -11,6 +11,7 @@ const ALLOWED_TABLES = [
   'marketing_costs', 'marketing_files', 'commission_orders', 'commission_payments',
   'salesperson_goals', 'salesperson_salaries', 'api_integrations', 'nfse_history',
   'profiles', 'user_roles', 'user_sheet_settings', 'sales_goals', 'agent_activity',
+  'agent_execution_history',
 ];
 
 /** Map incoming field names to actual DB column names per table */
