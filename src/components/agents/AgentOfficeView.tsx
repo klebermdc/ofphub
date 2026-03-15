@@ -1,26 +1,12 @@
 import { AgentActivity } from "@/hooks/useAgentActivity";
-import { AGENT_AVATARS } from "./agentAvatars";
-import { STATUS_CONFIG, AREA_LABELS, HEALTH_CONFIG, formatTimeAgo } from "./agentUtils";
+import { STATUS_CONFIG, AREA_LABELS, formatTimeAgo } from "./agentUtils";
+import { getAgentVisual } from "./agentVisualConfig";
 import { Monitor, Coffee, AlertTriangle, Zap, ShieldAlert } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-// Office desk positions in a grid layout
-const DESK_POSITIONS = [
-  // Row 1 - CEO desk (centered)
-  { row: 0, col: 1, colSpan: true },
-  // Row 2 - 3 desks
-  { row: 1, col: 0 },
-  { row: 1, col: 1 },
-  { row: 1, col: 2 },
-  // Row 3 - 3 desks
-  { row: 2, col: 0 },
-  { row: 2, col: 1 },
-  { row: 2, col: 2 },
-];
-
 function AgentDesk({ agent, onClick }: { agent: AgentActivity; onClick: () => void }) {
   const cfg = STATUS_CONFIG[agent.status] || STATUS_CONFIG.idle;
-  const avatar = AGENT_AVATARS[agent.agent_key];
+  const visual = getAgentVisual(agent);
   const isRunning = agent.status === "running";
   const isError = agent.status === "error";
   const isIdle = agent.status === "idle";
@@ -55,17 +41,22 @@ function AgentDesk({ agent, onClick }: { agent: AgentActivity; onClick: () => vo
                 agent.status === "success" ? "border-emerald-500" :
                 "border-muted-foreground/30 grayscale-[50%]"
               }`}>
-                {avatar ? (
+                {visual.avatar ? (
                   <img
-                    src={avatar}
+                    src={visual.avatar}
                     alt={agent.agent_name}
                     className={`w-full h-full object-cover transition-all duration-300 ${
                       isIdle ? "opacity-60 grayscale-[30%]" : "opacity-100"
                     }`}
                   />
                 ) : (
-                  <div className="w-full h-full bg-muted flex items-center justify-center text-lg font-bold text-muted-foreground">
-                    {agent.agent_name[0]}
+                  <div
+                    className={`w-full h-full flex items-center justify-center text-lg font-bold text-white transition-all duration-300 ${
+                      isIdle ? "opacity-60" : "opacity-100"
+                    }`}
+                    style={{ backgroundColor: visual.bgColor }}
+                  >
+                    {visual.initials}
                   </div>
                 )}
               </div>
@@ -92,6 +83,16 @@ function AgentDesk({ agent, onClick }: { agent: AgentActivity; onClick: () => vo
               {(isHealthWarning || isHealthCritical) && (
                 <div className={`absolute -top-1 -left-1 rounded-full p-0.5 border border-background ${isHealthCritical ? "bg-red-500 animate-pulse" : "bg-yellow-500"}`}>
                   <ShieldAlert className="h-2.5 w-2.5 text-white" />
+                </div>
+              )}
+
+              {/* Area icon badge for non-custom agents */}
+              {!visual.isCustom && (
+                <div
+                  className="absolute -bottom-0.5 -left-0.5 rounded-full p-0.5 border border-background"
+                  style={{ backgroundColor: visual.bgColor }}
+                >
+                  <visual.AreaIcon className="h-2.5 w-2.5 text-white" />
                 </div>
               )}
             </div>

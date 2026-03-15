@@ -2,10 +2,9 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } f
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { AgentActivity, AgentExecution, useAgentExecutionHistory } from "@/hooks/useAgentActivity";
 import { AREA_LABELS, STATUS_CONFIG, HEALTH_CONFIG, formatDuration, formatFullDateTime } from "./agentUtils";
-import { AGENT_AVATARS } from "./agentAvatars";
+import { AgentAvatar } from "./AgentAvatar";
 import { User, Target, Sparkles, History, Shield, Zap, MessageSquare, Clock, Timer, AlertTriangle, HeartPulse } from "lucide-react";
 
 function ExecutionRow({ exec }: { exec: AgentExecution }) {
@@ -29,20 +28,14 @@ function ExecutionRow({ exec }: { exec: AgentExecution }) {
           )}
         </div>
       </div>
-
-      {exec.action && (
-        <p className="font-medium text-xs">{exec.action}</p>
-      )}
-      {exec.summary && (
-        <p className="text-xs text-muted-foreground whitespace-pre-wrap">{exec.summary}</p>
-      )}
+      {exec.action && <p className="font-medium text-xs">{exec.action}</p>}
+      {exec.summary && <p className="text-xs text-muted-foreground whitespace-pre-wrap">{exec.summary}</p>}
       {exec.error && (
         <p className="text-xs text-destructive font-medium whitespace-pre-wrap flex items-start gap-1">
           <AlertTriangle className="h-3 w-3 shrink-0 mt-0.5" />
           {exec.error}
         </p>
       )}
-
       <div className="flex items-center gap-3 text-[10px] text-muted-foreground pt-1 border-t border-border/30">
         <span className="flex items-center gap-0.5"><Clock className="h-2.5 w-2.5" />Início: {startTime}</span>
         {exec.finished_at && <span>Fim: {endTime}</span>}
@@ -67,15 +60,17 @@ export function AgentDetailDrawer({
   const healthCfg = HEALTH_CONFIG[agent.health_level || "healthy"] || HEALTH_CONFIG.healthy;
   const showHealth = agent.health_level && agent.health_level !== "healthy";
 
+  const borderColor = cfg.dotClass.includes("emerald") ? "rgb(16 185 129)"
+    : cfg.dotClass.includes("blue") ? "rgb(59 130 246)"
+    : cfg.dotClass.includes("destructive") ? "hsl(var(--destructive))"
+    : "hsl(var(--muted-foreground))";
+
   return (
     <Drawer open={open} onOpenChange={(v) => !v && onClose()}>
       <DrawerContent className="max-h-[90vh]">
         <DrawerHeader className="pb-2">
           <div className="flex items-center gap-3">
-            <Avatar className="h-12 w-12 border-2" style={{ borderColor: cfg.dotClass.includes("emerald") ? "rgb(16 185 129)" : cfg.dotClass.includes("blue") ? "rgb(59 130 246)" : cfg.dotClass.includes("destructive") ? "hsl(var(--destructive))" : "hsl(var(--muted-foreground))" }}>
-              <AvatarImage src={AGENT_AVATARS[agent.agent_key]} alt={agent.agent_name} />
-              <AvatarFallback className="text-sm font-bold">{agent.agent_name[0]}</AvatarFallback>
-            </Avatar>
+            <AgentAvatar agent={agent} size="lg" borderColor={borderColor} />
             <DrawerTitle className="text-lg">{agent.agent_name}</DrawerTitle>
           </div>
           <DrawerDescription className="flex items-center gap-2 flex-wrap">
