@@ -24,6 +24,9 @@ function AgentDesk({ agent, onClick }: { agent: AgentActivity; onClick: () => vo
   const isRunning = agent.status === "running";
   const isError = agent.status === "error";
   const isIdle = agent.status === "idle";
+  const healthLevel = agent.health_level || "healthy";
+  const isHealthWarning = healthLevel === "warning";
+  const isHealthCritical = healthLevel === "critical";
 
   return (
     <TooltipProvider delayDuration={200}>
