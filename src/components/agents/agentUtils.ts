@@ -27,16 +27,18 @@ export const STATUS_CONFIG: Record<string, { color: string; label: string; dotCl
   error: { color: "text-destructive", label: "Erro", dotClass: "bg-destructive", bgClass: "bg-destructive/10" },
 };
 
-export type SortOption = "updated" | "status" | "area" | "name";
+export type SortOption = "updated" | "status" | "area" | "name" | "health";
 
 export const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: "updated", label: "Atualização" },
   { value: "status", label: "Status" },
+  { value: "health", label: "Saúde" },
   { value: "area", label: "Área" },
   { value: "name", label: "Nome" },
 ];
 
 const STATUS_ORDER: Record<string, number> = { error: 0, running: 1, success: 2, idle: 3 };
+const HEALTH_ORDER: Record<string, number> = { critical: 0, warning: 1, healthy: 2 };
 
 export function sortAgents(agents: any[], sort: SortOption) {
   return [...agents].sort((a, b) => {
@@ -45,6 +47,8 @@ export function sortAgents(agents: any[], sort: SortOption) {
         return (b.updated_at || "").localeCompare(a.updated_at || "");
       case "status":
         return (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9);
+      case "health":
+        return (HEALTH_ORDER[a.health_level || "healthy"] ?? 9) - (HEALTH_ORDER[b.health_level || "healthy"] ?? 9);
       case "area":
         return (a.area || "").localeCompare(b.area || "");
       case "name":
