@@ -69,8 +69,11 @@ export function AgentDetailDrawer({
     <Drawer open={open} onOpenChange={(v) => !v && onClose()}>
       <DrawerContent className="max-h-[90vh]">
         <DrawerHeader className="pb-2">
-          <div className="flex items-center gap-2">
-            <div className={`h-3 w-3 rounded-full ${cfg.dotClass}`} />
+          <div className="flex items-center gap-3">
+            <Avatar className="h-12 w-12 border-2" style={{ borderColor: cfg.dotClass.includes("emerald") ? "rgb(16 185 129)" : cfg.dotClass.includes("blue") ? "rgb(59 130 246)" : cfg.dotClass.includes("destructive") ? "hsl(var(--destructive))" : "hsl(var(--muted-foreground))" }}>
+              <AvatarImage src={AGENT_AVATARS[agent.agent_key]} alt={agent.agent_name} />
+              <AvatarFallback className="text-sm font-bold">{agent.agent_name[0]}</AvatarFallback>
+            </Avatar>
             <DrawerTitle className="text-lg">{agent.agent_name}</DrawerTitle>
           </div>
           <DrawerDescription className="flex items-center gap-2 flex-wrap">
