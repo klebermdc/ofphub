@@ -47,6 +47,7 @@ export default function AgentsPage() {
   const [areaFilter, setAreaFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [expFilter, setExpFilter] = useState("all");
+  const [healthFilter, setHealthFilter] = useState("all");
   const [nameFilter, setNameFilter] = useState("all");
   const [sortBy, setSortBy] = useState<SortOption>("updated");
   const [selectedAgent, setSelectedAgent] = useState<AgentActivity | null>(null);
