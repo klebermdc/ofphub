@@ -235,6 +235,11 @@ serve(async (req) => {
       const rawRows = Array.isArray(data) ? data : [data];
       const rows = rawRows.map(r => normalizeDataDates(table, r));
       result = await supabase.from(table).insert(rows).select();
+    } else if (action === 'upsert') {
+      const rawRows = Array.isArray(data) ? data : [data];
+      const rows = rawRows.map(r => normalizeDataDates(table, r));
+      const onConflict = body.on_conflict || undefined;
+      result = await supabase.from(table).upsert(rows, { onConflict }).select();
     } else if (action === 'update') {
       const normalizedData = normalizeDataDates(table, data);
       let query = supabase.from(table).update(normalizedData);
