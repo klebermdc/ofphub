@@ -276,6 +276,12 @@ export default function AgentsPage() {
     setRefreshing(false);
   };
 
+  // Auth redirect (after all hooks)
+  if (!authLoading && !user) {
+    navigate("/auth");
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}

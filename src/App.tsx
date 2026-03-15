@@ -11,6 +11,7 @@ import Auth from "./pages/Auth";
 import SalespersonDashboard from "./pages/SalespersonDashboard";
 import MarketingDashboard from "./pages/MarketingDashboard";
 import AllOrders from "./pages/AllOrders";
+import AgentsPage from "./pages/AgentsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
