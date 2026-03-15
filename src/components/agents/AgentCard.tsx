@@ -2,7 +2,9 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AgentActivity } from "@/hooks/useAgentActivity";
 import { AREA_LABELS, STATUS_CONFIG, formatDuration, formatTimeAgo } from "./agentUtils";
+import { AGENT_AVATARS } from "./agentAvatars";
 import { Clock, Timer, Sparkles, Shield } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 export function AgentCard({ agent, onClick }: { agent: AgentActivity; onClick: () => void }) {
   const cfg = STATUS_CONFIG[agent.status] || STATUS_CONFIG.idle;
