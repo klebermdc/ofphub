@@ -334,7 +334,16 @@ export default function AgentsPage() {
 
             {/* Filters */}
             <div className="flex flex-wrap items-center gap-2">
-              <Filter className="h-4 w-4 text-muted-foreground" />
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar agente ou ação..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-8 h-9 w-[200px] text-sm"
+                />
+              </div>
+              <Filter className="h-4 w-4 text-muted-foreground ml-1" />
               <Select value={areaFilter} onValueChange={setAreaFilter}>
                 <SelectTrigger className="w-[140px] h-9 text-sm">
                   <SelectValue placeholder="Área" />
