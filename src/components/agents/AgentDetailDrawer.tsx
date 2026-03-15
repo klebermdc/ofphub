@@ -6,7 +6,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { AgentActivity, AgentExecution, useAgentExecutionHistory } from "@/hooks/useAgentActivity";
 import { AREA_LABELS, STATUS_CONFIG, HEALTH_CONFIG, formatDuration, formatFullDateTime } from "./agentUtils";
 import { AGENT_AVATARS } from "./agentAvatars";
-import { User, Target, Sparkles, History, Shield, Zap, MessageSquare, Clock, Timer, AlertTriangle } from "lucide-react";
+import { User, Target, Sparkles, History, Shield, Zap, MessageSquare, Clock, Timer, AlertTriangle, HeartPulse } from "lucide-react";
 
 function ExecutionRow({ exec }: { exec: AgentExecution }) {
   const cfg = STATUS_CONFIG[exec.status] || STATUS_CONFIG.idle;
