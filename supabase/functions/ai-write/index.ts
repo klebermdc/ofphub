@@ -100,8 +100,8 @@ serve(async (req) => {
     }
 
     // === VALIDATE ACTION ===
-    if (!action || !['insert', 'update', 'delete'].includes(action)) {
-      return jsonResponse({ error: 'Invalid action. Allowed: insert, update, delete' }, 400);
+    if (!action || !['insert', 'update', 'delete', 'upsert'].includes(action)) {
+      return jsonResponse({ error: 'Invalid action. Allowed: insert, update, delete, upsert' }, 400);
     }
 
     // === VALIDATE DATA/MATCH ===
