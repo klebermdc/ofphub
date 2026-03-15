@@ -108,6 +108,8 @@ export type Database = {
           area: string
           created_at: string
           experience_level: string | null
+          health_level: string | null
+          health_reason: string | null
           id: string
           last_action: string | null
           last_channel: string | null
@@ -129,6 +131,8 @@ export type Database = {
           area?: string
           created_at?: string
           experience_level?: string | null
+          health_level?: string | null
+          health_reason?: string | null
           id?: string
           last_action?: string | null
           last_channel?: string | null
@@ -150,6 +154,8 @@ export type Database = {
           area?: string
           created_at?: string
           experience_level?: string | null
+          health_level?: string | null
+          health_reason?: string | null
           id?: string
           last_action?: string | null
           last_channel?: string | null
