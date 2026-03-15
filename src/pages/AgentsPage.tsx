@@ -261,12 +261,6 @@ export default function AgentsPage() {
   const [selectedAgent, setSelectedAgent] = useState<AgentActivity | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Auth redirect
-  if (!authLoading && !user) {
-    navigate("/auth");
-    return null;
-  }
-
   const filtered = useMemo(() => {
     return agents.filter((a) => {
       if (areaFilter !== "all" && a.area !== areaFilter) return false;
