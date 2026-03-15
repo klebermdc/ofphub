@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { RefreshCw, Activity, Bot, ArrowLeft, Search, SortAsc } from "lucide-react";
+import { RefreshCw, Activity, Bot, ArrowLeft, Search, SortAsc, LayoutGrid, Building2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
