@@ -159,6 +159,17 @@ export function AgentDetailDrawer({
 
             {/* Status Tab */}
             <TabsContent value="status" className="space-y-3">
+              {/* Health Level */}
+              <div className={`rounded-lg p-3 space-y-1 border ${showHealth ? `${healthCfg.bgClass} border-current/20` : "bg-emerald-500/10 border-emerald-500/20"}`}>
+                <p className={`text-[10px] uppercase tracking-wider font-medium flex items-center gap-1 ${showHealth ? healthCfg.color : "text-emerald-500"}`}>
+                  <HeartPulse className="h-3 w-3" /> Saúde Operacional
+                </p>
+                <p className={`text-sm font-semibold ${showHealth ? healthCfg.color : "text-emerald-500"}`}>{healthCfg.label}</p>
+                {agent.health_reason && (
+                  <p className="text-xs text-muted-foreground">{agent.health_reason}</p>
+                )}
+              </div>
+
               <div className="grid grid-cols-2 gap-2">
                 <div className="rounded-lg bg-muted/40 p-3 space-y-1">
                   <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Última execução</p>

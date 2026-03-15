@@ -70,7 +70,7 @@ export default function AgentsPage() {
       return true;
     });
     return sortAgents(result, sortBy);
-  }, [agents, areaFilter, statusFilter, expFilter, nameFilter, search, sortBy]);
+  }, [agents, areaFilter, statusFilter, expFilter, healthFilter, nameFilter, search, sortBy]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
