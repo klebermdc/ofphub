@@ -3,38 +3,47 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AgentActivity, AgentExecution, useAgentExecutionHistory } from "@/hooks/useAgentActivity";
-import { AREA_LABELS, STATUS_CONFIG, formatDuration } from "./agentUtils";
-import { User, Target, Sparkles, History } from "lucide-react";
+import { AREA_LABELS, STATUS_CONFIG, formatDuration, formatFullDateTime } from "./agentUtils";
+import { User, Target, Sparkles, History, Shield, Zap, MessageSquare, Clock, Timer, AlertTriangle } from "lucide-react";
 
 function ExecutionRow({ exec }: { exec: AgentExecution }) {
   const cfg = STATUS_CONFIG[exec.status] || STATUS_CONFIG.idle;
-  const time = exec.created_at
-    ? new Date(exec.created_at).toLocaleString("pt-BR", {
-        day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
-      })
-    : "—";
+  const startTime = formatFullDateTime(exec.started_at || exec.created_at);
+  const endTime = formatFullDateTime(exec.finished_at);
 
   return (
-    <div className="border rounded-lg p-3 space-y-1.5 text-sm">
+    <div className={`border rounded-lg p-3 space-y-2 text-sm ${cfg.bgClass}`}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className={`h-2 w-2 rounded-full ${cfg.dotClass}`} />
-          <span className={`font-medium ${cfg.color}`}>{cfg.label}</span>
+          <span className={`font-medium text-xs ${cfg.color}`}>{cfg.label}</span>
         </div>
-        <span className="text-xs text-muted-foreground">{time}</span>
+        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+          {exec.duration_ms != null && (
+            <span className="flex items-center gap-0.5"><Timer className="h-3 w-3" />{formatDuration(exec.duration_ms)}</span>
+          )}
+          {exec.channel && (
+            <span className="flex items-center gap-0.5"><MessageSquare className="h-3 w-3" />{exec.channel}</span>
+          )}
+        </div>
       </div>
+
       {exec.action && (
-        <p className="text-muted-foreground">{exec.action}</p>
+        <p className="font-medium text-xs">{exec.action}</p>
       )}
       {exec.summary && (
-        <p className="text-xs bg-muted/50 rounded p-2 whitespace-pre-wrap">{exec.summary}</p>
+        <p className="text-xs text-muted-foreground whitespace-pre-wrap">{exec.summary}</p>
       )}
       {exec.error && (
-        <p className="text-xs text-destructive bg-destructive/10 rounded p-2 whitespace-pre-wrap">⚠ {exec.error}</p>
+        <p className="text-xs text-destructive font-medium whitespace-pre-wrap flex items-start gap-1">
+          <AlertTriangle className="h-3 w-3 shrink-0 mt-0.5" />
+          {exec.error}
+        </p>
       )}
-      <div className="flex gap-3 text-xs text-muted-foreground">
-        {exec.duration_ms != null && <span>⏱ {formatDuration(exec.duration_ms)}</span>}
-        {exec.channel && <span>📡 {exec.channel}</span>}
+
+      <div className="flex items-center gap-3 text-[10px] text-muted-foreground pt-1 border-t border-border/30">
+        <span className="flex items-center gap-0.5"><Clock className="h-2.5 w-2.5" />Início: {startTime}</span>
+        {exec.finished_at && <span>Fim: {endTime}</span>}
       </div>
     </div>
   );
@@ -56,128 +65,149 @@ export function AgentDetailDrawer({
 
   return (
     <Drawer open={open} onOpenChange={(v) => !v && onClose()}>
-      <DrawerContent className="max-h-[85vh]">
-        <DrawerHeader>
+      <DrawerContent className="max-h-[90vh]">
+        <DrawerHeader className="pb-2">
           <div className="flex items-center gap-2">
             <div className={`h-3 w-3 rounded-full ${cfg.dotClass}`} />
-            <DrawerTitle>{agent.agent_name}</DrawerTitle>
+            <DrawerTitle className="text-lg">{agent.agent_name}</DrawerTitle>
           </div>
-          <DrawerDescription>
-            {AREA_LABELS[agent.area] || agent.area} · {cfg.label}
-            {agent.experience_level && ` · ${agent.experience_level}`}
+          <DrawerDescription className="flex items-center gap-2 flex-wrap">
+            <Badge variant="outline" className="text-[10px]">{AREA_LABELS[agent.area] || agent.area}</Badge>
+            <Badge className={`text-[10px] ${cfg.bgClass} ${cfg.color} border-0`}>{cfg.label}</Badge>
+            {agent.experience_level && (
+              <Badge variant="secondary" className="text-[10px]">
+                <Shield className="h-2.5 w-2.5 mr-0.5" />{agent.experience_level}
+              </Badge>
+            )}
           </DrawerDescription>
         </DrawerHeader>
         <div className="px-4 pb-6 overflow-y-auto">
           <Tabs defaultValue="profile" className="w-full">
             <TabsList className="w-full mb-4">
-              <TabsTrigger value="profile" className="flex-1 gap-1">
-                <User className="h-3.5 w-3.5" /> Perfil
+              <TabsTrigger value="profile" className="flex-1 gap-1 text-xs">
+                <User className="h-3 w-3" /> Perfil
               </TabsTrigger>
-              <TabsTrigger value="status" className="flex-1 gap-1">
-                <Target className="h-3.5 w-3.5" /> Status
+              <TabsTrigger value="status" className="flex-1 gap-1 text-xs">
+                <Target className="h-3 w-3" /> Status
               </TabsTrigger>
-              <TabsTrigger value="history" className="flex-1 gap-1">
-                <History className="h-3.5 w-3.5" /> Histórico
+              <TabsTrigger value="history" className="flex-1 gap-1 text-xs">
+                <History className="h-3 w-3" /> Histórico
+                {executions.length > 0 && (
+                  <Badge variant="secondary" className="text-[9px] h-4 px-1 ml-1">{executions.length}</Badge>
+                )}
               </TabsTrigger>
             </TabsList>
 
             {/* Profile Tab */}
-            <TabsContent value="profile" className="space-y-4">
+            <TabsContent value="profile" className="space-y-3">
               {agent.persona && (
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground font-medium flex items-center gap-1.5">
-                    <Sparkles className="h-3.5 w-3.5" /> Persona
+                <div className="rounded-lg bg-muted/40 p-3 space-y-1">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium flex items-center gap-1">
+                    <Sparkles className="h-3 w-3" /> Persona
                   </p>
-                  <p className="text-sm bg-muted/50 rounded-lg p-3">{agent.persona}</p>
+                  <p className="text-sm font-medium">{agent.persona}</p>
                 </div>
               )}
               {agent.specialty && (
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground font-medium">Especialidade</p>
-                  <p className="text-sm bg-muted/50 rounded-lg p-3">{agent.specialty}</p>
+                <div className="rounded-lg bg-muted/40 p-3 space-y-1">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium flex items-center gap-1">
+                    <Zap className="h-3 w-3" /> Especialidade
+                  </p>
+                  <p className="text-sm">{agent.specialty}</p>
                 </div>
               )}
               {agent.mission && (
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground font-medium">Missão</p>
-                  <p className="text-sm bg-muted/50 rounded-lg p-3">{agent.mission}</p>
+                <div className="rounded-lg bg-primary/5 border border-primary/10 p-3 space-y-1">
+                  <p className="text-[10px] text-primary uppercase tracking-wider font-medium flex items-center gap-1">
+                    <Target className="h-3 w-3" /> Missão
+                  </p>
+                  <p className="text-sm">{agent.mission}</p>
                 </div>
               )}
-              {agent.style && (
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground font-medium">Estilo</p>
-                  <Badge variant="secondary" className="text-xs">{agent.style}</Badge>
+              <div className="grid grid-cols-2 gap-2">
+                {agent.style && (
+                  <div className="rounded-lg bg-muted/40 p-3 space-y-1">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Estilo</p>
+                    <p className="text-xs">{agent.style}</p>
+                  </div>
+                )}
+                <div className="rounded-lg bg-muted/40 p-3 space-y-1">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Canal</p>
+                  <p className="text-xs flex items-center gap-1">
+                    <MessageSquare className="h-3 w-3" />
+                    {agent.last_channel || "—"}
+                  </p>
                 </div>
-              )}
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div className="space-y-1">
-                  <p className="text-muted-foreground">Chave</p>
-                  <p className="font-mono text-xs">{agent.agent_key}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-muted-foreground">Canal</p>
-                  <p>{agent.last_channel || "—"}</p>
-                </div>
+              </div>
+              <div className="rounded-lg bg-muted/30 p-3 space-y-1">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Chave técnica</p>
+                <p className="font-mono text-xs text-muted-foreground">{agent.agent_key}</p>
               </div>
             </TabsContent>
 
             {/* Status Tab */}
-            <TabsContent value="status" className="space-y-4">
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div className="space-y-1">
-                  <p className="text-muted-foreground">Última execução</p>
-                  <p>{agent.last_run_at ? new Date(agent.last_run_at).toLocaleString("pt-BR") : "—"}</p>
+            <TabsContent value="status" className="space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                <div className="rounded-lg bg-muted/40 p-3 space-y-1">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Última execução</p>
+                  <p className="text-xs">{agent.last_run_at ? new Date(agent.last_run_at).toLocaleString("pt-BR") : "—"}</p>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-muted-foreground">Próxima execução</p>
-                  <p>{agent.next_run_at ? new Date(agent.next_run_at).toLocaleString("pt-BR") : "—"}</p>
+                <div className="rounded-lg bg-muted/40 p-3 space-y-1">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Próxima</p>
+                  <p className="text-xs">{agent.next_run_at ? new Date(agent.next_run_at).toLocaleString("pt-BR") : "—"}</p>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-muted-foreground">Duração</p>
-                  <p>{formatDuration(agent.last_duration_ms)}</p>
+                <div className="rounded-lg bg-muted/40 p-3 space-y-1">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Duração</p>
+                  <p className="text-xs font-mono">{formatDuration(agent.last_duration_ms)}</p>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-muted-foreground">Atualizado</p>
-                  <p>{new Date(agent.updated_at).toLocaleString("pt-BR")}</p>
+                <div className="rounded-lg bg-muted/40 p-3 space-y-1">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Atualizado</p>
+                  <p className="text-xs">{new Date(agent.updated_at).toLocaleString("pt-BR")}</p>
                 </div>
               </div>
 
               {agent.last_action && (
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground font-medium">Última Ação</p>
-                  <p className="text-sm bg-muted/50 rounded-lg p-3">{agent.last_action}</p>
+                <div className="rounded-lg bg-muted/40 p-3 space-y-1">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Última Ação</p>
+                  <p className="text-sm">{agent.last_action}</p>
                 </div>
               )}
 
               {agent.last_summary && (
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground font-medium">Resumo</p>
-                  <p className="text-sm bg-muted/50 rounded-lg p-3 whitespace-pre-wrap">{agent.last_summary}</p>
+                <div className="rounded-lg bg-muted/40 p-3 space-y-1">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Resumo</p>
+                  <p className="text-sm whitespace-pre-wrap">{agent.last_summary}</p>
                 </div>
               )}
 
               {agent.last_error && (
-                <div className="space-y-1">
-                  <p className="text-sm text-destructive font-medium">Último Erro</p>
-                  <p className="text-sm bg-destructive/10 text-destructive rounded-lg p-3 whitespace-pre-wrap">
-                    {agent.last_error}
+                <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3 space-y-1">
+                  <p className="text-[10px] text-destructive uppercase tracking-wider font-medium flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" /> Último Erro
                   </p>
+                  <p className="text-sm text-destructive whitespace-pre-wrap">{agent.last_error}</p>
                 </div>
               )}
             </TabsContent>
 
             {/* History Tab */}
-            <TabsContent value="history" className="space-y-3">
+            <TabsContent value="history" className="space-y-2">
               {historyLoading ? (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {Array.from({ length: 3 }).map((_, i) => (
-                    <Skeleton key={i} className="h-24 rounded-lg" />
+                    <Skeleton key={i} className="h-20 rounded-lg" />
                   ))}
                 </div>
               ) : executions.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-8">
-                  Nenhuma execução registrada ainda.
-                </p>
+                <div className="text-center py-10 space-y-2">
+                  <History className="h-8 w-8 mx-auto text-muted-foreground/30" />
+                  <p className="text-sm text-muted-foreground">
+                    Nenhuma execução registrada ainda.
+                  </p>
+                  <p className="text-[11px] text-muted-foreground/60">
+                    O histórico aparecerá quando o agente começar a reportar.
+                  </p>
+                </div>
               ) : (
                 executions.map((exec) => (
                   <ExecutionRow key={exec.id} exec={exec} />

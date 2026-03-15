@@ -1,28 +1,36 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { RefreshCw, Activity, Bot, Filter, ArrowLeft, Search } from "lucide-react";
+import { RefreshCw, Activity, Bot, ArrowLeft, Search, SortAsc } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useAgentActivity, AgentActivity } from "@/hooks/useAgentActivity";
+import { useAgentActivity, useExecutionStats24h, AgentActivity } from "@/hooks/useAgentActivity";
 import { useAuth } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AgentCard } from "@/components/agents/AgentCard";
 import { SummaryBar } from "@/components/agents/SummaryBar";
 import { AgentDetailDrawer } from "@/components/agents/AgentDetailDrawer";
-import { AREAS, STATUSES, AREA_LABELS, STATUS_CONFIG } from "@/components/agents/agentUtils";
+import {
+  AREAS, STATUSES, EXPERIENCE_LEVELS, AREA_LABELS, STATUS_CONFIG,
+  SORT_OPTIONS, SortOption, sortAgents,
+} from "@/components/agents/agentUtils";
 
 function LoadingSkeleton() {
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-20 rounded-xl" />
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-16 rounded-xl" />
         ))}
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-16 rounded-xl" />
+        ))}
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="h-48 rounded-xl" />
+          <Skeleton key={i} className="h-52 rounded-xl" />
         ))}
       </div>
     </div>
@@ -33,27 +41,35 @@ export default function AgentsPage() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { agents, loading, refetch } = useAgentActivity();
+  const { stats: stats24h, loading: statsLoading, refetch: refetchStats } = useExecutionStats24h();
   const [areaFilter, setAreaFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [expFilter, setExpFilter] = useState("all");
   const [nameFilter, setNameFilter] = useState("all");
+  const [sortBy, setSortBy] = useState<SortOption>("updated");
   const [selectedAgent, setSelectedAgent] = useState<AgentActivity | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    return agents.filter((a) => {
+    const result = agents.filter((a) => {
       if (areaFilter !== "all" && a.area !== areaFilter) return false;
       if (statusFilter !== "all" && a.status !== statusFilter) return false;
+      if (expFilter !== "all" && a.experience_level !== expFilter) return false;
       if (nameFilter !== "all" && a.agent_key !== nameFilter) return false;
-      if (q && !a.agent_name.toLowerCase().includes(q) && !(a.last_action || "").toLowerCase().includes(q)) return false;
+      if (q && !a.agent_name.toLowerCase().includes(q)
+        && !(a.last_action || "").toLowerCase().includes(q)
+        && !(a.persona || "").toLowerCase().includes(q)
+        && !(a.specialty || "").toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [agents, areaFilter, statusFilter, nameFilter, search]);
+    return sortAgents(result, sortBy);
+  }, [agents, areaFilter, statusFilter, expFilter, nameFilter, search, sortBy]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await refetch();
+    await Promise.all([refetch(), refetchStats()]);
     setRefreshing(false);
   };
 
@@ -64,45 +80,53 @@ export default function AgentsPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Header */}
       <header className="border-b border-border bg-background/80 backdrop-blur-md sticky top-0 z-50">
         <div className="container mx-auto px-3 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-3">
             <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <Activity className="h-5 w-5 text-primary" />
-            <div>
-              <h1 className="font-semibold text-base sm:text-lg">Central de Agentes</h1>
-              <p className="text-xs text-muted-foreground hidden sm:block">Monitoramento em tempo real</p>
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 rounded-lg bg-primary/10">
+                <Activity className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <h1 className="font-semibold text-sm sm:text-base leading-none">Central de Agentes</h1>
+                <p className="text-[10px] text-muted-foreground hidden sm:block mt-0.5">
+                  Monitoramento em tempo real · {agents.length} agentes
+                </p>
+              </div>
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing}>
-            <RefreshCw className={`h-4 w-4 mr-1 ${refreshing ? "animate-spin" : ""}`} />
+          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing} className="text-xs h-8">
+            <RefreshCw className={`h-3.5 w-3.5 mr-1 ${refreshing ? "animate-spin" : ""}`} />
             Atualizar
           </Button>
         </div>
       </header>
 
-      <main className="container mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-5">
+      <main className="container mx-auto px-3 sm:px-6 py-4 sm:py-5 space-y-4">
         {loading ? (
           <LoadingSkeleton />
         ) : (
           <>
-            <SummaryBar agents={agents} />
+            {/* Executive Summary */}
+            <SummaryBar agents={agents} stats24h={stats24h} statsLoading={statsLoading} />
 
-            <div className="flex flex-wrap items-center gap-2">
+            {/* Filters */}
+            <div className="flex flex-wrap items-center gap-1.5">
               <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-2 top-2 h-3.5 w-3.5 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar agente ou ação..."
+                  placeholder="Buscar..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-8 h-9 w-[200px] text-sm"
+                  className="pl-7 h-8 w-[160px] text-xs"
                 />
               </div>
-              <Filter className="h-4 w-4 text-muted-foreground ml-1" />
               <Select value={areaFilter} onValueChange={setAreaFilter}>
-                <SelectTrigger className="w-[140px] h-9 text-sm">
+                <SelectTrigger className="w-[120px] h-8 text-xs">
                   <SelectValue placeholder="Área" />
                 </SelectTrigger>
                 <SelectContent>
@@ -113,7 +137,7 @@ export default function AgentsPage() {
                 </SelectContent>
               </Select>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[140px] h-9 text-sm">
+                <SelectTrigger className="w-[120px] h-8 text-xs">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -123,8 +147,19 @@ export default function AgentsPage() {
                   ))}
                 </SelectContent>
               </Select>
+              <Select value={expFilter} onValueChange={setExpFilter}>
+                <SelectTrigger className="w-[130px] h-8 text-xs">
+                  <SelectValue placeholder="Nível" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos níveis</SelectItem>
+                  {EXPERIENCE_LEVELS.filter(e => e !== "all").map((e) => (
+                    <SelectItem key={e} value={e}>{e}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Select value={nameFilter} onValueChange={setNameFilter}>
-                <SelectTrigger className="w-[150px] h-9 text-sm">
+                <SelectTrigger className="w-[130px] h-8 text-xs">
                   <SelectValue placeholder="Agente" />
                 </SelectTrigger>
                 <SelectContent>
@@ -134,19 +169,34 @@ export default function AgentsPage() {
                   ))}
                 </SelectContent>
               </Select>
+
+              <div className="ml-auto flex items-center gap-1">
+                <SortAsc className="h-3.5 w-3.5 text-muted-foreground" />
+                <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+                  <SelectTrigger className="w-[110px] h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SORT_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
+            {/* Agent Cards */}
             {filtered.length === 0 ? (
               <div className="text-center py-16 space-y-3">
-                <Bot className="h-12 w-12 mx-auto text-muted-foreground/40" />
-                <p className="text-muted-foreground">
+                <Bot className="h-10 w-10 mx-auto text-muted-foreground/30" />
+                <p className="text-sm text-muted-foreground">
                   {agents.length === 0
-                    ? "Nenhum agente registrado ainda. Os dados aparecerão quando os agentes começarem a reportar."
+                    ? "Nenhum agente registrado. Os dados aparecerão quando os agentes começarem a reportar."
                     : "Nenhum agente encontrado com os filtros selecionados."}
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                 {filtered.map((agent) => (
                   <AgentCard
                     key={agent.id}
