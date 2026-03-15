@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { LogOut, User, Settings, Users, Sun, Moon } from "lucide-react";
+import { LogOut, User, Settings, Users, Sun, Moon, Bot } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import { useAuth } from "@/hooks/useAuth";
