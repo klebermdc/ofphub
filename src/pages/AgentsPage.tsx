@@ -205,8 +205,13 @@ export default function AgentsPage() {
               </div>
             </div>
 
-            {/* Agent Cards */}
-            {filtered.length === 0 ? (
+            {/* Agent View */}
+            {viewMode === "office" ? (
+              <AgentOfficeView
+                agents={filtered}
+                onSelectAgent={setSelectedAgent}
+              />
+            ) : filtered.length === 0 ? (
               <div className="text-center py-16 space-y-3">
                 <Bot className="h-10 w-10 mx-auto text-muted-foreground/30" />
                 <p className="text-sm text-muted-foreground">
