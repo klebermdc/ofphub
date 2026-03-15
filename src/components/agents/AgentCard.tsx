@@ -77,6 +77,14 @@ export function AgentCard({ agent, onClick }: { agent: AgentActivity; onClick: (
           </p>
         )}
 
+        {/* Health indicator */}
+        {showHealth && (
+          <div className={`rounded-md p-2 text-[11px] font-medium flex items-center gap-1.5 ${healthCfg.bgClass} ${healthCfg.color}`}>
+            <div className={`h-1.5 w-1.5 rounded-full ${healthCfg.dotClass} ${agent.health_level === "critical" ? "animate-pulse" : ""}`} />
+            {healthCfg.label}{agent.health_reason ? ` · ${agent.health_reason}` : ""}
+          </div>
+        )}
+
         {/* Timestamps row */}
         <div className="flex items-center justify-between text-muted-foreground pt-1 border-t border-border/50">
           <span className="flex items-center gap-1">

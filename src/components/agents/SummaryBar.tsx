@@ -80,6 +80,21 @@ export function SummaryBar({ agents, stats24h, statsLoading }: SummaryBarProps) 
         ))}
       </div>
 
+      {/* Health row */}
+      <div className="grid grid-cols-3 gap-2">
+        {healthItems.map((item) => (
+          <div key={item.label} className="rounded-xl border bg-card/80 p-3 flex items-center gap-3">
+            <div className={`p-2 rounded-lg ${item.color === "text-yellow-500" ? "bg-yellow-500/10" : item.color === "text-red-500" ? "bg-red-500/10" : "bg-emerald-500/10"}`}>
+              <item.icon className={`h-4 w-4 ${item.color}`} />
+            </div>
+            <div>
+              <p className="text-xl font-bold leading-none">{item.value}</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">{item.label}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
       {/* 24h stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         {statsItems.map((item) => (
