@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AgentActivity } from "@/hooks/useAgentActivity";
-import { AREA_LABELS, STATUS_CONFIG, formatDuration, formatTimeAgo } from "./agentUtils";
+import { AREA_LABELS, STATUS_CONFIG, HEALTH_CONFIG, formatDuration, formatTimeAgo } from "./agentUtils";
 import { AGENT_AVATARS } from "./agentAvatars";
 import { Clock, Timer, Sparkles, Shield } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
