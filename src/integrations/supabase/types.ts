@@ -107,6 +107,7 @@ export type Database = {
           agent_name: string
           area: string
           created_at: string
+          experience_level: string | null
           id: string
           last_action: string | null
           last_channel: string | null
@@ -114,8 +115,12 @@ export type Database = {
           last_error: string | null
           last_run_at: string | null
           last_summary: string | null
+          mission: string | null
           next_run_at: string | null
+          persona: string | null
+          specialty: string | null
           status: string
+          style: string | null
           updated_at: string
         }
         Insert: {
@@ -123,6 +128,7 @@ export type Database = {
           agent_name: string
           area?: string
           created_at?: string
+          experience_level?: string | null
           id?: string
           last_action?: string | null
           last_channel?: string | null
@@ -130,8 +136,12 @@ export type Database = {
           last_error?: string | null
           last_run_at?: string | null
           last_summary?: string | null
+          mission?: string | null
           next_run_at?: string | null
+          persona?: string | null
+          specialty?: string | null
           status?: string
+          style?: string | null
           updated_at?: string
         }
         Update: {
@@ -139,6 +149,7 @@ export type Database = {
           agent_name?: string
           area?: string
           created_at?: string
+          experience_level?: string | null
           id?: string
           last_action?: string | null
           last_channel?: string | null
@@ -146,9 +157,61 @@ export type Database = {
           last_error?: string | null
           last_run_at?: string | null
           last_summary?: string | null
+          mission?: string | null
           next_run_at?: string | null
+          persona?: string | null
+          specialty?: string | null
           status?: string
+          style?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      agent_execution_history: {
+        Row: {
+          action: string | null
+          agent_key: string
+          agent_name: string
+          area: string
+          channel: string | null
+          created_at: string
+          duration_ms: number | null
+          error: string | null
+          finished_at: string | null
+          id: string
+          started_at: string | null
+          status: string
+          summary: string | null
+        }
+        Insert: {
+          action?: string | null
+          agent_key: string
+          agent_name: string
+          area: string
+          channel?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          started_at?: string | null
+          status: string
+          summary?: string | null
+        }
+        Update: {
+          action?: string | null
+          agent_key?: string
+          agent_name?: string
+          area?: string
+          channel?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          started_at?: string | null
+          status?: string
+          summary?: string | null
         }
         Relationships: []
       }
