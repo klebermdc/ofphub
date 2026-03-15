@@ -101,6 +101,57 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_activity: {
+        Row: {
+          agent_key: string
+          agent_name: string
+          area: string
+          created_at: string
+          id: string
+          last_action: string | null
+          last_channel: string | null
+          last_duration_ms: number | null
+          last_error: string | null
+          last_run_at: string | null
+          last_summary: string | null
+          next_run_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          agent_key: string
+          agent_name: string
+          area?: string
+          created_at?: string
+          id?: string
+          last_action?: string | null
+          last_channel?: string | null
+          last_duration_ms?: number | null
+          last_error?: string | null
+          last_run_at?: string | null
+          last_summary?: string | null
+          next_run_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          agent_key?: string
+          agent_name?: string
+          area?: string
+          created_at?: string
+          id?: string
+          last_action?: string | null
+          last_channel?: string | null
+          last_duration_ms?: number | null
+          last_error?: string | null
+          last_run_at?: string | null
+          last_summary?: string | null
+          next_run_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       api_integrations: {
         Row: {
           api_key: string
