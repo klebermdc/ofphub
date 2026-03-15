@@ -87,7 +87,13 @@ function AgentDesk({ agent, onClick }: { agent: AgentActivity; onClick: () => vo
                   <Zap className="h-2.5 w-2.5 text-white" />
                 )}
               </div>
-            </div>
+
+              {/* Health indicator overlay */}
+              {(isHealthWarning || isHealthCritical) && (
+                <div className={`absolute -top-1 -left-1 rounded-full p-0.5 border border-background ${isHealthCritical ? "bg-red-500 animate-pulse" : "bg-yellow-500"}`}>
+                  <ShieldAlert className="h-2.5 w-2.5 text-white" />
+                </div>
+              )}
 
             {/* Desk base */}
             <div className={`w-20 sm:w-24 h-6 sm:h-7 rounded-md border flex items-center justify-center transition-colors ${
