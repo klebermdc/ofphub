@@ -64,6 +64,8 @@ export function AgentDetailDrawer({
 
   if (!agent) return null;
   const cfg = STATUS_CONFIG[agent.status] || STATUS_CONFIG.idle;
+  const healthCfg = HEALTH_CONFIG[agent.health_level || "healthy"] || HEALTH_CONFIG.healthy;
+  const showHealth = agent.health_level && agent.health_level !== "healthy";
 
   return (
     <Drawer open={open} onOpenChange={(v) => !v && onClose()}>
