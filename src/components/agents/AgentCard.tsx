@@ -1,13 +1,15 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AgentActivity } from "@/hooks/useAgentActivity";
-import { AREA_LABELS, STATUS_CONFIG, formatDuration, formatTimeAgo } from "./agentUtils";
+import { AREA_LABELS, STATUS_CONFIG, HEALTH_CONFIG, formatDuration, formatTimeAgo } from "./agentUtils";
 import { AGENT_AVATARS } from "./agentAvatars";
 import { Clock, Timer, Sparkles, Shield } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 export function AgentCard({ agent, onClick }: { agent: AgentActivity; onClick: () => void }) {
   const cfg = STATUS_CONFIG[agent.status] || STATUS_CONFIG.idle;
+  const healthCfg = HEALTH_CONFIG[agent.health_level || "healthy"] || HEALTH_CONFIG.healthy;
+  const showHealth = agent.health_level && agent.health_level !== "healthy";
 
   return (
     <Card
@@ -73,6 +75,14 @@ export function AgentCard({ agent, onClick }: { agent: AgentActivity; onClick: (
           <p className="text-muted-foreground bg-muted/30 rounded-md p-2 line-clamp-2 text-[11px]">
             {agent.last_summary}
           </p>
+        )}
+
+        {/* Health indicator */}
+        {showHealth && (
+          <div className={`rounded-md p-2 text-[11px] font-medium flex items-center gap-1.5 ${healthCfg.bgClass} ${healthCfg.color}`}>
+            <div className={`h-1.5 w-1.5 rounded-full ${healthCfg.dotClass} ${agent.health_level === "critical" ? "animate-pulse" : ""}`} />
+            {healthCfg.label}{agent.health_reason ? ` · ${agent.health_reason}` : ""}
+          </div>
         )}
 
         {/* Timestamps row */}

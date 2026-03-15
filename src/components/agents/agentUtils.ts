@@ -12,6 +12,14 @@ export const AREA_LABELS: Record<string, string> = {
   pricing: "Pricing",
 };
 
+export const HEALTH_LEVELS = ["all", "healthy", "warning", "critical"];
+
+export const HEALTH_CONFIG: Record<string, { color: string; label: string; dotClass: string; bgClass: string; emoji: string }> = {
+  healthy: { color: "text-emerald-500", label: "Saudável", dotClass: "bg-emerald-500", bgClass: "bg-emerald-500/10", emoji: "💚" },
+  warning: { color: "text-yellow-500", label: "Atenção", dotClass: "bg-yellow-500", bgClass: "bg-yellow-500/10", emoji: "⚠️" },
+  critical: { color: "text-red-500", label: "Crítico", dotClass: "bg-red-500", bgClass: "bg-red-500/10", emoji: "🔴" },
+};
+
 export const STATUS_CONFIG: Record<string, { color: string; label: string; dotClass: string; bgClass: string }> = {
   success: { color: "text-emerald-500", label: "Saudável", dotClass: "bg-emerald-500", bgClass: "bg-emerald-500/10" },
   running: { color: "text-blue-500", label: "Executando", dotClass: "bg-blue-500 animate-pulse", bgClass: "bg-blue-500/10" },

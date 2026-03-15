@@ -1,7 +1,7 @@
 import { AgentActivity } from "@/hooks/useAgentActivity";
 import { AGENT_AVATARS } from "./agentAvatars";
-import { STATUS_CONFIG, AREA_LABELS, formatTimeAgo } from "./agentUtils";
-import { Monitor, Coffee, AlertTriangle, Zap } from "lucide-react";
+import { STATUS_CONFIG, AREA_LABELS, HEALTH_CONFIG, formatTimeAgo } from "./agentUtils";
+import { Monitor, Coffee, AlertTriangle, Zap, ShieldAlert } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 // Office desk positions in a grid layout
@@ -24,6 +24,9 @@ function AgentDesk({ agent, onClick }: { agent: AgentActivity; onClick: () => vo
   const isRunning = agent.status === "running";
   const isError = agent.status === "error";
   const isIdle = agent.status === "idle";
+  const healthLevel = agent.health_level || "healthy";
+  const isHealthWarning = healthLevel === "warning";
+  const isHealthCritical = healthLevel === "critical";
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -84,6 +87,13 @@ function AgentDesk({ agent, onClick }: { agent: AgentActivity; onClick: () => vo
                   <Zap className="h-2.5 w-2.5 text-white" />
                 )}
               </div>
+
+              {/* Health indicator overlay */}
+              {(isHealthWarning || isHealthCritical) && (
+                <div className={`absolute -top-1 -left-1 rounded-full p-0.5 border border-background ${isHealthCritical ? "bg-red-500 animate-pulse" : "bg-yellow-500"}`}>
+                  <ShieldAlert className="h-2.5 w-2.5 text-white" />
+                </div>
+              )}
             </div>
 
             {/* Desk base */}
@@ -120,6 +130,11 @@ function AgentDesk({ agent, onClick }: { agent: AgentActivity; onClick: () => vo
           <div className="space-y-1">
             <p className="font-semibold text-xs">{agent.agent_name}</p>
             <p className={`text-[10px] ${cfg.color} font-medium`}>{cfg.label}</p>
+            {(isHealthWarning || isHealthCritical) && (
+              <p className={`text-[10px] font-medium ${isHealthCritical ? "text-red-500" : "text-yellow-500"}`}>
+                {isHealthCritical ? "🔴 Crítico" : "⚠️ Atenção"}{agent.health_reason ? `: ${agent.health_reason}` : ""}
+              </p>
+            )}
             {agent.last_action && (
               <p className="text-[10px] text-muted-foreground line-clamp-2">{agent.last_action}</p>
             )}

@@ -1,4 +1,4 @@
-import { Bot, Zap, CheckCircle2, AlertTriangle, Activity, TrendingUp, Flame, ShieldAlert } from "lucide-react";
+import { Bot, Zap, CheckCircle2, AlertTriangle, Activity, TrendingUp, Flame, ShieldAlert, HeartPulse, AlertCircle, XCircle } from "lucide-react";
 import { AgentActivity, ExecutionStats24h } from "@/hooks/useAgentActivity";
 
 interface SummaryBarProps {
@@ -13,11 +13,21 @@ export function SummaryBar({ agents, stats24h, statsLoading }: SummaryBarProps) 
   const errors = agents.filter(a => a.status === "error").length;
   const healthy = agents.filter(a => a.status === "success").length;
 
+  const healthHealthy = agents.filter(a => !a.health_level || a.health_level === "healthy").length;
+  const healthWarning = agents.filter(a => a.health_level === "warning").length;
+  const healthCritical = agents.filter(a => a.health_level === "critical").length;
+
   const items = [
     { icon: Bot, label: "Agentes", value: String(total), color: "text-foreground", sub: null },
     { icon: Zap, label: "Rodando", value: String(running), color: "text-blue-500", sub: null },
     { icon: CheckCircle2, label: "Saudáveis", value: String(healthy), color: "text-emerald-500", sub: null },
     { icon: AlertTriangle, label: "Com Erro", value: String(errors), color: "text-destructive", sub: null },
+  ];
+
+  const healthItems = [
+    { icon: HeartPulse, label: "Saúde OK", value: String(healthHealthy), color: "text-emerald-500" },
+    { icon: AlertCircle, label: "Atenção", value: String(healthWarning), color: "text-yellow-500" },
+    { icon: XCircle, label: "Crítico", value: String(healthCritical), color: "text-red-500" },
   ];
 
   const statsItems = [
@@ -60,6 +70,21 @@ export function SummaryBar({ agents, stats24h, statsLoading }: SummaryBarProps) 
         {items.map((item) => (
           <div key={item.label} className="rounded-xl border bg-card p-3 flex items-center gap-3">
             <div className={`p-2 rounded-lg ${item.color === "text-destructive" ? "bg-destructive/10" : item.color === "text-emerald-500" ? "bg-emerald-500/10" : item.color === "text-blue-500" ? "bg-blue-500/10" : "bg-muted"}`}>
+              <item.icon className={`h-4 w-4 ${item.color}`} />
+            </div>
+            <div>
+              <p className="text-xl font-bold leading-none">{item.value}</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">{item.label}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Health row */}
+      <div className="grid grid-cols-3 gap-2">
+        {healthItems.map((item) => (
+          <div key={item.label} className="rounded-xl border bg-card/80 p-3 flex items-center gap-3">
+            <div className={`p-2 rounded-lg ${item.color === "text-yellow-500" ? "bg-yellow-500/10" : item.color === "text-red-500" ? "bg-red-500/10" : "bg-emerald-500/10"}`}>
               <item.icon className={`h-4 w-4 ${item.color}`} />
             </div>
             <div>

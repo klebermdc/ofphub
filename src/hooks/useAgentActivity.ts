@@ -19,6 +19,8 @@ export interface AgentActivity {
   mission: string | null;
   style: string | null;
   experience_level: string | null;
+  health_level: string | null;
+  health_reason: string | null;
   updated_at: string;
 }
 

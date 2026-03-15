@@ -4,9 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { AgentActivity, AgentExecution, useAgentExecutionHistory } from "@/hooks/useAgentActivity";
-import { AREA_LABELS, STATUS_CONFIG, formatDuration, formatFullDateTime } from "./agentUtils";
+import { AREA_LABELS, STATUS_CONFIG, HEALTH_CONFIG, formatDuration, formatFullDateTime } from "./agentUtils";
 import { AGENT_AVATARS } from "./agentAvatars";
-import { User, Target, Sparkles, History, Shield, Zap, MessageSquare, Clock, Timer, AlertTriangle } from "lucide-react";
+import { User, Target, Sparkles, History, Shield, Zap, MessageSquare, Clock, Timer, AlertTriangle, HeartPulse } from "lucide-react";
 
 function ExecutionRow({ exec }: { exec: AgentExecution }) {
   const cfg = STATUS_CONFIG[exec.status] || STATUS_CONFIG.idle;
@@ -64,6 +64,8 @@ export function AgentDetailDrawer({
 
   if (!agent) return null;
   const cfg = STATUS_CONFIG[agent.status] || STATUS_CONFIG.idle;
+  const healthCfg = HEALTH_CONFIG[agent.health_level || "healthy"] || HEALTH_CONFIG.healthy;
+  const showHealth = agent.health_level && agent.health_level !== "healthy";
 
   return (
     <Drawer open={open} onOpenChange={(v) => !v && onClose()}>
@@ -82,6 +84,11 @@ export function AgentDetailDrawer({
             {agent.experience_level && (
               <Badge variant="secondary" className="text-[10px]">
                 <Shield className="h-2.5 w-2.5 mr-0.5" />{agent.experience_level}
+              </Badge>
+            )}
+            {showHealth && (
+              <Badge className={`text-[10px] ${healthCfg.bgClass} ${healthCfg.color} border-0`}>
+                <HeartPulse className="h-2.5 w-2.5 mr-0.5" />{healthCfg.label}
               </Badge>
             )}
           </DrawerDescription>
@@ -152,6 +159,17 @@ export function AgentDetailDrawer({
 
             {/* Status Tab */}
             <TabsContent value="status" className="space-y-3">
+              {/* Health Level */}
+              <div className={`rounded-lg p-3 space-y-1 border ${showHealth ? `${healthCfg.bgClass} border-current/20` : "bg-emerald-500/10 border-emerald-500/20"}`}>
+                <p className={`text-[10px] uppercase tracking-wider font-medium flex items-center gap-1 ${showHealth ? healthCfg.color : "text-emerald-500"}`}>
+                  <HeartPulse className="h-3 w-3" /> Saúde Operacional
+                </p>
+                <p className={`text-sm font-semibold ${showHealth ? healthCfg.color : "text-emerald-500"}`}>{healthCfg.label}</p>
+                {agent.health_reason && (
+                  <p className="text-xs text-muted-foreground">{agent.health_reason}</p>
+                )}
+              </div>
+
               <div className="grid grid-cols-2 gap-2">
                 <div className="rounded-lg bg-muted/40 p-3 space-y-1">
                   <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Última execução</p>

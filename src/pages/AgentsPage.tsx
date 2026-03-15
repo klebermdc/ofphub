@@ -12,7 +12,8 @@ import { SummaryBar } from "@/components/agents/SummaryBar";
 import { AgentDetailDrawer } from "@/components/agents/AgentDetailDrawer";
 import { AgentOfficeView } from "@/components/agents/AgentOfficeView";
 import {
-  AREAS, STATUSES, EXPERIENCE_LEVELS, AREA_LABELS, STATUS_CONFIG,
+  AREAS, STATUSES, EXPERIENCE_LEVELS, HEALTH_LEVELS, HEALTH_CONFIG,
+  AREA_LABELS, STATUS_CONFIG,
   SORT_OPTIONS, SortOption, sortAgents,
 } from "@/components/agents/agentUtils";
 
@@ -46,6 +47,7 @@ export default function AgentsPage() {
   const [areaFilter, setAreaFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [expFilter, setExpFilter] = useState("all");
+  const [healthFilter, setHealthFilter] = useState("all");
   const [nameFilter, setNameFilter] = useState("all");
   const [sortBy, setSortBy] = useState<SortOption>("updated");
   const [selectedAgent, setSelectedAgent] = useState<AgentActivity | null>(null);
@@ -59,6 +61,7 @@ export default function AgentsPage() {
       if (areaFilter !== "all" && a.area !== areaFilter) return false;
       if (statusFilter !== "all" && a.status !== statusFilter) return false;
       if (expFilter !== "all" && a.experience_level !== expFilter) return false;
+      if (healthFilter !== "all" && (a.health_level || "healthy") !== healthFilter) return false;
       if (nameFilter !== "all" && a.agent_key !== nameFilter) return false;
       if (q && !a.agent_name.toLowerCase().includes(q)
         && !(a.last_action || "").toLowerCase().includes(q)
@@ -67,7 +70,7 @@ export default function AgentsPage() {
       return true;
     });
     return sortAgents(result, sortBy);
-  }, [agents, areaFilter, statusFilter, expFilter, nameFilter, search, sortBy]);
+  }, [agents, areaFilter, statusFilter, expFilter, healthFilter, nameFilter, search, sortBy]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -175,6 +178,17 @@ export default function AgentsPage() {
                   <SelectItem value="all">Todos níveis</SelectItem>
                   {EXPERIENCE_LEVELS.filter(e => e !== "all").map((e) => (
                     <SelectItem key={e} value={e}>{e}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={healthFilter} onValueChange={setHealthFilter}>
+                <SelectTrigger className="w-[120px] h-8 text-xs">
+                  <SelectValue placeholder="Saúde" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toda saúde</SelectItem>
+                  {HEALTH_LEVELS.filter(h => h !== "all").map((h) => (
+                    <SelectItem key={h} value={h}>{HEALTH_CONFIG[h]?.label || h}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
