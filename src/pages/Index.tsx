@@ -146,12 +146,91 @@ const Index = () => {
 
   const conversionRate = totalLeads > 0 ? (metrics.totalNegocios / totalLeads) * 100 : 0;
 
-  // Auto-load saved sheet URL on mount
-  useEffect(() => {
-    if (!settingsLoading && savedUrl && !hasData && !isLoading) {
-      handleAnalyze(savedUrl);
+  // Load orders from database on mount
+  const loadOrdersFromDB = useCallback(async () => {
+    if (!user || isLoading) return;
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      // Group orders by vendedor
+      const repMap = new Map<string, SalesRep>();
+      (data || []).forEach((row, index) => {
+        const name = resolveSalespersonName(row.vendedor);
+        const order = {
+          cliente: row.cliente || '',
+          emailCliente: row.email_cliente || undefined,
+          data: row.data || '',
+          pedido: row.pedido || '',
+          venda: Number(row.venda) || 0,
+          fornecedor: row.fornecedor || '',
+          produto: row.produto || '',
+          comissao: Number(row.comissao) || 0,
+          comissaoTotal: Number(row.comissao_total) || 0,
+          porcentagemVendedor: Number(row.porcentagem_vendedor) || 0,
+          comissaoVendedor: Number(row.comissao_vendedor) || 0,
+          status: row.status || undefined,
+        };
+
+        const existing = repMap.get(name);
+        if (existing) {
+          existing.orders.push(order);
+          existing.sales += order.venda;
+          existing.commission += order.comissaoVendedor;
+          existing.deals += 1;
+        } else {
+          repMap.set(name, {
+            id: `rep-${repMap.size}`,
+            name,
+            sales: order.venda,
+            commission: order.comissaoVendedor,
+            deals: 1,
+            rate: order.porcentagemVendedor,
+            orders: [order],
+          });
+        }
+      });
+
+      const reps = Array.from(repMap.values());
+      // Recalc rate as average
+      reps.forEach(r => {
+        r.rate = r.orders.length > 0
+          ? r.orders.reduce((s, o) => s + o.porcentagemVendedor, 0) / r.orders.length
+          : 0;
+      });
+
+      setSalesReps(reps);
+      setTotals({
+        totalVendas: reps.reduce((s, r) => s + r.sales, 0),
+        totalComissao: reps.reduce((s, r) => s + r.commission, 0),
+        totalNegocios: reps.reduce((s, r) => s + r.deals, 0),
+        taxaMedia: reps.length > 0 ? reps.reduce((s, r) => s + r.rate, 0) / reps.length : 0,
+        vendedoresAtivos: reps.length,
+      });
+      setHasData(reps.length > 0);
+      setDataSource('sheet');
+      refetchGoals();
+    } catch (err) {
+      console.error('Error loading orders from DB:', err);
+      toast({
+        title: "Erro ao carregar pedidos",
+        description: "Não foi possível carregar os pedidos do banco de dados.",
+        variant: "destructive",
+      });
     }
-  }, [settingsLoading, savedUrl]);
+    setIsLoading(false);
+  }, [user]);
+
+  useEffect(() => {
+    if (user && !hasData && !isLoading && !loading && !roleLoading && role === 'manager') {
+      loadOrdersFromDB();
+    }
+  }, [user, loading, roleLoading, role]);
 
   // Handle authentication and role-based routing
   useEffect(() => {
