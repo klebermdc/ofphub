@@ -147,7 +147,7 @@ const Index = () => {
 
   // Load orders from database on mount
   const loadOrdersFromDB = useCallback(async () => {
-    if (!user || isLoading) return;
+    if (!user) return;
     setIsLoading(true);
     try {
       const { data, error } = await supabase
@@ -159,7 +159,7 @@ const Index = () => {
 
       // Group orders by vendedor
       const repMap = new Map<string, SalesRep>();
-      (data || []).forEach((row, index) => {
+      (data || []).forEach((row) => {
         const name = resolveSalespersonName(row.vendedor);
         const order = {
           cliente: row.cliente || '',
@@ -223,13 +223,13 @@ const Index = () => {
       });
     }
     setIsLoading(false);
-  }, [user]);
+  }, [user, refetchGoals]);
 
   useEffect(() => {
-    if (user && !hasData && !isLoading && !loading && !roleLoading && role === 'manager') {
+    if (user && !isLoading && !loading && !roleLoading && role === 'manager') {
       loadOrdersFromDB();
     }
-  }, [user, loading, roleLoading, role]);
+  }, [user, loading, roleLoading, role, loadOrdersFromDB]);
 
   // Handle authentication and role-based routing
   useEffect(() => {
