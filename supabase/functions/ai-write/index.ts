@@ -119,6 +119,61 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
+    // === AUTO-FILL user_id AND AUTO-CALC FOR orders ===
+    if (table === 'orders' && (action === 'insert' || action === 'upsert')) {
+      // Vendedor commission percentage mapping
+      const VENDEDOR_PERCENT: Record<string, number> = {
+        'Renata Santos': 20,
+        'Carolina': 20,
+        'Gabriela': 20,
+        'Kleber Augusto': 20,
+        'Marcella Freitas Soares Bastos': 20,
+        'Pedro Lima': 20,
+        'Rafael': 20,
+        'Suelen Reame': 20,
+      };
+
+      const processOrder = async (row: any) => {
+        // Auto-fill user_id from manager account
+        if (!row.user_id) {
+          const { data: authData } = await supabase.auth.admin.listUsers();
+          const systemUser = authData?.users?.find(
+            (u: any) => u.email?.toLowerCase() === 'comercial@orlandofastpass.com.br'
+          );
+          if (systemUser) {
+            row.user_id = systemUser.id;
+          } else {
+            throw new Error('Could not resolve system user_id for orders.');
+          }
+        }
+
+        // Auto-calculate commissions if venda and comissao % are provided
+        const venda = Number(row.venda) || 0;
+        const comissaoPct = Number(row.comissao) || 0;
+        const comissaoTotal = venda * (comissaoPct / 100);
+        row.comissao_total = Number(comissaoTotal.toFixed(2));
+
+        // Determine vendedor percentage
+        const vendedor = row.vendedor || '';
+        const pctVendedor = row.porcentagem_vendedor ?? VENDEDOR_PERCENT[vendedor] ?? 20;
+        row.porcentagem_vendedor = pctVendedor;
+        row.comissao_vendedor = Number((comissaoTotal * (pctVendedor / 100)).toFixed(2));
+
+        // Default status
+        if (!row.status) row.status = 'Pendente';
+
+        return row;
+      };
+
+      if (Array.isArray(data)) {
+        for (let i = 0; i < data.length; i++) {
+          data[i] = await processOrder(data[i]);
+        }
+      } else {
+        Object.assign(data, await processOrder({ ...data }));
+      }
+    }
+
     // === AUTO-FILL user_id FOR marketing_costs ===
     if (table === 'marketing_costs' && (action === 'insert' || action === 'update')) {
       const fillUserId = async (row: any) => {
