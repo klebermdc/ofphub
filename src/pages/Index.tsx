@@ -226,10 +226,10 @@ const Index = () => {
   }, [user]);
 
   useEffect(() => {
-    if (user && !hasData && !isLoading && !loading && !roleLoading && role === 'manager') {
+    if (user && !isLoading && !loading && !roleLoading && role === 'manager') {
       loadOrdersFromDB();
     }
-  }, [user, loading, roleLoading, role]);
+  }, [user, loading, roleLoading, role, loadOrdersFromDB]);
 
   // Handle authentication and role-based routing
   useEffect(() => {
