@@ -31,6 +31,12 @@ export function getCurrentMonthKey(): string {
 export function parseOrderDate(dateStr: string): { day: number; month: number; year: number } | null {
   if (!dateStr) return null;
   
+  // Handle ISO format YYYY-MM-DD
+  const isoMatch = dateStr.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (isoMatch) {
+    return { day: parseInt(isoMatch[3]), month: parseInt(isoMatch[2]), year: parseInt(isoMatch[1]) };
+  }
+  
   const parts = dateStr.split('/');
   if (parts.length < 2) return null;
   
