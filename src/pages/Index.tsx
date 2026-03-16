@@ -148,18 +148,31 @@ const Index = () => {
   // Load orders from database on mount
   const loadOrdersFromDB = useCallback(async () => {
     if (!user) return;
+
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('user_id', user.id);
+      const pageSize = 1000;
+      const allRows: any[] = [];
 
-      if (error) throw error;
+      for (let offset = 0; ; offset += pageSize) {
+        const { data, error } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .range(offset, offset + pageSize - 1);
+
+        if (error) throw error;
+        if (!data || data.length === 0) break;
+
+        allRows.push(...data);
+
+        if (data.length < pageSize) break;
+      }
 
       // Group orders by vendedor
       const repMap = new Map<string, SalesRep>();
-      (data || []).forEach((row) => {
+      allRows.forEach((row) => {
         const name = resolveSalespersonName(row.vendedor);
         const order = {
           cliente: row.cliente || '',
@@ -196,8 +209,7 @@ const Index = () => {
       });
 
       const reps = Array.from(repMap.values());
-      // Recalc rate as average
-      reps.forEach(r => {
+      reps.forEach((r) => {
         r.rate = r.orders.length > 0
           ? r.orders.reduce((s, o) => s + o.porcentagemVendedor, 0) / r.orders.length
           : 0;
@@ -221,8 +233,9 @@ const Index = () => {
         description: "Não foi possível carregar os pedidos do banco de dados.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }, [user, refetchGoals]);
 
   useEffect(() => {
