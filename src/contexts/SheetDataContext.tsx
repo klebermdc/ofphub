@@ -22,18 +22,26 @@ const SheetDataContext = createContext<SheetDataContextType | undefined>(undefin
  * These are orders added directly in the system, not imported from the sheet.
  */
 async function fetchManualOrders(userId: string): Promise<{ vendedor: string; order: OrderDetail }[]> {
-  const { data, error } = await supabase
-    .from('orders')
-    .select('*')
-    .eq('user_id', userId)
-    .is('sheet_row_index', null);
+  const pageSize = 1000;
+  const allRows: any[] = [];
+  for (let offset = 0; ; offset += pageSize) {
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('user_id', userId)
+      .is('sheet_row_index', null)
+      .range(offset, offset + pageSize - 1);
 
-  if (error) {
-    console.error('Error fetching manual orders:', error);
-    return [];
+    if (error) {
+      console.error('Error fetching manual orders:', error);
+      break;
+    }
+    if (!data || data.length === 0) break;
+    allRows.push(...data);
+    if (data.length < pageSize) break;
   }
 
-  return (data || []).map((row) => ({
+  return allRows.map((row) => ({
     vendedor: row.vendedor,
     order: {
       cliente: row.cliente || '',
