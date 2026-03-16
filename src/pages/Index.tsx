@@ -250,68 +250,7 @@ const Index = () => {
     handleRoleCheck();
   }, [user, loading, role, roleLoading, navigate, assignManagerRole]);
 
-  const handleAnalyze = async (url: string) => {
-    setIsLoading(true);
-    
-    try {
-      const { data, error } = await supabase.functions.invoke('parse-google-sheet', {
-        body: { sheetUrl: url }
-      });
-
-      if (error) {
-        toast({
-          title: "Erro ao importar",
-          description: error.message || "Não foi possível processar a planilha.",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      if (data.error) {
-        toast({
-          title: "Erro na planilha",
-          description: data.error,
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      const { resolveSalespersonName } = await import('@/config/salaries');
-      const transformedData: SalesRep[] = data.data.map((item: any, index: number) => ({
-        id: String(index + 1),
-        name: resolveSalespersonName(item.vendedor),
-        sales: item.vendas,
-        commission: item.comissao,
-        deals: item.negocios,
-        rate: item.taxa,
-        orders: item.pedidos || []
-      }));
-
-      setSalesReps(transformedData);
-      setTotals(data.totals);
-      setHasData(true);
-      setDataSource('sheet');
-      
-      await saveUrl(url);
-      refetchGoals();
-      
-      toast({
-        title: "Planilha importada!",
-        description: data.message,
-      });
-    } catch (err) {
-      console.error('Error:', err);
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao processar a planilha.",
-        variant: "destructive",
-      });
-    }
-    
-    setIsLoading(false);
-  };
+  const refreshOrders = () => loadOrdersFromDB();
 
   const handleGeneratePDF = async (rep: SalesRep) => {
     toast({
