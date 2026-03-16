@@ -1,0 +1,1 @@
+DELETE FROM orders WHERE vendedor LIKE '%@%' AND created_at >= now() - interval '24 hours'
