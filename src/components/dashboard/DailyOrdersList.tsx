@@ -47,12 +47,30 @@ interface DailyOrdersListProps {
 }
 
 function parseOrderDate(dateStr: string): { day: number; month: number; year: number } | null {
-  const parts = dateStr.split('/');
+  if (!dateStr) return null;
+  const trimmed = dateStr.trim();
+
+  // ISO format: YYYY-MM-DD
+  const isoMatch = trimmed.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (isoMatch) {
+    return {
+      day: parseInt(isoMatch[3], 10),
+      month: parseInt(isoMatch[2], 10),
+      year: parseInt(isoMatch[1], 10),
+    };
+  }
+
+  // BR format: DD/MM/YYYY or DD/MM/YY
+  const parts = trimmed.split('/');
   if (parts.length < 3) return null;
+
   const day = parseInt(parts[0], 10);
   const month = parseInt(parts[1], 10);
   let year = parseInt(parts[2], 10);
+
+  if (Number.isNaN(day) || Number.isNaN(month) || Number.isNaN(year)) return null;
   if (year < 100) year += 2000;
+
   return { day, month, year };
 }
 
