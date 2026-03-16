@@ -371,7 +371,7 @@ const Index = () => {
                       availableVendedores={salesReps.map(r => r.name)}
                       availableProdutos={[...new Set(salesReps.flatMap(r => r.orders?.map((o: any) => o.produto).filter(Boolean) || []))]}
                       availableFornecedores={[...new Set(salesReps.flatMap(r => r.orders?.map((o: any) => o.fornecedor).filter(Boolean) || []))]}
-                      onOrderSuccess={() => handleAnalyze(savedUrl || '')}
+                      onOrderSuccess={refreshOrders}
                     />
 
                     <DashboardMonthlyMetrics
