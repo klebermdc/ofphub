@@ -349,9 +349,8 @@ const Index = () => {
                       dashboardMonth={dashboardMonth}
                       setDashboardMonth={setDashboardMonth}
                       availableMonths={availableMonths}
-                      onAnalyze={handleAnalyze}
+                      onRefresh={refreshOrders}
                       isLoading={isLoading}
-                      savedUrl={savedUrl}
                       onSaveOperationalCosts={saveOperationalCosts}
                       getCostForMonth={getCostForMonth}
                       userId={user?.id}
