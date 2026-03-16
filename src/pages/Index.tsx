@@ -76,7 +76,7 @@ const Index = () => {
   const [dashboardMonth, setDashboardMonth] = useState<string>(getCurrentMonthKey());
 
   // Hooks for data fetching
-  const { savedUrl, isLoading: settingsLoading, saveUrl } = useSheetSettings(user?.id);
+  const { salaries, saveSalaries, getSalary } = useSalespersonSalaries(user?.id);
   const { salaries, saveSalaries, getSalary } = useSalespersonSalaries(user?.id);
   const { role, isLoading: roleLoading, assignManagerRole } = useUserRole(user?.id);
   const { 
