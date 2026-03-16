@@ -13,7 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SalesRep, SalesTotals } from "@/types/sales";
 import { generateSalesRepPDF } from "@/utils/pdfGenerator";
 import { useAuth } from "@/hooks/useAuth";
-import { useSheetSettings } from "@/hooks/useSheetSettings";
+
 import { useSalespersonSalaries } from "@/hooks/useSalespersonSalaries";
 import { useMarketingCosts } from "@/hooks/useMarketingCosts";
 import { useUserRole } from "@/hooks/useUserRole";
