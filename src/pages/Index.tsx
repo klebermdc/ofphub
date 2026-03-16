@@ -326,16 +326,19 @@ const Index = () => {
 
             <TabsContent value="dashboard" className="space-y-4 sm:space-y-6">
               <ErrorBoundary>
-                {!hasData ? (
+                {!hasData && !isLoading ? (
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
                     <div className="lg:col-span-2">
                       <div className="glass rounded-xl p-4 sm:p-8 text-center">
-                        <FileSpreadsheet className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 text-primary" />
+                        <ClipboardList className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 text-primary" />
                         <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">Bem-vindo ao Hub de Gestão</h2>
                         <p className="text-muted-foreground mb-4 sm:mb-6 text-sm sm:text-base">
-                          Importe sua planilha do Google Sheets para começar a análise de comissões.
+                          Nenhum pedido encontrado. Adicione pedidos pelo botão "Todos os Pedidos".
                         </p>
-                        <SheetInput onAnalyze={handleAnalyze} isLoading={isLoading} />
+                        <Button onClick={() => navigate('/pedidos')} className="gap-2">
+                          <ClipboardList className="h-4 w-4" />
+                          Ir para Pedidos
+                        </Button>
                       </div>
                     </div>
                   </div>
