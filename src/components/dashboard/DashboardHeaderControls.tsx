@@ -1,10 +1,9 @@
 import { useState } from "react";
-import { FileSpreadsheet, Calendar, ClipboardList, Download, Loader2 } from "lucide-react";
+import { FileSpreadsheet, Calendar, ClipboardList, Download, Loader2, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { SheetInput } from "@/components/SheetInput";
 import { OperationalCostsDialog } from "@/components/OperationalCostsDialog";
 import { getMonthName } from "@/utils/dateUtils";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,9 +14,8 @@ interface DashboardHeaderControlsProps {
   dashboardMonth: string;
   setDashboardMonth: (month: string) => void;
   availableMonths: string[];
-  onAnalyze: (url: string) => void;
+  onRefresh: () => void;
   isLoading: boolean;
-  savedUrl?: string;
   onSaveOperationalCosts: (month: number, year: number, software: number, telefonia: number) => Promise<boolean>;
   getCostForMonth: (month: number, year: number) => any;
   userId?: string;
@@ -29,9 +27,8 @@ export function DashboardHeaderControls({
   dashboardMonth,
   setDashboardMonth,
   availableMonths,
-  onAnalyze,
+  onRefresh,
   isLoading,
-  savedUrl,
   onSaveOperationalCosts,
   getCostForMonth,
   userId,
@@ -44,7 +41,6 @@ export function DashboardHeaderControls({
     if (!userId) return;
     setImporting(true);
     try {
-      // Get the integration config
       const { data: integrations, error: intError } = await supabase
         .from('api_integrations')
         .select('*')
@@ -60,7 +56,6 @@ export function DashboardHeaderControls({
 
       const integration = integrations[0] as any;
 
-      // Fetch data from external API via edge function
       const { data, error } = await supabase.functions.invoke('fetch-accounting-api', {
         body: { apiUrl: integration.api_url, apiKey: integration.api_key }
       });
@@ -71,18 +66,15 @@ export function DashboardHeaderControls({
         return;
       }
 
-      // Parse the response - try to extract costs from common formats
       const apiData = data.data;
       let software = 0;
       let telefonia = 0;
 
       if (apiData) {
-        // Support various response formats
         if (typeof apiData === 'object' && !Array.isArray(apiData)) {
           software = parseFloat(apiData.software || apiData.Software || apiData.custos_software || 0);
           telefonia = parseFloat(apiData.telefonia || apiData.Telefonia || apiData.custos_telefonia || 0);
         } else if (Array.isArray(apiData)) {
-          // Sum up costs from array items by category
           apiData.forEach((item: any) => {
             const cat = (item.categoria || item.category || item.plano_de_contas || '').toLowerCase();
             const valor = parseFloat(item.valor || item.value || item.amount || 0);
@@ -95,13 +87,11 @@ export function DashboardHeaderControls({
         }
       }
 
-      // Determine target month
       const targetMonth = dashboardMonth !== 'all' ? parseInt(dashboardMonth.split('/')[0]) : new Date().getMonth() + 1;
       const targetYear = dashboardMonth !== 'all' ? parseInt(dashboardMonth.split('/')[1]) : new Date().getFullYear();
 
       const success = await onSaveOperationalCosts(targetMonth, targetYear, software, telefonia);
       if (success) {
-        // Update last_sync_at
         await supabase
           .from('api_integrations')
           .update({ last_sync_at: new Date().toISOString() } as any)
@@ -122,9 +112,9 @@ export function DashboardHeaderControls({
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
       <div className="flex flex-wrap items-center gap-2 sm:gap-3">
         <span className="text-xs sm:text-sm text-muted-foreground">Fonte:</span>
-        <Badge variant={dataSource === 'sheet' ? 'default' : 'secondary'} className="gap-1 text-xs">
+        <Badge variant="default" className="gap-1 text-xs">
           <FileSpreadsheet className="h-3 w-3" />
-          {dataSource === 'sheet' ? 'Planilha' : 'Histórico'}
+          Banco de Dados
         </Badge>
         
         {/* Filtro de Mês */}
@@ -164,7 +154,16 @@ export function DashboardHeaderControls({
           </Button>
         )}
         <OperationalCostsDialog onSave={onSaveOperationalCosts} getCostForMonth={getCostForMonth} />
-        <SheetInput onAnalyze={onAnalyze} isLoading={isLoading} compact savedUrl={savedUrl} />
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onRefresh}
+          disabled={isLoading}
+          className="gap-1 sm:gap-2 text-xs sm:text-sm"
+        >
+          <RefreshCw className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isLoading ? 'animate-spin' : ''}`} />
+          <span className="hidden sm:inline">Atualizar</span>
+        </Button>
         <Button
           variant="outline"
           size="sm"

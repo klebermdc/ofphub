@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { FileSpreadsheet, Users, Megaphone, Receipt, Kanban, Calendar, ClipboardList } from "lucide-react";
 import { DashboardHeader } from "@/components/DashboardHeader";
-import { SheetInput } from "@/components/SheetInput";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { resolveSalespersonName } from "@/config/salaries";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -13,7 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SalesRep, SalesTotals } from "@/types/sales";
 import { generateSalesRepPDF } from "@/utils/pdfGenerator";
 import { useAuth } from "@/hooks/useAuth";
-import { useSheetSettings } from "@/hooks/useSheetSettings";
+
 import { useSalespersonSalaries } from "@/hooks/useSalespersonSalaries";
 import { useMarketingCosts } from "@/hooks/useMarketingCosts";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -76,7 +76,6 @@ const Index = () => {
   const [dashboardMonth, setDashboardMonth] = useState<string>(getCurrentMonthKey());
 
   // Hooks for data fetching
-  const { savedUrl, isLoading: settingsLoading, saveUrl } = useSheetSettings(user?.id);
   const { salaries, saveSalaries, getSalary } = useSalespersonSalaries(user?.id);
   const { role, isLoading: roleLoading, assignManagerRole } = useUserRole(user?.id);
   const { 
@@ -146,12 +145,91 @@ const Index = () => {
 
   const conversionRate = totalLeads > 0 ? (metrics.totalNegocios / totalLeads) * 100 : 0;
 
-  // Auto-load saved sheet URL on mount
-  useEffect(() => {
-    if (!settingsLoading && savedUrl && !hasData && !isLoading) {
-      handleAnalyze(savedUrl);
+  // Load orders from database on mount
+  const loadOrdersFromDB = useCallback(async () => {
+    if (!user || isLoading) return;
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      // Group orders by vendedor
+      const repMap = new Map<string, SalesRep>();
+      (data || []).forEach((row, index) => {
+        const name = resolveSalespersonName(row.vendedor);
+        const order = {
+          cliente: row.cliente || '',
+          emailCliente: row.email_cliente || undefined,
+          data: row.data || '',
+          pedido: row.pedido || '',
+          venda: Number(row.venda) || 0,
+          fornecedor: row.fornecedor || '',
+          produto: row.produto || '',
+          comissao: Number(row.comissao) || 0,
+          comissaoTotal: Number(row.comissao_total) || 0,
+          porcentagemVendedor: Number(row.porcentagem_vendedor) || 0,
+          comissaoVendedor: Number(row.comissao_vendedor) || 0,
+          status: row.status || undefined,
+        };
+
+        const existing = repMap.get(name);
+        if (existing) {
+          existing.orders.push(order);
+          existing.sales += order.venda;
+          existing.commission += order.comissaoVendedor;
+          existing.deals += 1;
+        } else {
+          repMap.set(name, {
+            id: `rep-${repMap.size}`,
+            name,
+            sales: order.venda,
+            commission: order.comissaoVendedor,
+            deals: 1,
+            rate: order.porcentagemVendedor,
+            orders: [order],
+          });
+        }
+      });
+
+      const reps = Array.from(repMap.values());
+      // Recalc rate as average
+      reps.forEach(r => {
+        r.rate = r.orders.length > 0
+          ? r.orders.reduce((s, o) => s + o.porcentagemVendedor, 0) / r.orders.length
+          : 0;
+      });
+
+      setSalesReps(reps);
+      setTotals({
+        totalVendas: reps.reduce((s, r) => s + r.sales, 0),
+        totalComissao: reps.reduce((s, r) => s + r.commission, 0),
+        totalNegocios: reps.reduce((s, r) => s + r.deals, 0),
+        taxaMedia: reps.length > 0 ? reps.reduce((s, r) => s + r.rate, 0) / reps.length : 0,
+        vendedoresAtivos: reps.length,
+      });
+      setHasData(reps.length > 0);
+      setDataSource('sheet');
+      refetchGoals();
+    } catch (err) {
+      console.error('Error loading orders from DB:', err);
+      toast({
+        title: "Erro ao carregar pedidos",
+        description: "Não foi possível carregar os pedidos do banco de dados.",
+        variant: "destructive",
+      });
     }
-  }, [settingsLoading, savedUrl]);
+    setIsLoading(false);
+  }, [user]);
+
+  useEffect(() => {
+    if (user && !hasData && !isLoading && !loading && !roleLoading && role === 'manager') {
+      loadOrdersFromDB();
+    }
+  }, [user, loading, roleLoading, role]);
 
   // Handle authentication and role-based routing
   useEffect(() => {
@@ -171,68 +249,7 @@ const Index = () => {
     handleRoleCheck();
   }, [user, loading, role, roleLoading, navigate, assignManagerRole]);
 
-  const handleAnalyze = async (url: string) => {
-    setIsLoading(true);
-    
-    try {
-      const { data, error } = await supabase.functions.invoke('parse-google-sheet', {
-        body: { sheetUrl: url }
-      });
-
-      if (error) {
-        toast({
-          title: "Erro ao importar",
-          description: error.message || "Não foi possível processar a planilha.",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      if (data.error) {
-        toast({
-          title: "Erro na planilha",
-          description: data.error,
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      const { resolveSalespersonName } = await import('@/config/salaries');
-      const transformedData: SalesRep[] = data.data.map((item: any, index: number) => ({
-        id: String(index + 1),
-        name: resolveSalespersonName(item.vendedor),
-        sales: item.vendas,
-        commission: item.comissao,
-        deals: item.negocios,
-        rate: item.taxa,
-        orders: item.pedidos || []
-      }));
-
-      setSalesReps(transformedData);
-      setTotals(data.totals);
-      setHasData(true);
-      setDataSource('sheet');
-      
-      await saveUrl(url);
-      refetchGoals();
-      
-      toast({
-        title: "Planilha importada!",
-        description: data.message,
-      });
-    } catch (err) {
-      console.error('Error:', err);
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao processar a planilha.",
-        variant: "destructive",
-      });
-    }
-    
-    setIsLoading(false);
-  };
+  const refreshOrders = () => loadOrdersFromDB();
 
   const handleGeneratePDF = async (rep: SalesRep) => {
     toast({
@@ -308,16 +325,19 @@ const Index = () => {
 
             <TabsContent value="dashboard" className="space-y-4 sm:space-y-6">
               <ErrorBoundary>
-                {!hasData ? (
+                {!hasData && !isLoading ? (
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
                     <div className="lg:col-span-2">
                       <div className="glass rounded-xl p-4 sm:p-8 text-center">
-                        <FileSpreadsheet className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 text-primary" />
+                        <ClipboardList className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 text-primary" />
                         <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">Bem-vindo ao Hub de Gestão</h2>
                         <p className="text-muted-foreground mb-4 sm:mb-6 text-sm sm:text-base">
-                          Importe sua planilha do Google Sheets para começar a análise de comissões.
+                          Nenhum pedido encontrado. Adicione pedidos pelo botão "Todos os Pedidos".
                         </p>
-                        <SheetInput onAnalyze={handleAnalyze} isLoading={isLoading} />
+                        <Button onClick={() => navigate('/pedidos')} className="gap-2">
+                          <ClipboardList className="h-4 w-4" />
+                          Ir para Pedidos
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -328,9 +348,8 @@ const Index = () => {
                       dashboardMonth={dashboardMonth}
                       setDashboardMonth={setDashboardMonth}
                       availableMonths={availableMonths}
-                      onAnalyze={handleAnalyze}
+                      onRefresh={refreshOrders}
                       isLoading={isLoading}
-                      savedUrl={savedUrl}
                       onSaveOperationalCosts={saveOperationalCosts}
                       getCostForMonth={getCostForMonth}
                       userId={user?.id}
@@ -351,7 +370,7 @@ const Index = () => {
                       availableVendedores={salesReps.map(r => r.name)}
                       availableProdutos={[...new Set(salesReps.flatMap(r => r.orders?.map((o: any) => o.produto).filter(Boolean) || []))]}
                       availableFornecedores={[...new Set(salesReps.flatMap(r => r.orders?.map((o: any) => o.fornecedor).filter(Boolean) || []))]}
-                      onOrderSuccess={() => handleAnalyze(savedUrl || '')}
+                      onOrderSuccess={refreshOrders}
                     />
 
                     <DashboardMonthlyMetrics
@@ -545,7 +564,7 @@ const Index = () => {
                 ) : (
                   <div className="glass rounded-xl p-8 text-center">
                     <p className="text-muted-foreground">
-                      Importe uma planilha ou carregue um relatório do histórico para ver os vendedores.
+                      Nenhum pedido encontrado. Adicione pedidos na página "Todos os Pedidos".
                     </p>
                   </div>
                 )}
