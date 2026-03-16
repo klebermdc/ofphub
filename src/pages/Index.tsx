@@ -565,7 +565,7 @@ const Index = () => {
                 ) : (
                   <div className="glass rounded-xl p-8 text-center">
                     <p className="text-muted-foreground">
-                      Importe uma planilha ou carregue um relatório do histórico para ver os vendedores.
+                      Nenhum pedido encontrado. Adicione pedidos na página "Todos os Pedidos".
                     </p>
                   </div>
                 )}
