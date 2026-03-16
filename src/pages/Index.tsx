@@ -77,7 +77,6 @@ const Index = () => {
 
   // Hooks for data fetching
   const { salaries, saveSalaries, getSalary } = useSalespersonSalaries(user?.id);
-  const { salaries, saveSalaries, getSalary } = useSalespersonSalaries(user?.id);
   const { role, isLoading: roleLoading, assignManagerRole } = useUserRole(user?.id);
   const { 
     costs: marketingCosts, 
