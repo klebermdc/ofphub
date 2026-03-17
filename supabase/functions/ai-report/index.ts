@@ -84,6 +84,22 @@ serve(async (req) => {
     const statusParam = url.searchParams.get('status');
     const limitParam = Math.min(Math.max(parseInt(url.searchParams.get('limit') || '5000') || 5000, 1), 5000);
 
+    // === AGENT REPORTS LIST MODE ===
+    const tableParam = url.searchParams.get('table');
+    if (tableParam === 'agent_reports') {
+      const agentKeyFilter = url.searchParams.get('agent_key');
+      const reportTypeFilter = url.searchParams.get('report_type');
+      const reportLimit = Math.min(parseInt(url.searchParams.get('limit') || '50') || 50, 200);
+
+      let query = supabase.from('agent_reports').select('id, agent_key, title, report_type, metadata, created_at, content');
+      if (agentKeyFilter) query = query.eq('agent_key', agentKeyFilter);
+      if (reportTypeFilter) query = query.eq('report_type', reportTypeFilter);
+      const { data: reports, error } = await query.order('created_at', { ascending: false }).limit(reportLimit);
+      if (error) throw error;
+
+      return jsonResponse({ table: 'agent_reports', total: reports?.length || 0, reports: reports || [] });
+    }
+
     const hasDateFilters = dateParam || (startDateParam && endDateParam);
     const hasMonthFilter = monthParam || yearParam;
     const hasSpecificFilters = hasDateFilters || hasMonthFilter || vendedorParam || statusParam;

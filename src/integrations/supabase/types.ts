@@ -221,6 +221,36 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_reports: {
+        Row: {
+          agent_key: string
+          content: string
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          report_type: string
+          title: string
+        }
+        Insert: {
+          agent_key: string
+          content: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          report_type: string
+          title: string
+        }
+        Update: {
+          agent_key?: string
+          content?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          report_type?: string
+          title?: string
+        }
+        Relationships: []
+      }
       api_integrations: {
         Row: {
           api_key: string
