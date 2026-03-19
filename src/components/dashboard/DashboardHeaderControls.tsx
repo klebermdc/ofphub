@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileSpreadsheet, Calendar, ClipboardList, Download, Loader2, RefreshCw } from "lucide-react";
+import { FileSpreadsheet, Calendar, ClipboardList, Download, Loader2, RefreshCw, CloudDownload } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { OperationalCostsDialog } from "@/components/OperationalCostsDialog";
 import { getMonthName } from "@/utils/dateUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useSheetSettings } from "@/hooks/useSheetSettings";
 
 interface DashboardHeaderControlsProps {
   dataSource: 'sheet' | 'history';
@@ -36,6 +37,8 @@ export function DashboardHeaderControls({
 }: DashboardHeaderControlsProps) {
   const navigate = useNavigate();
   const [importing, setImporting] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const { savedUrl } = useSheetSettings(userId);
 
   const handleImportCosts = async () => {
     if (!userId) return;
@@ -108,6 +111,29 @@ export function DashboardHeaderControls({
     setImporting(false);
   };
 
+  const handleSyncSheet = async () => {
+    if (!savedUrl) {
+      toast({ title: 'Nenhuma planilha configurada', description: 'Configure a URL da planilha em Configurações primeiro.', variant: 'destructive' });
+      return;
+    }
+    setSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('parse-google-sheet', {
+        body: { sheetUrl: savedUrl }
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      const totalPedidos = data?.data?.reduce((sum: number, v: any) => sum + (v.pedidos?.length || 0), 0) || 0;
+      toast({ title: 'Planilha sincronizada!', description: `${totalPedidos} pedidos importados da planilha.` });
+      // Refresh DB data after sync
+      onRefresh();
+    } catch (err: any) {
+      toast({ title: 'Erro ao sincronizar', description: err.message || 'Falha ao importar planilha.', variant: 'destructive' });
+    }
+    setSyncing(false);
+  };
+
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
       <div className="flex flex-wrap items-center gap-2 sm:gap-3">
@@ -154,6 +180,19 @@ export function DashboardHeaderControls({
           </Button>
         )}
         <OperationalCostsDialog onSave={onSaveOperationalCosts} getCostForMonth={getCostForMonth} />
+        {savedUrl && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSyncSheet}
+            disabled={syncing || isLoading}
+            className="gap-1 sm:gap-2 text-xs sm:text-sm"
+          >
+            {syncing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CloudDownload className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
+            <span className="hidden sm:inline">Sincronizar Planilha</span>
+            <span className="sm:hidden">Planilha</span>
+          </Button>
+        )}
         <Button
           variant="outline"
           size="sm"
