@@ -256,15 +256,31 @@ serve(async (req) => {
     const currentMonth = now.getMonth() + 1;
     const currentYear = now.getFullYear();
 
+    // Paginated fetch for ALL orders (bypasses 1000-row default limit)
+    const fetchAllFromTable = async (table: string, selectCols = '*', filters?: (q: any) => any) => {
+      const pageSize = 1000;
+      const all: any[] = [];
+      for (let offset = 0; ; offset += pageSize) {
+        let query = supabase.from(table).select(selectCols).range(offset, offset + pageSize - 1);
+        if (filters) query = filters(query);
+        const { data, error } = await query;
+        if (error) throw error;
+        if (!data || data.length === 0) break;
+        all.push(...data);
+        if (data.length < pageSize) break;
+      }
+      return all;
+    };
+
     const [
-      ordersResult, recentOrders24hResult, recentOrders7dResult,
-      accountingResult, recentAccountingResult, salesGoalsResult,
+      orders, recentOrders24hResult, recentOrders7dResult,
+      accounting, recentAccountingResult, salesGoalsResult,
       marketingResult, crmLeadsResult, salespeopleResult, commissionsResult,
     ] = await Promise.all([
-      supabase.from('orders').select('*'),
+      fetchAllFromTable('orders'),
       supabase.from('orders').select('*').gte('created_at', oneDayAgo).order('created_at', { ascending: false }),
       supabase.from('orders').select('*').gte('created_at', sevenDaysAgo).order('created_at', { ascending: false }),
-      supabase.from('accounting_entries').select('*'),
+      fetchAllFromTable('accounting_entries'),
       supabase.from('accounting_entries').select('*').gte('created_at', sevenDaysAgo).order('created_at', { ascending: false }),
       supabase.from('sales_goals').select('*').eq('period_month', currentMonth).eq('period_year', currentYear),
       supabase.from('marketing_costs').select('*').eq('period_month', currentMonth).eq('period_year', currentYear),
@@ -273,10 +289,8 @@ serve(async (req) => {
       supabase.from('commission_payments').select('*').eq('period_month', currentMonth).eq('period_year', currentYear),
     ]);
 
-    const orders = ordersResult.data || [];
     const recentOrders24h = recentOrders24hResult.data || [];
     const recentOrders7d = recentOrders7dResult.data || [];
-    const accounting = accountingResult.data || [];
     const recentAccounting = recentAccountingResult.data || [];
     const salesGoals = salesGoalsResult.data || [];
     const marketing = marketingResult.data || [];
@@ -335,6 +349,7 @@ serve(async (req) => {
     return jsonResponse({
       generated_at: now.toISOString(),
       period: { month: currentMonth, year: currentYear },
+      note: `Total de ${orders.length} pedidos carregados do banco (paginação completa).`,
       financial_summary: {
         total_revenue: totalRevenue, total_commission: totalCommission,
         total_orders: totalOrders, unique_clients: uniqueClients,
