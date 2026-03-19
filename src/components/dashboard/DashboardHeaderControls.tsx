@@ -111,6 +111,29 @@ export function DashboardHeaderControls({
     setImporting(false);
   };
 
+  const handleSyncSheet = async () => {
+    if (!savedUrl) {
+      toast({ title: 'Nenhuma planilha configurada', description: 'Configure a URL da planilha em Configurações primeiro.', variant: 'destructive' });
+      return;
+    }
+    setSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('parse-google-sheet', {
+        body: { sheetUrl: savedUrl }
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      const totalPedidos = data?.data?.reduce((sum: number, v: any) => sum + (v.pedidos?.length || 0), 0) || 0;
+      toast({ title: 'Planilha sincronizada!', description: `${totalPedidos} pedidos importados da planilha.` });
+      // Refresh DB data after sync
+      onRefresh();
+    } catch (err: any) {
+      toast({ title: 'Erro ao sincronizar', description: err.message || 'Falha ao importar planilha.', variant: 'destructive' });
+    }
+    setSyncing(false);
+  };
+
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
       <div className="flex flex-wrap items-center gap-2 sm:gap-3">
