@@ -84,8 +84,70 @@ serve(async (req) => {
     const statusParam = url.searchParams.get('status');
     const limitParam = Math.min(Math.max(parseInt(url.searchParams.get('limit') || '5000') || 5000, 1), 5000);
 
-    // === AGENT REPORTS LIST MODE ===
+    // === TABLE LIST MODE (agent_reports, orders, crm_leads, etc.) ===
     const tableParam = url.searchParams.get('table');
+
+    // --- Direct orders listing: ?table=orders ---
+    if (tableParam === 'orders') {
+      const vendFilter = url.searchParams.get('vendedor');
+      const statusFilter = url.searchParams.get('status');
+      const monthFilter = url.searchParams.get('month');
+      const yearFilter = url.searchParams.get('year');
+      const pageParam = Math.max(parseInt(url.searchParams.get('page') || '1') || 1, 1);
+      const perPage = Math.min(Math.max(parseInt(url.searchParams.get('per_page') || '500') || 500, 1), 2000);
+
+      // Fetch all orders with pagination
+      const pageSize = 1000;
+      const allOrders: any[] = [];
+      for (let offset = 0; ; offset += pageSize) {
+        let q = supabase.from('orders').select('*').range(offset, offset + pageSize - 1);
+        if (vendFilter) q = q.ilike('vendedor', `%${vendFilter}%`);
+        if (statusFilter) q = q.ilike('status', `%${statusFilter}%`);
+        const { data, error } = await q;
+        if (error) throw error;
+        if (!data || data.length === 0) break;
+        allOrders.push(...data);
+        if (data.length < pageSize) break;
+      }
+
+      // In-memory date filtering
+      let filtered = allOrders;
+      if (monthFilter || yearFilter) {
+        const mf = monthFilter ? parseInt(monthFilter) : null;
+        const yf = yearFilter ? parseInt(yearFilter) : null;
+        filtered = allOrders.filter(o => {
+          const my = extractMonthYear(o.data);
+          if (!my) return false;
+          if (mf && my.month !== mf) return false;
+          if (yf && my.year !== yf) return false;
+          return true;
+        });
+      }
+
+      // Sort by date desc
+      filtered.sort((a, b) => {
+        const da = parseDateToISO(a.data) || '';
+        const db = parseDateToISO(b.data) || '';
+        return db.localeCompare(da);
+      });
+
+      // Paginate result
+      const totalFiltered = filtered.length;
+      const totalPages = Math.ceil(totalFiltered / perPage);
+      const startIdx = (pageParam - 1) * perPage;
+      const pageData = filtered.slice(startIdx, startIdx + perPage);
+
+      return jsonResponse({
+        table: 'orders',
+        total: totalFiltered,
+        page: pageParam,
+        per_page: perPage,
+        total_pages: totalPages,
+        orders: pageData.map(mapOrder),
+      });
+    }
+
+    // --- Agent reports listing ---
     if (tableParam === 'agent_reports') {
       const agentKeyFilter = url.searchParams.get('agent_key');
       const reportTypeFilter = url.searchParams.get('report_type');
@@ -98,6 +160,95 @@ serve(async (req) => {
       if (error) throw error;
 
       return jsonResponse({ table: 'agent_reports', total: reports?.length || 0, reports: reports || [] });
+    }
+
+    // --- CRM leads listing ---
+    if (tableParam === 'crm_leads') {
+      const stageFilter = url.searchParams.get('stage');
+      const spFilter = url.searchParams.get('salesperson_name');
+      let query = supabase.from('crm_leads').select('*');
+      if (stageFilter) query = query.eq('stage', stageFilter);
+      if (spFilter) query = query.ilike('salesperson_name', `%${spFilter}%`);
+      const { data, error } = await query.order('created_at', { ascending: false });
+      if (error) throw error;
+      return jsonResponse({ table: 'crm_leads', total: data?.length || 0, leads: data || [] });
+    }
+
+    // --- Marketing costs listing ---
+    if (tableParam === 'marketing_costs') {
+      const { data, error } = await supabase.from('marketing_costs').select('*').order('period_year', { ascending: false }).order('period_month', { ascending: false });
+      if (error) throw error;
+      return jsonResponse({ table: 'marketing_costs', total: data?.length || 0, costs: data || [] });
+    }
+
+    // --- Salesperson goals listing ---
+    if (tableParam === 'salesperson_goals') {
+      const { data, error } = await supabase.from('salesperson_goals').select('*').order('period_year', { ascending: false }).order('period_month', { ascending: false });
+      if (error) throw error;
+      return jsonResponse({ table: 'salesperson_goals', total: data?.length || 0, goals: data || [] });
+    }
+
+    // --- Salesperson discounts listing ---
+    if (tableParam === 'salesperson_discounts') {
+      const { data, error } = await supabase.from('salesperson_discounts').select('*').order('period_year', { ascending: false }).order('period_month', { ascending: false });
+      if (error) throw error;
+      return jsonResponse({ table: 'salesperson_discounts', total: data?.length || 0, discounts: data || [] });
+    }
+
+    // --- Salesperson salaries listing ---
+    if (tableParam === 'salesperson_salaries') {
+      const { data, error } = await supabase.from('salesperson_salaries').select('*');
+      if (error) throw error;
+      return jsonResponse({ table: 'salesperson_salaries', total: data?.length || 0, salaries: data || [] });
+    }
+
+    // --- Sales goals listing ---
+    if (tableParam === 'sales_goals') {
+      const { data, error } = await supabase.from('sales_goals').select('*').order('period_year', { ascending: false }).order('period_month', { ascending: false });
+      if (error) throw error;
+      return jsonResponse({ table: 'sales_goals', total: data?.length || 0, goals: data || [] });
+    }
+
+    // --- Commission payments listing ---
+    if (tableParam === 'commission_payments') {
+      const { data, error } = await supabase.from('commission_payments').select('*').order('period_year', { ascending: false }).order('period_month', { ascending: false });
+      if (error) throw error;
+      return jsonResponse({ table: 'commission_payments', total: data?.length || 0, payments: data || [] });
+    }
+
+    // --- Accounting entries listing ---
+    if (tableParam === 'accounting_entries') {
+      const pageSize = 1000;
+      const allEntries: any[] = [];
+      for (let offset = 0; ; offset += pageSize) {
+        const { data, error } = await supabase.from('accounting_entries').select('*').range(offset, offset + pageSize - 1);
+        if (error) throw error;
+        if (!data || data.length === 0) break;
+        allEntries.push(...data);
+        if (data.length < pageSize) break;
+      }
+      return jsonResponse({ table: 'accounting_entries', total: allEntries.length, entries: allEntries });
+    }
+
+    // --- Profiles listing ---
+    if (tableParam === 'profiles') {
+      const { data, error } = await supabase.from('profiles').select('*');
+      if (error) throw error;
+      return jsonResponse({ table: 'profiles', total: data?.length || 0, profiles: data || [] });
+    }
+
+    // --- User roles listing ---
+    if (tableParam === 'user_roles') {
+      const { data, error } = await supabase.from('user_roles').select('*');
+      if (error) throw error;
+      return jsonResponse({ table: 'user_roles', total: data?.length || 0, roles: data || [] });
+    }
+
+    // --- Agent activity listing ---
+    if (tableParam === 'agent_activity') {
+      const { data, error } = await supabase.from('agent_activity').select('*');
+      if (error) throw error;
+      return jsonResponse({ table: 'agent_activity', total: data?.length || 0, agents: data || [] });
     }
 
     const hasDateFilters = dateParam || (startDateParam && endDateParam);
