@@ -497,10 +497,22 @@ serve(async (req) => {
     });
     const topSuppliers = Object.entries(supplierMap).map(([name, data]) => ({ name, ...data })).sort((a, b) => b.total - a.total).slice(0, 10);
 
+    // Check if agent wants all orders included
+    const includeOrders = url.searchParams.get('include_orders') === 'true';
+
     return jsonResponse({
       generated_at: now.toISOString(),
       period: { month: currentMonth, year: currentYear },
       note: `Total de ${orders.length} pedidos carregados do banco (paginação completa).`,
+      available_tables: [
+        'orders (com filtros: vendedor, status, month, year, page, per_page)',
+        'crm_leads (com filtros: stage, salesperson_name)',
+        'marketing_costs', 'salesperson_goals', 'salesperson_discounts',
+        'salesperson_salaries', 'sales_goals', 'commission_payments',
+        'accounting_entries', 'profiles', 'user_roles',
+        'agent_activity', 'agent_reports',
+      ],
+      usage_hint: 'Use ?table=orders para listar todos os pedidos. Use ?table=orders&month=3&year=2026 para filtrar. Use ?include_orders=true no modo default para incluir todos os pedidos no resumo.',
       financial_summary: {
         total_revenue: totalRevenue, total_commission: totalCommission,
         total_orders: totalOrders, unique_clients: uniqueClients,
@@ -544,6 +556,7 @@ serve(async (req) => {
           total_comissao: Number(s.total_comissao), total_negocios: s.total_negocios,
         })),
       } : null,
+      ...(includeOrders && { all_orders: orders.map(mapOrder) }),
     });
   } catch (error) {
     console.error('Error in ai-report:', error);
