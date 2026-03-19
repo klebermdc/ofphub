@@ -291,7 +291,6 @@ serve(async (req) => {
 
     const recentOrders24h = recentOrders24hResult.data || [];
     const recentOrders7d = recentOrders7dResult.data || [];
-    const accounting = accountingResult.data || [];
     const recentAccounting = recentAccountingResult.data || [];
     const salesGoals = salesGoalsResult.data || [];
     const marketing = marketingResult.data || [];
