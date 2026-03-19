@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileSpreadsheet, Calendar, ClipboardList, Download, Loader2, RefreshCw } from "lucide-react";
+import { FileSpreadsheet, Calendar, ClipboardList, Download, Loader2, RefreshCw, CloudDownload } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { OperationalCostsDialog } from "@/components/OperationalCostsDialog";
 import { getMonthName } from "@/utils/dateUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useSheetSettings } from "@/hooks/useSheetSettings";
 
 interface DashboardHeaderControlsProps {
   dataSource: 'sheet' | 'history';
@@ -36,6 +37,8 @@ export function DashboardHeaderControls({
 }: DashboardHeaderControlsProps) {
   const navigate = useNavigate();
   const [importing, setImporting] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const { savedUrl } = useSheetSettings(userId);
 
   const handleImportCosts = async () => {
     if (!userId) return;
