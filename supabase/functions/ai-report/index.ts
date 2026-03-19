@@ -350,6 +350,7 @@ serve(async (req) => {
     return jsonResponse({
       generated_at: now.toISOString(),
       period: { month: currentMonth, year: currentYear },
+      note: `Total de ${orders.length} pedidos carregados do banco (paginação completa).`,
       financial_summary: {
         total_revenue: totalRevenue, total_commission: totalCommission,
         total_orders: totalOrders, unique_clients: uniqueClients,
