@@ -1,0 +1,1 @@
+DELETE FROM orders WHERE sheet_row_index IS NULL AND venda = 0 AND vendedor = 'contato@orlandofastpass.com.br' AND data LIKE '2026-03%';
