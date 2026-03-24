@@ -526,23 +526,18 @@ serve(async (req) => {
       return dateStr;
     }
 
-    // Deduplicate: if same (pedido, cliente, vendedor, venda, normalized_data), keep only first occurrence (lowest sheet_row_index)
-    const seen = new Map<string, number>(); // key -> lowest sheet_row_index
-    const dedupedOrders = allOrders.filter(order => {
+    // Deduplicate: keep only the row with the lowest sheet_row_index per composite key
+    // (pedido, cliente, vendedor, venda, normalized_data)
+    const dedupByKey = new Map<string, typeof allOrders[number]>();
+    for (const order of allOrders) {
       const normalizedDate = normalizeDateForDedup(order.data);
       const key = `${order.pedido}|${order.cliente}|${order.vendedor}|${order.venda}|${normalizedDate}`;
-      const existing = seen.get(key);
-      if (existing !== undefined) {
-        // Keep the one with lower sheet_row_index
-        if (order.sheet_row_index < existing) {
-          seen.set(key, order.sheet_row_index);
-          return true; // This one replaces via upsert
-        }
-        return false; // Skip this duplicate
+      const existing = dedupByKey.get(key);
+      if (!existing || order.sheet_row_index < existing.sheet_row_index) {
+        dedupByKey.set(key, order);
       }
-      seen.set(key, order.sheet_row_index);
-      return true;
-    });
+    }
+    const dedupedOrders = Array.from(dedupByKey.values());
 
     const removedDuplicates = allOrders.length - dedupedOrders.length;
     if (removedDuplicates > 0) {
@@ -568,7 +563,41 @@ serve(async (req) => {
       syncedCount += batch.length;
     }
 
-    console.log(`Synced ${syncedCount}/${allOrders.length} orders to DB`);
+    // Remove stale sheet rows that no longer exist in the current sheet snapshot.
+    // Keep manual rows untouched (sheet_row_index IS NULL).
+    let removedStaleRows = 0;
+    if (!syncError) {
+      const keepRowIndexes = new Set(dedupedOrders.map((order) => order.sheet_row_index));
+      const { data: existingSheetRows, error: existingRowsError } = await supabase
+        .from('orders')
+        .select('id, sheet_row_index')
+        .eq('user_id', userId)
+        .not('sheet_row_index', 'is', null);
+
+      if (existingRowsError) {
+        console.error('Failed to load existing sheet rows for cleanup:', existingRowsError);
+      } else if (existingSheetRows && existingSheetRows.length > 0) {
+        const staleIds = existingSheetRows
+          .filter((row) => row.sheet_row_index !== null && !keepRowIndexes.has(row.sheet_row_index))
+          .map((row) => row.id);
+
+        for (let i = 0; i < staleIds.length; i += BATCH_SIZE) {
+          const idBatch = staleIds.slice(i, i + BATCH_SIZE);
+          const { error: deleteError } = await supabase
+            .from('orders')
+            .delete()
+            .in('id', idBatch);
+
+          if (deleteError) {
+            console.error('Failed deleting stale sheet rows batch:', deleteError);
+            break;
+          }
+          removedStaleRows += idBatch.length;
+        }
+      }
+    }
+
+    console.log(`Synced ${syncedCount}/${allOrders.length} orders to DB (removed ${removedStaleRows} stale rows)`);
 
     return new Response(
       JSON.stringify({ 
@@ -576,6 +605,7 @@ serve(async (req) => {
         data: salesData,
         totals,
         syncedOrders: syncedCount,
+        removedStaleRows,
         syncError,
         message: `${salesData.length} vendedores encontrados, ${syncedCount} pedidos sincronizados`
       }),
