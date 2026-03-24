@@ -509,10 +509,28 @@ serve(async (req) => {
       }
     }
 
-    // Deduplicate: if same (pedido, cliente, vendedor, venda, data), keep only first occurrence (lowest sheet_row_index)
+    // Normalize date to ISO for dedup comparison (handles "10/3/26" vs "10/03/2026")
+    function normalizeDateForDedup(dateStr: string): string {
+      if (!dateStr) return dateStr;
+      // Already ISO
+      if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(dateStr)) return dateStr;
+      // D/M/YY or DD/MM/YYYY
+      const parts = dateStr.split('/');
+      if (parts.length === 3) {
+        const d = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10);
+        let y = parseInt(parts[2], 10);
+        if (y < 100) y += 2000;
+        return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      }
+      return dateStr;
+    }
+
+    // Deduplicate: if same (pedido, cliente, vendedor, venda, normalized_data), keep only first occurrence (lowest sheet_row_index)
     const seen = new Map<string, number>(); // key -> lowest sheet_row_index
     const dedupedOrders = allOrders.filter(order => {
-      const key = `${order.pedido}|${order.cliente}|${order.vendedor}|${order.venda}|${order.data}`;
+      const normalizedDate = normalizeDateForDedup(order.data);
+      const key = `${order.pedido}|${order.cliente}|${order.vendedor}|${order.venda}|${normalizedDate}`;
       const existing = seen.get(key);
       if (existing !== undefined) {
         // Keep the one with lower sheet_row_index
