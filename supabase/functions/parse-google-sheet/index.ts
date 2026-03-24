@@ -509,13 +509,35 @@ serve(async (req) => {
       }
     }
 
+    // Deduplicate: if same (pedido, cliente, vendedor, venda, data), keep only first occurrence (lowest sheet_row_index)
+    const seen = new Map<string, number>(); // key -> lowest sheet_row_index
+    const dedupedOrders = allOrders.filter(order => {
+      const key = `${order.pedido}|${order.cliente}|${order.vendedor}|${order.venda}|${order.data}`;
+      const existing = seen.get(key);
+      if (existing !== undefined) {
+        // Keep the one with lower sheet_row_index
+        if (order.sheet_row_index < existing) {
+          seen.set(key, order.sheet_row_index);
+          return true; // This one replaces via upsert
+        }
+        return false; // Skip this duplicate
+      }
+      seen.set(key, order.sheet_row_index);
+      return true;
+    });
+
+    const removedDuplicates = allOrders.length - dedupedOrders.length;
+    if (removedDuplicates > 0) {
+      console.log(`Removed ${removedDuplicates} duplicate rows from sheet data`);
+    }
+
     // Upsert orders in batches (Supabase limit ~1000 per call)
     const BATCH_SIZE = 500;
     let syncedCount = 0;
     let syncError: string | null = null;
 
-    for (let i = 0; i < allOrders.length; i += BATCH_SIZE) {
-      const batch = allOrders.slice(i, i + BATCH_SIZE);
+    for (let i = 0; i < dedupedOrders.length; i += BATCH_SIZE) {
+      const batch = dedupedOrders.slice(i, i + BATCH_SIZE);
       const { error: upsertErr } = await supabase
         .from('orders')
         .upsert(batch, { onConflict: 'user_id,sheet_row_index', ignoreDuplicates: false });
