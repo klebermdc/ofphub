@@ -235,10 +235,12 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
     const totalOther = filteredCosts.reduce((sum, c) => sum + c.other_marketing, 0);
     const totalInvestment = totalGoogleAds + totalMetaAds + totalOther;
     
-    // Get leads from CRM (Notion) for selected period
+    // Priority: manual leads from marketing_costs > CRM count
     let totalLeads = 0;
-    if (selectedMonth === 'all') {
-      // Sum all leads for the year from CRM
+    const manualLeadsTotal = filteredCosts.reduce((sum, c) => sum + (c.leads || 0), 0);
+    if (manualLeadsTotal > 0) {
+      totalLeads = manualLeadsTotal;
+    } else if (selectedMonth === 'all') {
       totalLeads = leadsData?.monthBreakdown
         .filter(m => m.year === parseInt(selectedYear))
         .reduce((sum, m) => sum + m.total, 0) || 0;
