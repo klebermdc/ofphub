@@ -209,8 +209,10 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
         return sum + sales;
       }, 0);
 
-      // Get leads from CRM for this month
-      const monthLeads = getLeadsCountForMonth(cost.period_month, cost.period_year);
+      // Priority: manual leads from marketing_costs > CRM count
+      const manualLeads = cost.leads || 0;
+      const crmLeads = getLeadsCountForMonth(cost.period_month, cost.period_year);
+      const monthLeads = manualLeads > 0 ? manualLeads : crmLeads;
       
       return {
         month: getMonthName(cost.period_month).substring(0, 3),
