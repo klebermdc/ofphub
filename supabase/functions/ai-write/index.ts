@@ -18,8 +18,58 @@ const ALLOWED_TABLES = [
 const FIELD_MAPPINGS: Record<string, Record<string, string>> = {
   marketing_costs: {
     other: 'other_marketing',
+    valor: 'meta_ads',       // fallback; overridden by platform logic below
+    value: 'meta_ads',
+    amount: 'meta_ads',
+    cost: 'meta_ads',
   },
 };
+
+/** Platform-to-column mapping for marketing_costs */
+const PLATFORM_COLUMN_MAP: Record<string, string> = {
+  'meta ads': 'meta_ads',
+  'meta': 'meta_ads',
+  'facebook': 'meta_ads',
+  'facebook ads': 'meta_ads',
+  'instagram': 'meta_ads',
+  'google ads': 'google_ads',
+  'google': 'google_ads',
+  'tiktok ads': 'other_marketing',
+  'tiktok': 'other_marketing',
+  'outros': 'other_marketing',
+  'other': 'other_marketing',
+};
+
+/**
+ * For marketing_costs, if the agent sends { platform, amount/value/valor },
+ * route the monetary value to the correct column (meta_ads, google_ads, other_marketing).
+ */
+function resolveMarketingCostFields(row: any): any {
+  const platform = (row.platform || row.plataforma || '').toString().trim().toLowerCase();
+  const amountValue = row.amount ?? row.value ?? row.valor ?? row.cost ?? null;
+
+  if (amountValue !== null && platform) {
+    const targetColumn = PLATFORM_COLUMN_MAP[platform] || 'other_marketing';
+    row[targetColumn] = Number(amountValue);
+
+    // Clean up source fields
+    delete row.amount;
+    delete row.value;
+    delete row.valor;
+    delete row.cost;
+    delete row.platform;
+    delete row.plataforma;
+  } else if (amountValue !== null && !platform) {
+    // No platform specified — default to other_marketing
+    row.other_marketing = Number(amountValue);
+    delete row.amount;
+    delete row.value;
+    delete row.valor;
+    delete row.cost;
+  }
+
+  return row;
+}
 
 /**
  * Parse various date formats into ISO YYYY-MM-DD.
@@ -174,9 +224,13 @@ serve(async (req) => {
       }
     }
 
-    // === AUTO-FILL user_id FOR marketing_costs ===
-    if (table === 'marketing_costs' && (action === 'insert' || action === 'update')) {
-      const fillUserId = async (row: any) => {
+    // === RESOLVE PLATFORM + AUTO-FILL user_id FOR marketing_costs ===
+    if (table === 'marketing_costs' && (action === 'insert' || action === 'update' || action === 'upsert')) {
+      const processMarketingRow = async (row: any) => {
+        // Resolve platform/amount to correct column
+        resolveMarketingCostFields(row);
+
+        // Auto-fill user_id
         if (!row.user_id) {
           const { data: authData } = await supabase.auth.admin.listUsers();
           const systemUser = authData?.users?.find(
@@ -185,18 +239,22 @@ serve(async (req) => {
           if (systemUser) {
             row.user_id = systemUser.id;
           } else {
-            throw new Error('Could not resolve system user_id for marketing_costs. No user found with email comercial@orlandofastpass.com.br');
+            throw new Error('Could not resolve system user_id for marketing_costs.');
           }
         }
         return row;
       };
 
+      const NON_DB_KEYS = ['platform', 'plataforma', 'amount', 'value', 'valor', 'cost'];
       if (Array.isArray(data)) {
         for (let i = 0; i < data.length; i++) {
-          data[i] = await fillUserId(data[i]);
+          data[i] = await processMarketingRow(data[i]);
         }
       } else {
-        Object.assign(data, await fillUserId({ ...data }));
+        const processed = await processMarketingRow({ ...data });
+        // Remove non-DB keys from original data, then merge
+        for (const k of NON_DB_KEYS) delete data[k];
+        Object.assign(data, processed);
       }
     }
 
