@@ -245,12 +245,16 @@ serve(async (req) => {
         return row;
       };
 
+      const NON_DB_KEYS = ['platform', 'plataforma', 'amount', 'value', 'valor', 'cost'];
       if (Array.isArray(data)) {
         for (let i = 0; i < data.length; i++) {
           data[i] = await processMarketingRow(data[i]);
         }
       } else {
-        Object.assign(data, await processMarketingRow({ ...data }));
+        const processed = await processMarketingRow({ ...data });
+        // Remove non-DB keys from original data, then merge
+        for (const k of NON_DB_KEYS) delete data[k];
+        Object.assign(data, processed);
       }
     }
 
