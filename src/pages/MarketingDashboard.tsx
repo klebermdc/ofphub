@@ -236,8 +236,10 @@ const MarketingDashboard = () => {
         return sum + sales;
       }, 0);
 
-      // Get leads from CRM for this month
-      const monthLeads = getLeadsCountForMonth(cost.period_month, cost.period_year);
+      // Priority: manual leads from marketing_costs > CRM count
+      const manualLeads = cost.leads || 0;
+      const crmLeads = getLeadsCountForMonth(cost.period_month, cost.period_year);
+      const monthLeads = manualLeads > 0 ? manualLeads : crmLeads;
       
       return {
         month: getMonthName(cost.period_month).substring(0, 3),
@@ -260,9 +262,12 @@ const MarketingDashboard = () => {
     const totalOther = filteredCosts.reduce((sum, c) => sum + c.other_marketing, 0);
     const totalInvestment = totalGoogleAds + totalMetaAds + totalOther;
     
-    // Get leads from CRM (Notion) for selected period
+    // Priority: manual leads from marketing_costs > CRM count
     let totalLeads = 0;
-    if (selectedMonth === 'all') {
+    const manualLeadsTotal = filteredCosts.reduce((sum, c) => sum + (c.leads || 0), 0);
+    if (manualLeadsTotal > 0) {
+      totalLeads = manualLeadsTotal;
+    } else if (selectedMonth === 'all') {
       totalLeads = leadsData?.monthBreakdown
         .filter(m => m.year === parseInt(selectedYear))
         .reduce((sum, m) => sum + m.total, 0) || 0;
