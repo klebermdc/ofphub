@@ -126,6 +126,7 @@ const SALESPERSON_EMAIL_MAP: Record<string, string> = {
   "simone@orlandofastpass.com.br": "Simone",
   "site@orlandofastpass.com.br": "Site",
   "maria gabriela@orlandofastpass.com.br": "Maria Gabriela",
+  "mariagabriela@orlandofastpass.com.br": "Maria Gabriela",
 };
 
 function resolveSalespersonName(nameOrEmail: string): string {
