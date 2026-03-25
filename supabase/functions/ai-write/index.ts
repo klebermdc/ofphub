@@ -224,9 +224,13 @@ serve(async (req) => {
       }
     }
 
-    // === AUTO-FILL user_id FOR marketing_costs ===
-    if (table === 'marketing_costs' && (action === 'insert' || action === 'update')) {
-      const fillUserId = async (row: any) => {
+    // === RESOLVE PLATFORM + AUTO-FILL user_id FOR marketing_costs ===
+    if (table === 'marketing_costs' && (action === 'insert' || action === 'update' || action === 'upsert')) {
+      const processMarketingRow = async (row: any) => {
+        // Resolve platform/amount to correct column
+        resolveMarketingCostFields(row);
+
+        // Auto-fill user_id
         if (!row.user_id) {
           const { data: authData } = await supabase.auth.admin.listUsers();
           const systemUser = authData?.users?.find(
@@ -235,7 +239,7 @@ serve(async (req) => {
           if (systemUser) {
             row.user_id = systemUser.id;
           } else {
-            throw new Error('Could not resolve system user_id for marketing_costs. No user found with email comercial@orlandofastpass.com.br');
+            throw new Error('Could not resolve system user_id for marketing_costs.');
           }
         }
         return row;
@@ -243,10 +247,10 @@ serve(async (req) => {
 
       if (Array.isArray(data)) {
         for (let i = 0; i < data.length; i++) {
-          data[i] = await fillUserId(data[i]);
+          data[i] = await processMarketingRow(data[i]);
         }
       } else {
-        Object.assign(data, await fillUserId({ ...data }));
+        Object.assign(data, await processMarketingRow({ ...data }));
       }
     }
 
