@@ -565,21 +565,37 @@ serve(async (req) => {
 
     // Remove stale sheet rows that no longer exist in the current sheet snapshot.
     // Keep manual rows untouched (sheet_row_index IS NULL).
+    // IMPORTANT: paginate to avoid Supabase 1000-row default limit.
     let removedStaleRows = 0;
     if (!syncError) {
       const keepRowIndexes = new Set(dedupedOrders.map((order) => order.sheet_row_index));
-      const { data: existingSheetRows, error: existingRowsError } = await supabase
-        .from('orders')
-        .select('id, sheet_row_index')
-        .eq('user_id', userId)
-        .not('sheet_row_index', 'is', null);
+      
+      // Paginate fetching existing sheet rows (Supabase default limit = 1000)
+      const PAGE_SIZE = 1000;
+      const allExistingRows: { id: string; sheet_row_index: number }[] = [];
+      for (let offset = 0; ; offset += PAGE_SIZE) {
+        const { data: page, error: pageError } = await supabase
+          .from('orders')
+          .select('id, sheet_row_index')
+          .eq('user_id', userId)
+          .not('sheet_row_index', 'is', null)
+          .range(offset, offset + PAGE_SIZE - 1);
 
-      if (existingRowsError) {
-        console.error('Failed to load existing sheet rows for cleanup:', existingRowsError);
-      } else if (existingSheetRows && existingSheetRows.length > 0) {
-        const staleIds = existingSheetRows
+        if (pageError) {
+          console.error('Failed to load existing sheet rows page:', pageError);
+          break;
+        }
+        if (!page || page.length === 0) break;
+        allExistingRows.push(...page);
+        if (page.length < PAGE_SIZE) break;
+      }
+
+      if (allExistingRows.length > 0) {
+        const staleIds = allExistingRows
           .filter((row) => row.sheet_row_index !== null && !keepRowIndexes.has(row.sheet_row_index))
           .map((row) => row.id);
+
+        console.log(`Found ${allExistingRows.length} existing sheet rows, ${staleIds.length} are stale`);
 
         for (let i = 0; i < staleIds.length; i += BATCH_SIZE) {
           const idBatch = staleIds.slice(i, i + BATCH_SIZE);
