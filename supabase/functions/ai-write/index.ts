@@ -233,8 +233,9 @@ serve(async (req) => {
         // Auto-fill user_id
         if (!row.user_id) {
           const { data: authData } = await supabase.auth.admin.listUsers();
+          // Use manager account (contato@) so costs appear on the dashboard
           const systemUser = authData?.users?.find(
-            (u: any) => u.email?.toLowerCase() === 'comercial@orlandofastpass.com.br'
+            (u: any) => u.email?.toLowerCase() === 'contato@orlandofastpass.com.br'
           );
           if (systemUser) {
             row.user_id = systemUser.id;

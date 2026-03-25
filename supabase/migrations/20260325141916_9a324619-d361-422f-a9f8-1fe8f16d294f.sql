@@ -1,0 +1,1 @@
+UPDATE marketing_costs SET user_id = '7fe205d8-9622-43fc-be97-09af9f9157fa' WHERE id = '3999ca66-368e-4cba-9aca-4038f068f2ac';
