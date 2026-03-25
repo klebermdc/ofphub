@@ -18,8 +18,58 @@ const ALLOWED_TABLES = [
 const FIELD_MAPPINGS: Record<string, Record<string, string>> = {
   marketing_costs: {
     other: 'other_marketing',
+    valor: 'meta_ads',       // fallback; overridden by platform logic below
+    value: 'meta_ads',
+    amount: 'meta_ads',
+    cost: 'meta_ads',
   },
 };
+
+/** Platform-to-column mapping for marketing_costs */
+const PLATFORM_COLUMN_MAP: Record<string, string> = {
+  'meta ads': 'meta_ads',
+  'meta': 'meta_ads',
+  'facebook': 'meta_ads',
+  'facebook ads': 'meta_ads',
+  'instagram': 'meta_ads',
+  'google ads': 'google_ads',
+  'google': 'google_ads',
+  'tiktok ads': 'other_marketing',
+  'tiktok': 'other_marketing',
+  'outros': 'other_marketing',
+  'other': 'other_marketing',
+};
+
+/**
+ * For marketing_costs, if the agent sends { platform, amount/value/valor },
+ * route the monetary value to the correct column (meta_ads, google_ads, other_marketing).
+ */
+function resolveMarketingCostFields(row: any): any {
+  const platform = (row.platform || row.plataforma || '').toString().trim().toLowerCase();
+  const amountValue = row.amount ?? row.value ?? row.valor ?? row.cost ?? null;
+
+  if (amountValue !== null && platform) {
+    const targetColumn = PLATFORM_COLUMN_MAP[platform] || 'other_marketing';
+    row[targetColumn] = Number(amountValue);
+
+    // Clean up source fields
+    delete row.amount;
+    delete row.value;
+    delete row.valor;
+    delete row.cost;
+    delete row.platform;
+    delete row.plataforma;
+  } else if (amountValue !== null && !platform) {
+    // No platform specified — default to other_marketing
+    row.other_marketing = Number(amountValue);
+    delete row.amount;
+    delete row.value;
+    delete row.valor;
+    delete row.cost;
+  }
+
+  return row;
+}
 
 /**
  * Parse various date formats into ISO YYYY-MM-DD.
