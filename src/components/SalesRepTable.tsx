@@ -61,8 +61,17 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
   });
   const [pastedImage, setPastedImage] = useState<string | null>(null);
 
-  const openReceiptDialog = (url: string, name: string) => {
-    setReceiptDialog({ open: true, url, name });
+  const openReceiptDialog = async (name: string) => {
+    const signedUrl = await getSignedReceiptUrl(name);
+    if (signedUrl) {
+      setReceiptDialog({ open: true, url: signedUrl, name });
+    } else {
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar o comprovante.",
+        variant: "destructive",
+      });
+    }
   };
 
   const openPasteDialog = (name: string) => {
