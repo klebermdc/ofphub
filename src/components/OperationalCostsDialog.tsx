@@ -135,7 +135,6 @@ export function OperationalCostsDialog({ onSave, getCostForMonth }: OperationalC
           Adicionar Custos
         </Button>
       </DialogTrigger>
-      </DialogTrigger>
       <DialogContent className="sm:max-w-[520px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
