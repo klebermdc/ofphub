@@ -130,10 +130,11 @@ export function OperationalCostsDialog({ onSave, getCostForMonth }: OperationalC
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
+        <Button variant="default" size="sm" className="gap-2">
           <Plus className="h-4 w-4" />
-          Custos
+          Adicionar Custos
         </Button>
+      </DialogTrigger>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[520px]">
         <DialogHeader>
