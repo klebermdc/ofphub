@@ -352,21 +352,31 @@ const SalespersonDashboard = () => {
       
       <main className="container mx-auto px-3 sm:px-6 py-4 sm:py-6 relative">
         <Tabs defaultValue="vendas" className="space-y-4 sm:space-y-6">
-          <TabsList className="grid w-full max-w-lg grid-cols-3 h-auto p-1">
-            <TabsTrigger value="vendas" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-              <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Minhas Vendas</span>
-              <span className="sm:hidden">Vendas</span>
-            </TabsTrigger>
-            <TabsTrigger value="crm" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-              <Kanban className="h-3 w-3 sm:h-4 sm:w-4" />
-              CRM
-            </TabsTrigger>
-            <TabsTrigger value="propostas" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-              <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
-              Propostas
-            </TabsTrigger>
-          </TabsList>
+          {isManagerViewing ? (
+            <TabsList className="grid w-full max-w-lg grid-cols-3 h-auto p-1">
+              <TabsTrigger value="vendas" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+                <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Vendas</span>
+                <span className="sm:hidden">Vendas</span>
+              </TabsTrigger>
+              <TabsTrigger value="crm" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+                <Kanban className="h-3 w-3 sm:h-4 sm:w-4" />
+                CRM
+              </TabsTrigger>
+              <TabsTrigger value="propostas" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+                <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
+                Propostas
+              </TabsTrigger>
+            </TabsList>
+          ) : (
+            <TabsList className="w-auto h-auto p-1">
+              <TabsTrigger value="vendas" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+                <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Minhas Vendas</span>
+                <span className="sm:hidden">Vendas</span>
+              </TabsTrigger>
+            </TabsList>
+          )}
 
           {/* Vendas Tab */}
           <TabsContent value="vendas" className="space-y-4 sm:space-y-6">
@@ -508,18 +518,22 @@ const SalespersonDashboard = () => {
             </div>
           </TabsContent>
 
-          {/* CRM Tab */}
-          <TabsContent value="crm">
-            <CRMTab 
-              salespersonFilter={displaySalespersonName || undefined}
-              isReadOnly={!!isManagerViewing}
-            />
-          </TabsContent>
+          {/* CRM Tab - only for managers viewing */}
+          {isManagerViewing && (
+            <TabsContent value="crm">
+              <CRMTab 
+                salespersonFilter={displaySalespersonName || undefined}
+                isReadOnly={!!isManagerViewing}
+              />
+            </TabsContent>
+          )}
 
-          {/* Propostas Tab */}
-          <TabsContent value="propostas">
-            <ProposalTab />
-          </TabsContent>
+          {/* Propostas Tab - only for managers viewing */}
+          {isManagerViewing && (
+            <TabsContent value="propostas">
+              <ProposalTab />
+            </TabsContent>
+          )}
         </Tabs>
       </main>
     </div>
