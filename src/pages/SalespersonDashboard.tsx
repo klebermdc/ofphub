@@ -27,7 +27,8 @@ const SalespersonDashboard = () => {
   const { salespersonName: urlSalespersonName } = useParams<{ salespersonName?: string }>();
   const { user, loading, signOut } = useAuth();
   const { role, salespersonName: userSalespersonName, isLoading: roleLoading } = useUserRole(user?.id);
-  const { salesReps, isLoading: sheetLoading } = useSheetData();
+  const [allOrders, setAllOrders] = useState<OrderDetail[]>([]);
+  const [dbLoading, setDbLoading] = useState(true);
   const navigate = useNavigate();
   const { theme } = useTheme();
   
