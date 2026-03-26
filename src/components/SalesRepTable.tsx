@@ -66,11 +66,7 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
     if (signedUrl) {
       setReceiptDialog({ open: true, url: signedUrl, name });
     } else {
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar o comprovante.",
-        variant: "destructive",
-      });
+      toast.error("Não foi possível carregar o comprovante.");
     }
   };
 
