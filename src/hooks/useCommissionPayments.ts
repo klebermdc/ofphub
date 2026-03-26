@@ -112,12 +112,8 @@ export function useCommissionPayments(month: number, year: number) {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('payment-receipts')
-        .getPublicUrl(fileName);
-
-      const receiptUrl = urlData.publicUrl;
+      // Store the file path (not a public URL) — signed URLs are generated on read
+      const receiptUrl = fileName;
 
       if (existingPayment) {
         // Update existing payment with receipt
