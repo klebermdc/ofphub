@@ -362,7 +362,7 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
                                 variant="ghost"
                                 size="icon"
                                 className="h-7 w-7 sm:h-8 sm:w-8 text-success"
-                                onClick={() => openReceiptDialog(receiptUrl, rep.name)}
+                                onClick={() => openReceiptDialog(rep.name)}
                               >
                                 <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                               </Button>
