@@ -17,7 +17,7 @@ interface DashboardHeaderControlsProps {
   availableMonths: string[];
   onRefresh: () => void;
   isLoading: boolean;
-  onSaveOperationalCosts: (month: number, year: number, software: number, telefonia: number) => Promise<boolean>;
+  onSaveOperationalCosts: (month: number, year: number, software: number, telefonia: number, googleAds?: number, metaAds?: number, otherMarketing?: number, leads?: number, description?: string) => Promise<boolean>;
   getCostForMonth: (month: number, year: number) => any;
   userId?: string;
   hasApiIntegration?: boolean;
