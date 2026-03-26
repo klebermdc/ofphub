@@ -196,7 +196,8 @@ export function useCommissionPayments(month: number, year: number) {
     loading,
     togglePayment,
     isPaid,
-    getReceiptUrl,
+    getReceiptUrl: getReceiptPath,
+    getSignedReceiptUrl,
     uploadReceipt,
     refetch: fetchPayments
   };
