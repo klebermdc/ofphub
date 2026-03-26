@@ -4,7 +4,8 @@ import { DollarSign, TrendingUp, Package, Calendar, LogOut, User, Kanban, BarCha
 import { MetricCard } from "@/components/MetricCard";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
-import { useSheetData } from "@/contexts/SheetDataContext";
+import { OrderDetail } from "@/types/sales";
+import { resolveSalespersonName } from "@/config/salaries";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -26,7 +27,8 @@ const SalespersonDashboard = () => {
   const { salespersonName: urlSalespersonName } = useParams<{ salespersonName?: string }>();
   const { user, loading, signOut } = useAuth();
   const { role, salespersonName: userSalespersonName, isLoading: roleLoading } = useUserRole(user?.id);
-  const { salesReps, isLoading: sheetLoading } = useSheetData();
+  const [allOrders, setAllOrders] = useState<OrderDetail[]>([]);
+  const [dbLoading, setDbLoading] = useState(true);
   const navigate = useNavigate();
   const { theme } = useTheme();
   
@@ -46,6 +48,60 @@ const SalespersonDashboard = () => {
   
   const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonthKey());
   const [enviadoStatus, setEnviadoStatus] = useState<Record<string, boolean>>({});
+
+  // Load orders from database
+  const loadOrdersFromDB = useCallback(async () => {
+    if (!displaySalespersonName) return;
+    
+    setDbLoading(true);
+    try {
+      const pageSize = 1000;
+      const fetchedOrders: OrderDetail[] = [];
+      
+      for (let offset = 0; ; offset += pageSize) {
+        const { data, error } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('vendedor', displaySalespersonName)
+          .order('created_at', { ascending: false })
+          .range(offset, offset + pageSize - 1);
+        
+        if (error) throw error;
+        if (!data || data.length === 0) break;
+        
+        data.forEach((row: any) => {
+          fetchedOrders.push({
+            cliente: row.cliente || '',
+            emailCliente: row.email_cliente || undefined,
+            data: row.data || '',
+            pedido: row.pedido || '',
+            venda: Number(row.venda) || 0,
+            fornecedor: row.fornecedor || '',
+            produto: row.produto || '',
+            comissao: Number(row.comissao) || 0,
+            comissaoTotal: Number(row.comissao_total) || 0,
+            porcentagemVendedor: Number(row.porcentagem_vendedor) || 0,
+            comissaoVendedor: Number(row.comissao_vendedor) || 0,
+            status: row.status || undefined,
+          });
+        });
+        
+        if (data.length < pageSize) break;
+      }
+      
+      setAllOrders(fetchedOrders);
+    } catch (err) {
+      console.error('Error loading salesperson orders:', err);
+    } finally {
+      setDbLoading(false);
+    }
+  }, [displaySalespersonName]);
+
+  useEffect(() => {
+    if (displaySalespersonName) {
+      loadOrdersFromDB();
+    }
+  }, [loadOrdersFromDB]);
 
   // Fetch enviado status from database
   const fetchEnviadoStatus = useCallback(async () => {
@@ -114,28 +170,8 @@ const SalespersonDashboard = () => {
     }
   }, [user, loading, role, roleLoading, navigate, urlSalespersonName]);
 
-  // Get orders for this salesperson from salesReps
-  const salespersonOrders = useMemo(() => {
-    if (!displaySalespersonName || !salesReps.length) {
-      console.log('No salesperson name or no salesReps:', { displaySalespersonName, salesRepsLength: salesReps.length });
-      return [];
-    }
-    
-    // Find the salesperson in salesReps
-    const salesRep = salesReps.find(rep => 
-      rep.name.toLowerCase().includes(displaySalespersonName.toLowerCase()) ||
-      displaySalespersonName.toLowerCase().includes(rep.name.toLowerCase())
-    );
-    
-    console.log('Matching salesperson:', { 
-      displaySalespersonName, 
-      foundRep: salesRep?.name, 
-      ordersCount: salesRep?.orders?.length,
-      allReps: salesReps.map(r => r.name)
-    });
-    
-    return salesRep?.orders || [];
-  }, [salesReps, displaySalespersonName]);
+  // Orders already loaded from DB
+  const salespersonOrders = allOrders;
 
   // Extract available months
   const availableMonths = useMemo(() => {
@@ -216,7 +252,7 @@ const SalespersonDashboard = () => {
     navigate("/auth");
   };
 
-  if (loading || roleLoading || sheetLoading) {
+  if (loading || roleLoading || dbLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full"></div>
