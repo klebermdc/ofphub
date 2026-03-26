@@ -59,12 +59,19 @@ const SalespersonDashboard = () => {
       const fetchedOrders: OrderDetail[] = [];
       
       for (let offset = 0; ; offset += pageSize) {
-        const { data, error } = await supabase
+        let query = supabase
           .from('orders')
           .select('*')
           .eq('vendedor', displaySalespersonName)
           .order('created_at', { ascending: false })
           .range(offset, offset + pageSize - 1);
+
+        // Manager view must stay scoped to manager tenant to avoid cross-account mixing
+        if (role === 'manager' && user?.id) {
+          query = query.eq('user_id', user.id);
+        }
+
+        const { data, error } = await query;
         
         if (error) throw error;
         if (!data || data.length === 0) break;
@@ -95,7 +102,7 @@ const SalespersonDashboard = () => {
     } finally {
       setDbLoading(false);
     }
-  }, [displaySalespersonName]);
+  }, [displaySalespersonName, role, user?.id]);
 
   useEffect(() => {
     if (displaySalespersonName) {
@@ -105,11 +112,18 @@ const SalespersonDashboard = () => {
 
   // Fetch enviado status from database
   const fetchEnviadoStatus = useCallback(async () => {
-    if (!user) return;
-    
-    const { data, error } = await supabase
+    if (!user || !displaySalespersonName) return;
+
+    let query = supabase
       .from('orders')
-      .select('pedido, enviado');
+      .select('pedido, enviado')
+      .eq('vendedor', displaySalespersonName);
+
+    if (role === 'manager') {
+      query = query.eq('user_id', user.id);
+    }
+
+    const { data, error } = await query;
     
     if (!error && data) {
       const statusMap: Record<string, boolean> = {};
@@ -120,7 +134,7 @@ const SalespersonDashboard = () => {
       });
       setEnviadoStatus(statusMap);
     }
-  }, [user]);
+  }, [displaySalespersonName, role, user]);
 
   useEffect(() => {
     fetchEnviadoStatus();
@@ -128,7 +142,7 @@ const SalespersonDashboard = () => {
 
   // Toggle enviado status
   const toggleEnviado = async (pedido: string, currentValue: boolean) => {
-    if (!user) return;
+    if (!user || !displaySalespersonName || !pedido) return;
     
     const newValue = !currentValue;
     
@@ -136,17 +150,30 @@ const SalespersonDashboard = () => {
     setEnviadoStatus(prev => ({ ...prev, [pedido]: newValue }));
     
     // Check if order exists in DB
-    const { data: existing } = await supabase
+    let existingQuery = supabase
       .from('orders')
       .select('id')
       .eq('pedido', pedido)
-      .maybeSingle();
+      .eq('vendedor', displaySalespersonName);
+
+    if (role === 'manager') {
+      existingQuery = existingQuery.eq('user_id', user.id);
+    }
+
+    const { data: existing } = await existingQuery.maybeSingle();
     
     if (existing) {
-      const { error } = await supabase
+      let updateQuery = supabase
         .from('orders')
         .update({ enviado: newValue })
-        .eq('pedido', pedido);
+        .eq('pedido', pedido)
+        .eq('vendedor', displaySalespersonName);
+
+      if (role === 'manager') {
+        updateQuery = updateQuery.eq('user_id', user.id);
+      }
+
+      const { error } = await updateQuery;
       
       if (error) {
         setEnviadoStatus(prev => ({ ...prev, [pedido]: currentValue }));
