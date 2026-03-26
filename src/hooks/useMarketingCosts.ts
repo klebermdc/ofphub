@@ -149,7 +149,12 @@ export function useMarketingCosts(userId: string | undefined, isMarketingRole: b
     month: number,
     year: number,
     software: number,
-    telefonia: number
+    telefonia: number,
+    googleAds?: number,
+    metaAds?: number,
+    otherMarketing?: number,
+    leads?: number,
+    description?: string
   ) => {
     if (!userId) return false;
 
@@ -157,19 +162,23 @@ export function useMarketingCosts(userId: string | undefined, isMarketingRole: b
       (c) => c.period_month === month && c.period_year === year
     );
 
+    const updateData: Record<string, any> = { software, telefonia };
+    if (googleAds !== undefined) updateData.google_ads = googleAds;
+    if (metaAds !== undefined) updateData.meta_ads = metaAds;
+    if (otherMarketing !== undefined) updateData.other_marketing = otherMarketing;
+    if (leads !== undefined) updateData.leads = leads;
+    if (description !== undefined) updateData.description = description || null;
+
     if (existing) {
       const { error } = await supabase
         .from("marketing_costs")
-        .update({
-          software,
-          telefonia,
-        })
+        .update(updateData)
         .eq("id", existing.id);
 
       if (error) {
         toast({
           title: "Erro",
-          description: "Não foi possível atualizar os custos operacionais.",
+          description: "Não foi possível atualizar os custos.",
           variant: "destructive",
         });
         return false;
@@ -179,14 +188,13 @@ export function useMarketingCosts(userId: string | undefined, isMarketingRole: b
         user_id: userId,
         period_month: month,
         period_year: year,
-        software,
-        telefonia,
+        ...updateData,
       });
 
       if (error) {
         toast({
           title: "Erro",
-          description: "Não foi possível salvar os custos operacionais.",
+          description: "Não foi possível salvar os custos.",
           variant: "destructive",
         });
         return false;
@@ -196,7 +204,7 @@ export function useMarketingCosts(userId: string | undefined, isMarketingRole: b
     await fetchCosts();
     toast({
       title: "Custos salvos",
-      description: "Custos operacionais atualizados com sucesso.",
+      description: "Custos atualizados com sucesso.",
     });
     return true;
   };
