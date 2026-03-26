@@ -112,12 +112,8 @@ export function useCommissionPayments(month: number, year: number) {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('payment-receipts')
-        .getPublicUrl(fileName);
-
-      const receiptUrl = urlData.publicUrl;
+      // Store the file path (not a public URL) — signed URLs are generated on read
+      const receiptUrl = fileName;
 
       if (existingPayment) {
         // Update existing payment with receipt
@@ -164,9 +160,31 @@ export function useCommissionPayments(month: number, year: number) {
     return payment?.paid || false;
   };
 
-  const getReceiptUrl = (salespersonName: string): string | null => {
+  const getReceiptPath = (salespersonName: string): string | null => {
     const payment = payments.find(p => p.salesperson_name === salespersonName);
     return payment?.receipt_url || null;
+  };
+
+  const getSignedReceiptUrl = async (salespersonName: string): Promise<string | null> => {
+    const path = getReceiptPath(salespersonName);
+    if (!path) return null;
+
+    // Handle legacy full public URLs
+    const filePath = path.includes('/storage/v1/') 
+      ? path.split('/payment-receipts/')[1] 
+      : path;
+
+    if (!filePath) return null;
+
+    const { data, error } = await supabase.storage
+      .from('payment-receipts')
+      .createSignedUrl(filePath, 3600); // 1 hour expiry
+
+    if (error) {
+      console.error('Error creating signed URL:', error);
+      return null;
+    }
+    return data.signedUrl;
   };
 
   useEffect(() => {
@@ -178,7 +196,8 @@ export function useCommissionPayments(month: number, year: number) {
     loading,
     togglePayment,
     isPaid,
-    getReceiptUrl,
+    getReceiptUrl: getReceiptPath,
+    getSignedReceiptUrl,
     uploadReceipt,
     refetch: fetchPayments
   };

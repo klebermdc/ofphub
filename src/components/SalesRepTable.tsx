@@ -24,7 +24,7 @@ interface SalesRepTableProps {
 }
 
 export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selectedYear, getSalary, getDiscount, getDiscountDescription }: SalesRepTableProps) {
-  const { isPaid, togglePayment, uploadReceipt, getReceiptUrl, loading } = useCommissionPayments(selectedMonth, selectedYear);
+  const { isPaid, togglePayment, uploadReceipt, getReceiptUrl, getSignedReceiptUrl, loading } = useCommissionPayments(selectedMonth, selectedYear);
   
   // Filter out excluded names (partners) but add salary-only people (like Henrique TI)
   const allPeopleForPayment = useMemo(() => {
@@ -61,8 +61,13 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
   });
   const [pastedImage, setPastedImage] = useState<string | null>(null);
 
-  const openReceiptDialog = (url: string, name: string) => {
-    setReceiptDialog({ open: true, url, name });
+  const openReceiptDialog = async (name: string) => {
+    const signedUrl = await getSignedReceiptUrl(name);
+    if (signedUrl) {
+      setReceiptDialog({ open: true, url: signedUrl, name });
+    } else {
+      toast.error("Não foi possível carregar o comprovante.");
+    }
   };
 
   const openPasteDialog = (name: string) => {
@@ -353,7 +358,7 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
                                 variant="ghost"
                                 size="icon"
                                 className="h-7 w-7 sm:h-8 sm:w-8 text-success"
-                                onClick={() => openReceiptDialog(receiptUrl, rep.name)}
+                                onClick={() => openReceiptDialog(rep.name)}
                               >
                                 <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                               </Button>
