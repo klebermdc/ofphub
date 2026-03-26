@@ -4,7 +4,8 @@ import { DollarSign, TrendingUp, Package, Calendar, LogOut, User, Kanban, BarCha
 import { MetricCard } from "@/components/MetricCard";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
-import { useSheetData } from "@/contexts/SheetDataContext";
+import { OrderDetail } from "@/types/sales";
+import { resolveSalespersonName } from "@/config/salaries";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
