@@ -1,0 +1,1 @@
+ALTER TABLE marketing_costs ADD COLUMN IF NOT EXISTS category text;

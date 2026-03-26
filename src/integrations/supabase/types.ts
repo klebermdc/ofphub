@@ -512,6 +512,7 @@ export type Database = {
       }
       marketing_costs: {
         Row: {
+          category: string | null
           created_at: string
           description: string | null
           google_ads: number
@@ -528,6 +529,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          category?: string | null
           created_at?: string
           description?: string | null
           google_ads?: number
@@ -544,6 +546,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          category?: string | null
           created_at?: string
           description?: string | null
           google_ads?: number
