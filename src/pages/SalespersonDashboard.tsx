@@ -49,6 +49,60 @@ const SalespersonDashboard = () => {
   const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonthKey());
   const [enviadoStatus, setEnviadoStatus] = useState<Record<string, boolean>>({});
 
+  // Load orders from database
+  const loadOrdersFromDB = useCallback(async () => {
+    if (!displaySalespersonName) return;
+    
+    setDbLoading(true);
+    try {
+      const pageSize = 1000;
+      const fetchedOrders: OrderDetail[] = [];
+      
+      for (let offset = 0; ; offset += pageSize) {
+        const { data, error } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('vendedor', displaySalespersonName)
+          .order('created_at', { ascending: false })
+          .range(offset, offset + pageSize - 1);
+        
+        if (error) throw error;
+        if (!data || data.length === 0) break;
+        
+        data.forEach((row: any) => {
+          fetchedOrders.push({
+            cliente: row.cliente || '',
+            emailCliente: row.email_cliente || undefined,
+            data: row.data || '',
+            pedido: row.pedido || '',
+            venda: Number(row.venda) || 0,
+            fornecedor: row.fornecedor || '',
+            produto: row.produto || '',
+            comissao: Number(row.comissao) || 0,
+            comissaoTotal: Number(row.comissao_total) || 0,
+            porcentagemVendedor: Number(row.porcentagem_vendedor) || 0,
+            comissaoVendedor: Number(row.comissao_vendedor) || 0,
+            status: row.status || undefined,
+          });
+        });
+        
+        if (data.length < pageSize) break;
+      }
+      
+      setAllOrders(fetchedOrders);
+    } catch (err) {
+      console.error('Error loading salesperson orders:', err);
+    } finally {
+      setDbLoading(false);
+    }
+  }, [displaySalespersonName]);
+
+  useEffect(() => {
+    if (displaySalespersonName) {
+      loadOrdersFromDB();
+    }
+  }, [loadOrdersFromDB]);
+
   // Fetch enviado status from database
   const fetchEnviadoStatus = useCallback(async () => {
     if (!user) return;
