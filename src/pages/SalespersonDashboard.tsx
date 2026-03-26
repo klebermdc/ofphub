@@ -518,18 +518,22 @@ const SalespersonDashboard = () => {
             </div>
           </TabsContent>
 
-          {/* CRM Tab */}
-          <TabsContent value="crm">
-            <CRMTab 
-              salespersonFilter={displaySalespersonName || undefined}
-              isReadOnly={!!isManagerViewing}
-            />
-          </TabsContent>
+          {/* CRM Tab - only for managers viewing */}
+          {isManagerViewing && (
+            <TabsContent value="crm">
+              <CRMTab 
+                salespersonFilter={displaySalespersonName || undefined}
+                isReadOnly={!!isManagerViewing}
+              />
+            </TabsContent>
+          )}
 
-          {/* Propostas Tab */}
-          <TabsContent value="propostas">
-            <ProposalTab />
-          </TabsContent>
+          {/* Propostas Tab - only for managers viewing */}
+          {isManagerViewing && (
+            <TabsContent value="propostas">
+              <ProposalTab />
+            </TabsContent>
+          )}
         </Tabs>
       </main>
     </div>
