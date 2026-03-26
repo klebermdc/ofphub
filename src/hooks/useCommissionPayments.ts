@@ -160,12 +160,16 @@ export function useCommissionPayments(month: number, year: number) {
     return payment?.paid || false;
   };
 
-  const getReceiptUrl = async (salespersonName: string): Promise<string | null> => {
+  const getReceiptPath = (salespersonName: string): string | null => {
     const payment = payments.find(p => p.salesperson_name === salespersonName);
-    const path = payment?.receipt_url;
+    return payment?.receipt_url || null;
+  };
+
+  const getSignedReceiptUrl = async (salespersonName: string): Promise<string | null> => {
+    const path = getReceiptPath(salespersonName);
     if (!path) return null;
 
-    // If it's already a full URL (legacy public URLs), generate a signed URL from the path segment
+    // Handle legacy full public URLs
     const filePath = path.includes('/storage/v1/') 
       ? path.split('/payment-receipts/')[1] 
       : path;
