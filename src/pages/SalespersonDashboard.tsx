@@ -170,28 +170,8 @@ const SalespersonDashboard = () => {
     }
   }, [user, loading, role, roleLoading, navigate, urlSalespersonName]);
 
-  // Get orders for this salesperson from salesReps
-  const salespersonOrders = useMemo(() => {
-    if (!displaySalespersonName || !salesReps.length) {
-      console.log('No salesperson name or no salesReps:', { displaySalespersonName, salesRepsLength: salesReps.length });
-      return [];
-    }
-    
-    // Find the salesperson in salesReps
-    const salesRep = salesReps.find(rep => 
-      rep.name.toLowerCase().includes(displaySalespersonName.toLowerCase()) ||
-      displaySalespersonName.toLowerCase().includes(rep.name.toLowerCase())
-    );
-    
-    console.log('Matching salesperson:', { 
-      displaySalespersonName, 
-      foundRep: salesRep?.name, 
-      ordersCount: salesRep?.orders?.length,
-      allReps: salesReps.map(r => r.name)
-    });
-    
-    return salesRep?.orders || [];
-  }, [salesReps, displaySalespersonName]);
+  // Orders already loaded from DB
+  const salespersonOrders = allOrders;
 
   // Extract available months
   const availableMonths = useMemo(() => {
