@@ -114,7 +114,7 @@ export function DashboardMonthlyMetrics({
       </div>
 
       {/* Totais e Métricas */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4">
         <MetricCard
           title="Custo Total"
           value={formatCurrency(totalCost)}
@@ -132,6 +132,14 @@ export function DashboardMonthlyMetrics({
           variant="info"
           formula="Faturamento Total ÷ Número de Pedidos
 = Valor médio por pedido"
+        />
+        <MetricCard
+          title="Comissão Média %"
+          value={`${taxaMedia.toFixed(2)}%`}
+          icon={Percent}
+          delay={122}
+          variant="info"
+          formula="Média das porcentagens de comissão de todos os vendedores ativos no período"
         />
         <MetricCard
           title="Resultado Parcial"
