@@ -98,27 +98,19 @@ export function useDashboardMetrics(filteredSalesReps: SalesRep[]): DashboardMet
     const totalComissao = filteredSalesReps.reduce((sum, r) => sum + r.commission, 0);
     const totalNegocios = filteredSalesReps.reduce((sum, r) => sum + r.deals, 0);
     const vendedoresAtivos = filteredSalesReps.length;
-    
-    // Taxa média: comissão total / faturamento total * 100
-    const taxaMedia = totalVendas > 0 
-      ? (totalComissaoTotal / totalVendas) * 100
-      : 0;
 
     const ticketMedio = totalNegocios > 0 ? totalVendas / totalNegocios : 0;
-    
-    const topFornecedores = [...new Set(
-      filteredSalesReps.flatMap(r => r.orders?.map(o => o.fornecedor) || [])
-    )].filter(Boolean).length;
-
-    const topProdutos = [...new Set(
-      filteredSalesReps.flatMap(r => r.orders?.map(o => o.produto) || [])
-    )].filter(Boolean).length;
 
     // Calculate Comissão Total (from comissaoTotal column)
     const totalComissaoTotal = filteredSalesReps.reduce(
       (sum, rep) => sum + (rep.orders?.reduce((s, o) => s + (o.comissaoTotal || 0), 0) || 0), 
       0
     );
+
+    // Taxa média: comissão total / faturamento total * 100
+    const taxaMedia = totalVendas > 0 
+      ? (totalComissaoTotal / totalVendas) * 100
+      : 0;
 
     const ganhoBruto = totalComissaoTotal - totalComissao;
 
