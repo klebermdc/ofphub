@@ -306,7 +306,7 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
                         </TooltipContent>
                       </Tooltip>
                     </td>
-                    <td className="p-3 sm:p-4 text-right font-mono text-xs sm:text-sm hidden sm:table-cell">
+                    <td className="p-3 sm:p-4 text-right font-mono text-xs sm:text-sm">
                       {rep.sales > 0 ? ((rep.orders.filter(o => !o.produto?.toLowerCase().includes('guiamento')).reduce((s, o) => s + (o.comissaoTotal || 0), 0) / rep.orders.filter(o => !o.produto?.toLowerCase().includes('guiamento')).reduce((s, o) => s + o.venda, 0) * 100) || 0).toFixed(1) : '0.0'}%
                     </td>
                     <td className="p-3 sm:p-4 text-right font-mono text-xs sm:text-sm hidden sm:table-cell">
