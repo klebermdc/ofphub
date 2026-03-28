@@ -10,17 +10,21 @@ interface FilteredSalesData {
 /**
  * Hook to filter sales representatives by selected month
  */
+// Helper to check if an order is a "guiamento" product (excluded from reports)
+const isGuiamento = (produto?: string) =>
+  !!produto && produto.toLowerCase().includes('guiamento');
+
 export function useFilteredSalesReps(
   salesReps: SalesRep[],
   selectedMonth: string
 ): FilteredSalesData {
-  // Extract available months from orders data
+  // Extract available months from orders data (excluding guiamento)
   const availableMonths = useMemo(() => {
     const months = new Set<string>();
     
     salesReps.forEach(rep => {
       rep.orders?.forEach(order => {
-        if (order.data) {
+        if (order.data && !isGuiamento(order.produto)) {
           const monthKey = getMonthKeyFromDate(order.data);
           if (monthKey) {
             months.add(monthKey);
@@ -36,9 +40,36 @@ export function useFilteredSalesReps(
     });
   }, [salesReps]);
 
-  // Filter sales reps by selected month
+  // Filter sales reps by selected month (excluding guiamento products)
   const filteredSalesReps = useMemo(() => {
-    if (selectedMonth === 'all') return salesReps;
+    const filterOrders = (orders: OrderDetail[]) =>
+      orders.filter(o => !isGuiamento(o.produto));
+
+    const baseReps = selectedMonth === 'all'
+      ? salesReps.map(rep => ({ ...rep, orders: filterOrders(rep.orders || []) }))
+      : salesReps.map(rep => {
+          const filtered = filterOrders(rep.orders || []).filter(order => {
+            if (!order.data) return false;
+            return getMonthKeyFromDate(order.data) === selectedMonth;
+          });
+          return { ...rep, orders: filtered };
+        });
+
+    return baseReps.map(rep => {
+      const orders = rep.orders;
+      const sales = orders.reduce((sum, o) => sum + o.venda, 0);
+      const commission = orders.reduce((sum, o) => sum + o.comissaoVendedor, 0);
+      return {
+        ...rep,
+        orders,
+        sales,
+        commission,
+        deals: orders.length,
+        rate: orders.length > 0
+          ? orders.reduce((sum, o) => sum + o.porcentagemVendedor, 0) / orders.length
+          : 0,
+      };
+    }).filter(rep => rep.orders.length > 0);
     
     return salesReps.map(rep => {
       const filteredOrders = rep.orders?.filter(order => {
