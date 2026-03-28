@@ -194,11 +194,11 @@ export function SupplierSalesBreakdown({ salesReps }: SupplierSalesBreakdownProp
                     <YAxis
                       type="category"
                       dataKey="name"
-                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 9 }}
-                      fontSize={9}
+                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
+                      fontSize={10}
                       tickLine={false}
                       axisLine={false}
-                      width={80}
+                      width={100}
                     />
                     <Tooltip
                       contentStyle={{

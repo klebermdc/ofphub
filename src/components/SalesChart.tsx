@@ -56,10 +56,10 @@ export function SalesChart({ salesReps }: SalesChartProps) {
                 type="category"
                 dataKey="name"
                 tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                fontSize={12}
+                fontSize={11}
                 tickLine={false}
                 axisLine={false}
-                width={100}
+                width={120}
               />
               <Tooltip
                 contentStyle={{
