@@ -135,7 +135,7 @@ export function DashboardMonthlyMetrics({
         />
         <MetricCard
           title="Comissão Média %"
-          value={`${taxaMedia.toFixed(2)}%`}
+          value={`${(taxaMedia || 0).toFixed(2)}%`}
           icon={Percent}
           delay={122}
           variant="info"
