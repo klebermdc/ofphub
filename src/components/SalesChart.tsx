@@ -25,7 +25,7 @@ export function SalesChart({ salesReps }: SalesChartProps) {
   const chartData = [...salesReps]
     .sort((a, b) => b.sales - a.sales)
     .map(rep => ({
-      name: rep.name.split(' ')[0],
+      name: rep.name,
       vendas: rep.sales,
     }));
 
