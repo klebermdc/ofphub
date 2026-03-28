@@ -98,20 +98,8 @@ export function useDashboardMetrics(filteredSalesReps: SalesRep[]): DashboardMet
     const totalComissao = filteredSalesReps.reduce((sum, r) => sum + r.commission, 0);
     const totalNegocios = filteredSalesReps.reduce((sum, r) => sum + r.deals, 0);
     const vendedoresAtivos = filteredSalesReps.length;
-    
-    const taxaMedia = vendedoresAtivos > 0 
-      ? filteredSalesReps.reduce((sum, r) => sum + r.rate, 0) / vendedoresAtivos 
-      : 0;
 
     const ticketMedio = totalNegocios > 0 ? totalVendas / totalNegocios : 0;
-    
-    const topFornecedores = [...new Set(
-      filteredSalesReps.flatMap(r => r.orders?.map(o => o.fornecedor) || [])
-    )].filter(Boolean).length;
-
-    const topProdutos = [...new Set(
-      filteredSalesReps.flatMap(r => r.orders?.map(o => o.produto) || [])
-    )].filter(Boolean).length;
 
     // Calculate Comissão Total (from comissaoTotal column)
     const totalComissaoTotal = filteredSalesReps.reduce(
@@ -119,7 +107,20 @@ export function useDashboardMetrics(filteredSalesReps: SalesRep[]): DashboardMet
       0
     );
 
+    // Taxa média: comissão total / faturamento total * 100
+    const taxaMedia = totalVendas > 0 
+      ? (totalComissaoTotal / totalVendas) * 100
+      : 0;
+
     const ganhoBruto = totalComissaoTotal - totalComissao;
+
+    const topFornecedores = [...new Set(
+      filteredSalesReps.flatMap(r => r.orders?.map(o => o.fornecedor) || [])
+    )].filter(Boolean).length;
+
+    const topProdutos = [...new Set(
+      filteredSalesReps.flatMap(r => r.orders?.map(o => o.produto) || [])
+    )].filter(Boolean).length;
 
     // Calculate results by fortnight
     let primeira = { comissaoTotal: 0, comissaoVendedor: 0 };
