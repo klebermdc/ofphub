@@ -30,7 +30,7 @@ export function SalesChart({ salesReps }: SalesChartProps) {
     }));
 
   const pieData = salesReps.map((rep) => ({
-    name: rep.name.split(' ')[0],
+    name: rep.name,
     value: rep.sales,
     percentage: totalSales > 0 ? ((rep.sales / totalSales) * 100).toFixed(1) : 0,
   })).sort((a, b) => b.value - a.value);
