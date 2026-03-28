@@ -1,4 +1,4 @@
-import { DollarSign, TrendingUp, Users, Megaphone, Briefcase, Receipt, Wallet, Target, CircleDollarSign } from "lucide-react";
+import { DollarSign, TrendingUp, Users, Megaphone, Briefcase, Receipt, Wallet, Target, CircleDollarSign, Percent } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
 import { formatCurrency } from "@/utils/formatters";
 
@@ -15,6 +15,7 @@ interface MonthlyMetricsProps {
   ticketMedio: number;
   resultadoParcial: number;
   resultado: number;
+  taxaMedia: number;
 }
 
 export function DashboardMonthlyMetrics({
