@@ -25,12 +25,12 @@ export function SalesChart({ salesReps }: SalesChartProps) {
   const chartData = [...salesReps]
     .sort((a, b) => b.sales - a.sales)
     .map(rep => ({
-      name: rep.name.split(' ')[0],
+      name: rep.name,
       vendas: rep.sales,
     }));
 
   const pieData = salesReps.map((rep) => ({
-    name: rep.name.split(' ')[0],
+    name: rep.name,
     value: rep.sales,
     percentage: totalSales > 0 ? ((rep.sales / totalSales) * 100).toFixed(1) : 0,
   })).sort((a, b) => b.value - a.value);
@@ -56,10 +56,10 @@ export function SalesChart({ salesReps }: SalesChartProps) {
                 type="category"
                 dataKey="name"
                 tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                fontSize={12}
+                fontSize={11}
                 tickLine={false}
                 axisLine={false}
-                width={100}
+                width={120}
               />
               <Tooltip
                 contentStyle={{
