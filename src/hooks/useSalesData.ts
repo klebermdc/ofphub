@@ -18,13 +18,13 @@ export function useFilteredSalesReps(
   salesReps: SalesRep[],
   selectedMonth: string
 ): FilteredSalesData {
-  // Extract available months from orders data (excluding guiamento)
+  // Extract available months from orders data
   const availableMonths = useMemo(() => {
     const months = new Set<string>();
     
     salesReps.forEach(rep => {
       rep.orders?.forEach(order => {
-        if (order.data && !isGuiamento(order.produto)) {
+        if (order.data) {
           const monthKey = getMonthKeyFromDate(order.data);
           if (monthKey) {
             months.add(monthKey);
@@ -40,15 +40,12 @@ export function useFilteredSalesReps(
     });
   }, [salesReps]);
 
-  // Filter sales reps by selected month (excluding guiamento products)
+  // Filter sales reps by selected month (guiamento stays in base data, excluded only for commission % calc)
   const filteredSalesReps = useMemo(() => {
-    const filterOrders = (orders: OrderDetail[]) =>
-      orders.filter(o => !isGuiamento(o.produto));
-
     const baseReps = selectedMonth === 'all'
-      ? salesReps.map(rep => ({ ...rep, orders: filterOrders(rep.orders || []) }))
+      ? salesReps.map(rep => ({ ...rep, orders: rep.orders || [] }))
       : salesReps.map(rep => {
-          const filtered = filterOrders(rep.orders || []).filter(order => {
+          const filtered = (rep.orders || []).filter(order => {
             if (!order.data) return false;
             return getMonthKeyFromDate(order.data) === selectedMonth;
           });
@@ -68,28 +65,6 @@ export function useFilteredSalesReps(
         rate: orders.length > 0
           ? orders.reduce((sum, o) => sum + o.porcentagemVendedor, 0) / orders.length
           : 0,
-      };
-    }).filter(rep => rep.orders.length > 0);
-    
-    return salesReps.map(rep => {
-      const filteredOrders = rep.orders?.filter(order => {
-        if (!order.data) return false;
-        const orderMonthKey = getMonthKeyFromDate(order.data);
-        return orderMonthKey === selectedMonth;
-      }) || [];
-      
-      const sales = filteredOrders.reduce((sum, o) => sum + o.venda, 0);
-      const commission = filteredOrders.reduce((sum, o) => sum + o.comissaoVendedor, 0);
-      
-      return {
-        ...rep,
-        orders: filteredOrders,
-        sales,
-        commission,
-        deals: filteredOrders.length,
-        rate: filteredOrders.length > 0 
-          ? filteredOrders.reduce((sum, o) => sum + o.porcentagemVendedor, 0) / filteredOrders.length 
-          : 0
       };
     }).filter(rep => rep.orders.length > 0);
   }, [salesReps, selectedMonth]);
