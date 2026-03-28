@@ -416,6 +416,13 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
                   R$ {allPeopleForPayment.reduce((sum, rep) => sum + rep.commission + getSalary(rep.name) - (getDiscount ? getDiscount(rep.name) : 0), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </td>
                 <td className="p-3 sm:p-4 text-right font-mono text-xs sm:text-sm hidden sm:table-cell">
+                  {(() => {
+                    const totalSales = allPeopleForPayment.reduce((sum, rep) => sum + rep.orders.filter(o => !o.produto?.toLowerCase().includes('guiamento')).reduce((s, o) => s + o.venda, 0), 0);
+                    const totalComissao = allPeopleForPayment.reduce((sum, rep) => sum + rep.orders.filter(o => !o.produto?.toLowerCase().includes('guiamento')).reduce((s, o) => s + (o.comissaoTotal || 0), 0), 0);
+                    return totalSales > 0 ? (totalComissao / totalSales * 100).toFixed(1) : '0.0';
+                  })()}%
+                </td>
+                <td className="p-3 sm:p-4 text-right font-mono text-xs sm:text-sm hidden sm:table-cell">
                   {allPeopleForPayment.reduce((sum, rep) => sum + rep.deals, 0)}
                 </td>
                 <td className="p-3 sm:p-4" colSpan={3}></td>
