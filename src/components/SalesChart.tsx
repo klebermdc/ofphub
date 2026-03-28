@@ -59,7 +59,7 @@ export function SalesChart({ salesReps }: SalesChartProps) {
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
-                width={80}
+                width={100}
               />
               <Tooltip
                 contentStyle={{
