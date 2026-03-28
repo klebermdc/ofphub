@@ -411,7 +411,7 @@ export function DailyOrdersList({
                   <YAxis
                     type="category"
                     dataKey="name"
-                    width={80}
+                    width={100}
                     tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
                     axisLine={false}
                     tickLine={false}

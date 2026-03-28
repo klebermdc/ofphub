@@ -114,7 +114,7 @@ export function SalespersonROI({ salesReps, getSalary }: SalespersonROIProps) {
               dataKey="shortName"
               tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
               axisLine={{ stroke: 'hsl(var(--border))' }}
-              width={60}
+              width={100}
             />
             <Tooltip
               contentStyle={{
