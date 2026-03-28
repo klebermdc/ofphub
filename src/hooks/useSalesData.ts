@@ -114,6 +114,14 @@ export function useDashboardMetrics(filteredSalesReps: SalesRep[]): DashboardMet
 
     const ganhoBruto = totalComissaoTotal - totalComissao;
 
+    const topFornecedores = [...new Set(
+      filteredSalesReps.flatMap(r => r.orders?.map(o => o.fornecedor) || [])
+    )].filter(Boolean).length;
+
+    const topProdutos = [...new Set(
+      filteredSalesReps.flatMap(r => r.orders?.map(o => o.produto) || [])
+    )].filter(Boolean).length;
+
     // Calculate results by fortnight
     let primeira = { comissaoTotal: 0, comissaoVendedor: 0 };
     let segunda = { comissaoTotal: 0, comissaoVendedor: 0 };
