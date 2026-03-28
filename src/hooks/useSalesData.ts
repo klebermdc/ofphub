@@ -113,9 +113,14 @@ export function useDashboardMetrics(filteredSalesReps: SalesRep[]): DashboardMet
       0
     );
 
-    // Taxa média: comissão total / faturamento total * 100
-    const taxaMedia = totalVendas > 0 
-      ? (totalComissaoTotal / totalVendas) * 100
+    // Taxa média: exclude guiamento products for accurate commission rate
+    const nonGuiamentoOrders = filteredSalesReps.flatMap(r => 
+      (r.orders || []).filter(o => !isGuiamento(o.produto))
+    );
+    const vendasSemGuiamento = nonGuiamentoOrders.reduce((s, o) => s + o.venda, 0);
+    const comissaoTotalSemGuiamento = nonGuiamentoOrders.reduce((s, o) => s + (o.comissaoTotal || 0), 0);
+    const taxaMedia = vendasSemGuiamento > 0 
+      ? (comissaoTotalSemGuiamento / vendasSemGuiamento) * 100
       : 0;
 
     const ganhoBruto = totalComissaoTotal - totalComissao;
