@@ -453,6 +453,7 @@ const Index = () => {
                       ticketMedio={metrics.ticketMedio}
                       resultadoParcial={costCalc.resultadoParcial}
                       resultado={costCalc.resultado}
+                      taxaMedia={metrics.taxaMedia}
                     />
 
                     <EBITDACard
