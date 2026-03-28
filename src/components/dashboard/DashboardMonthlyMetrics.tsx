@@ -31,6 +31,7 @@ export function DashboardMonthlyMetrics({
   ticketMedio,
   resultadoParcial,
   resultado,
+  taxaMedia,
 }: MonthlyMetricsProps) {
   return (
     <div className="space-y-4">
