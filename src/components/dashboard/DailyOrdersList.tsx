@@ -15,12 +15,15 @@ import { DateRange } from "react-day-picker";
 
 interface DailyOrder {
   cliente: string;
+  emailCliente: string;
   pedido: string;
   venda: number;
   produto: string;
   fornecedor: string;
   vendedor: string;
+  comissao: number;
   comissaoTotal: number;
+  porcentagemVendedor: number;
   comissaoVendedor: number;
   dia: string;
 }
