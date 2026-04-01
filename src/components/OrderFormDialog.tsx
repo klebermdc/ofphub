@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
-import { Plus, Edit2, Loader2 } from "lucide-react";
+import { Plus, Edit2, Loader2, CalendarIcon } from "lucide-react";
+import { format, parse } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,6 +15,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -203,8 +208,8 @@ export function OrderFormDialog({
           <DialogTitle>{mode === 'add' ? 'Adicionar Novo Pedido' : 'Editar Pedido'}</DialogTitle>
           <DialogDescription>
             {mode === 'add' 
-              ? 'Preencha os dados do novo pedido. Ele será adicionado automaticamente à planilha.'
-              : 'Atualize os dados do pedido. As alterações serão sincronizadas com a planilha.'
+              ? 'Preencha os dados do novo pedido.'
+              : 'Atualize os dados do pedido.'
             }
           </DialogDescription>
         </DialogHeader>
@@ -213,14 +218,49 @@ export function OrderFormDialog({
           {/* Row 1: Data, Pedido, Vendedor */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="data">Data</Label>
-              <Input
-                id="data"
-                type="text"
-                placeholder="DD/MM/YYYY"
-                value={formData.data}
-                onChange={(e) => handleFieldChange('data', e.target.value)}
-              />
+              <Label>Data do Pedido</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !formData.data && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {formData.data || "Selecione a data"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={(() => {
+                      if (!formData.data) return undefined;
+                      // Try ISO format
+                      if (/^\d{4}-\d{2}-\d{2}$/.test(formData.data)) {
+                        return new Date(formData.data + 'T12:00:00');
+                      }
+                      // Try DD/MM/YYYY
+                      const parts = formData.data.split('/');
+                      if (parts.length === 3) {
+                        const y = parts[2].length === 2 ? 2000 + parseInt(parts[2]) : parseInt(parts[2]);
+                        return new Date(y, parseInt(parts[1]) - 1, parseInt(parts[0]), 12);
+                      }
+                      return undefined;
+                    })()}
+                    onSelect={(date) => {
+                      if (date) {
+                        const formatted = format(date, 'dd/MM/yyyy');
+                        handleFieldChange('data', formatted);
+                      }
+                    }}
+                    locale={ptBR}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
             <div className="space-y-2">
               <Label htmlFor="pedido">Nº Pedido</Label>
