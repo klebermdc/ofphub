@@ -466,7 +466,7 @@ export function DailyOrdersList({
           </div>
 
           {/* Charts side by side */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Sales Chart */}
             <div className="glass rounded-xl p-4">
               <div className="flex items-center gap-2 mb-3">
