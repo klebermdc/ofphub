@@ -9,7 +9,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { OrderFormDialog } from "@/components/OrderFormDialog";
 import { MetricCard } from "@/components/MetricCard";
 import { formatCurrency } from "@/utils/formatters";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from "recharts";
 import { ptBR } from "date-fns/locale";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
