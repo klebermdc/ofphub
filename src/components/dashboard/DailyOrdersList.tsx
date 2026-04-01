@@ -452,49 +452,61 @@ export function DailyOrdersList({
             </div>
           </div>
 
-          {/* Top Seller Chart */}
-          <div className="glass rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Trophy className="h-4 w-4 text-warning" />
-              <span className="text-sm font-semibold text-foreground">Vendas por Vendedor</span>
-            </div>
-            <div className="h-[200px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={salesByRep} layout="vertical" margin={{ left: 0, right: 8, top: 4, bottom: 4 }}>
-                  <XAxis type="number" hide />
-                  <YAxis
-                    type="category"
-                    dataKey="name"
-                    width={100}
-                    tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <Tooltip
-                    formatter={(value: number) => formatCurrency(value)}
-                    contentStyle={{
-                      background: "hsl(var(--popover))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: 8,
-                      fontSize: 12,
-                    }}
-                    labelStyle={{ color: "hsl(var(--foreground))" }}
-                  />
-                  <Bar dataKey="total" radius={[0, 6, 6, 0]} barSize={20}>
-                    {salesByRep.map((_, i) => (
-                      <Cell key={i} fill={chartColors[i % chartColors.length]} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            {salesByRep.length > 0 && (
-              <div className="mt-2 pt-2 border-t border-border/30 text-center">
-                <p className="text-[10px] text-muted-foreground">🏆 Líder {isFiltering ? 'do período' : 'do mês'}</p>
-                <p className="text-sm font-bold text-foreground">{salesByRep[0].name}</p>
-                <p className="text-xs text-primary font-medium">{formatCurrency(salesByRep[0].total)}</p>
+          {/* Charts side by side */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Sales Chart */}
+            <div className="glass rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Trophy className="h-4 w-4 text-warning" />
+                <span className="text-sm font-semibold text-foreground">Vendas por Vendedor</span>
               </div>
-            )}
+              <div className="h-[200px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={salesByRep} layout="vertical" margin={{ left: 0, right: 8, top: 4, bottom: 4 }}>
+                    <XAxis type="number" hide />
+                    <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                    <Tooltip formatter={(value: number) => formatCurrency(value)} contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} labelStyle={{ color: "hsl(var(--foreground))" }} />
+                    <Bar dataKey="total" radius={[0, 6, 6, 0]} barSize={20}>
+                      {salesByRep.map((_, i) => (<Cell key={i} fill={chartColors[i % chartColors.length]} />))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              {salesByRep.length > 0 && (
+                <div className="mt-2 pt-2 border-t border-border/30 text-center">
+                  <p className="text-[10px] text-muted-foreground">🏆 Líder {isFiltering ? 'do período' : 'do mês'}</p>
+                  <p className="text-sm font-bold text-foreground">{salesByRep[0].name}</p>
+                  <p className="text-xs text-primary font-medium">{formatCurrency(salesByRep[0].total)}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Profit Chart */}
+            <div className="glass rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <TrendingUp className="h-4 w-4 text-success" />
+                <span className="text-sm font-semibold text-foreground">Ganho por Vendedor</span>
+              </div>
+              <div className="h-[200px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={profitByRep} layout="vertical" margin={{ left: 0, right: 8, top: 4, bottom: 4 }}>
+                    <XAxis type="number" hide />
+                    <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                    <Tooltip formatter={(value: number) => formatCurrency(value)} contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} labelStyle={{ color: "hsl(var(--foreground))" }} />
+                    <Bar dataKey="total" radius={[0, 6, 6, 0]} barSize={20}>
+                      {profitByRep.map((_, i) => (<Cell key={i} fill={["hsl(var(--success))", "hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--warning))", "hsl(var(--secondary))"][i % 5]} />))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              {profitByRep.length > 0 && (
+                <div className="mt-2 pt-2 border-t border-border/30 text-center">
+                  <p className="text-[10px] text-muted-foreground">💰 Mais rentável {isFiltering ? 'do período' : 'do mês'}</p>
+                  <p className="text-sm font-bold text-foreground">{profitByRep[0].name}</p>
+                  <p className="text-xs text-success font-medium">{formatCurrency(profitByRep[0].total)}</p>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Period KPI Cards */}
