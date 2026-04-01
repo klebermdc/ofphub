@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Plus, Package, Trophy, CalendarIcon, RotateCcw, DollarSign, TrendingUp, Wallet, Pencil, Trash2 } from "lucide-react";
+import { Plus, Package, Trophy, CalendarIcon, RotateCcw, DollarSign, TrendingUp, Wallet, Pencil, Trash2, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
