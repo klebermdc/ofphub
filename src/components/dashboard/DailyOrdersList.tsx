@@ -110,6 +110,7 @@ export function DailyOrdersList({
         if (!parsed) return;
         if (parsed.month === m && parsed.year === y) {
           orders.push({
+            id: order.id || undefined,
             cliente: order.cliente || '-',
             emailCliente: order.emailCliente || '',
             pedido: order.pedido || '-',
@@ -122,6 +123,7 @@ export function DailyOrdersList({
             porcentagemVendedor: order.porcentagemVendedor || 0,
             comissaoVendedor: order.comissaoVendedor || 0,
             dia: `${parsed.day.toString().padStart(2, '0')}/${parsed.month.toString().padStart(2, '0')}`,
+            createdAt: order.createdAt || order.created_at || '',
           });
         }
       });
@@ -129,7 +131,10 @@ export function DailyOrdersList({
     return orders.sort((a, b) => {
       const dayA = parseInt(a.dia.split('/')[0], 10);
       const dayB = parseInt(b.dia.split('/')[0], 10);
-      return dayB - dayA;
+      if (dayB !== dayA) return dayB - dayA;
+      // Within same day, sort by insertion order (most recent first)
+      if (a.createdAt && b.createdAt) return b.createdAt.localeCompare(a.createdAt);
+      return 0;
     });
   }, [salesReps, m, y]);
 
