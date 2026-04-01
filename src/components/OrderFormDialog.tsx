@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { Plus, Edit2, Loader2, CalendarIcon } from "lucide-react";
-import { format, parse } from "date-fns";
+import { Plus, Edit2, Loader2, CalendarIcon, Trash2 } from "lucide-react";
+import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,28 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+interface ProductLineItem {
+  produto: string;
+  fornecedor: string;
+  venda: number;
+  comissao: number;
+  comissaoTotal: number;
+  porcentagemVendedor: number;
+  comissaoVendedor: number;
+}
+
 interface OrderFormData {
+  cliente: string;
+  emailCliente: string;
+  data: string;
+  pedido: string;
+  vendedor: string;
+  status: string;
+  items: ProductLineItem[];
+}
+
+// Legacy single-product interface for edit mode
+interface OrderFormDataLegacy {
   cliente: string;
   emailCliente: string;
   data: string;
@@ -38,7 +59,7 @@ interface OrderFormData {
 
 interface OrderFormDialogProps {
   mode: 'add' | 'edit';
-  order?: OrderFormData & { rowIndex?: number };
+  order?: OrderFormDataLegacy & { rowIndex?: number };
   sheetUrl?: string;
   availableVendedores?: string[];
   availableProdutos?: string[];
@@ -47,26 +68,51 @@ interface OrderFormDialogProps {
   trigger?: React.ReactNode;
 }
 
+const emptyItem: ProductLineItem = {
+  produto: '',
+  fornecedor: '',
+  venda: 0,
+  comissao: 0,
+  comissaoTotal: 0,
+  porcentagemVendedor: 0,
+  comissaoVendedor: 0,
+};
+
 const emptyOrder: OrderFormData = {
   cliente: '',
   emailCliente: '',
   data: new Date().toLocaleDateString('pt-BR'),
   pedido: '',
-  venda: 0,
-  fornecedor: '',
-  produto: '',
-  comissao: 0,
-  comissaoTotal: 0,
-  porcentagemVendedor: 0,
-  comissaoVendedor: 0,
   vendedor: '',
   status: 'Pendente',
+  items: [{ ...emptyItem }],
 };
+
+function parseDate(dateStr: string): Date | undefined {
+  if (!dateStr) return undefined;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    return new Date(dateStr + 'T12:00:00');
+  }
+  const parts = dateStr.split('/');
+  if (parts.length === 3) {
+    const y = parts[2].length === 2 ? 2000 + parseInt(parts[2]) : parseInt(parts[2]);
+    return new Date(y, parseInt(parts[1]) - 1, parseInt(parts[0]), 12);
+  }
+  return undefined;
+}
+
+function calcItem(item: ProductLineItem): ProductLineItem {
+  const comissaoTotal = item.venda * (item.comissao / 100);
+  const comissaoVendedor = comissaoTotal * (item.porcentagemVendedor / 100);
+  return { ...item, comissaoTotal, comissaoVendedor };
+}
+
+const formatCurrency = (value: number) =>
+  `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 export function OrderFormDialog({
   mode,
   order,
-  sheetUrl,
   availableVendedores = [],
   availableProdutos = [],
   availableFornecedores = [],
@@ -75,84 +121,118 @@ export function OrderFormDialog({
 }: OrderFormDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState<OrderFormData>(order || emptyOrder);
+  const [formData, setFormData] = useState<OrderFormData>(emptyOrder);
 
   useEffect(() => {
     if (order) {
-      setFormData(order);
+      setFormData({
+        cliente: order.cliente,
+        emailCliente: order.emailCliente,
+        data: order.data,
+        pedido: order.pedido,
+        vendedor: order.vendedor,
+        status: order.status,
+        items: [{
+          produto: order.produto,
+          fornecedor: order.fornecedor,
+          venda: order.venda,
+          comissao: order.comissao,
+          comissaoTotal: order.comissaoTotal,
+          porcentagemVendedor: order.porcentagemVendedor,
+          comissaoVendedor: order.comissaoVendedor,
+        }],
+      });
     } else {
-      setFormData(emptyOrder);
+      setFormData({ ...emptyOrder, items: [{ ...emptyItem }] });
     }
   }, [order, open]);
 
-  // Calculate derived values
-  const calculateDerivedValues = (data: Partial<OrderFormData>) => {
-    const venda = data.venda ?? formData.venda;
-    const comissao = data.comissao ?? formData.comissao;
-    const porcentagemVendedor = data.porcentagemVendedor ?? formData.porcentagemVendedor;
-    
-    const comissaoTotal = venda * (comissao / 100);
-    const comissaoVendedor = comissaoTotal * (porcentagemVendedor / 100);
-    
-    return { comissaoTotal, comissaoVendedor };
+  const handleHeaderChange = (field: keyof Omit<OrderFormData, 'items'>, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleFieldChange = (field: keyof OrderFormData, value: string | number) => {
-    const updatedData = { ...formData, [field]: value };
-    
-    // Recalculate derived values when relevant fields change
-    if (['venda', 'comissao', 'porcentagemVendedor'].includes(field)) {
-      const derived = calculateDerivedValues(updatedData);
-      updatedData.comissaoTotal = derived.comissaoTotal;
-      updatedData.comissaoVendedor = derived.comissaoVendedor;
-    }
-    
-    setFormData(updatedData);
+  const handleItemChange = (index: number, field: keyof ProductLineItem, value: string | number) => {
+    setFormData(prev => {
+      const newItems = [...prev.items];
+      newItems[index] = { ...newItems[index], [field]: value };
+      if (['venda', 'comissao', 'porcentagemVendedor'].includes(field)) {
+        newItems[index] = calcItem(newItems[index]);
+      }
+      return { ...prev, items: newItems };
+    });
   };
+
+  const addItem = () => {
+    setFormData(prev => ({ ...prev, items: [...prev.items, { ...emptyItem }] }));
+  };
+
+  const removeItem = (index: number) => {
+    if (formData.items.length <= 1) return;
+    setFormData(prev => ({ ...prev, items: prev.items.filter((_, i) => i !== index) }));
+  };
+
+  // Totals across all items
+  const totalVenda = formData.items.reduce((s, i) => s + i.venda, 0);
+  const totalComissao = formData.items.reduce((s, i) => s + i.comissaoTotal, 0);
+  const totalComissaoVendedor = formData.items.reduce((s, i) => s + i.comissaoVendedor, 0);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.vendedor) {
-      toast({
-        title: "Campo obrigatório",
-        description: "Selecione um vendedor.",
-        variant: "destructive",
-      });
+      toast({ title: "Campo obrigatório", description: "Selecione um vendedor.", variant: "destructive" });
+      return;
+    }
+    if (formData.items.some(i => !i.venda)) {
+      toast({ title: "Campo obrigatório", description: "Preencha o valor da venda de todos os produtos.", variant: "destructive" });
       return;
     }
 
     setLoading(true);
-
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        throw new Error("Usuário não autenticado");
-      }
-
-      const orderData = {
-        user_id: user.id,
-        cliente: formData.cliente,
-        email_cliente: formData.emailCliente,
-        data: formData.data,
-        pedido: formData.pedido,
-        venda: formData.venda,
-        fornecedor: formData.fornecedor,
-        produto: formData.produto,
-        comissao: formData.comissao,
-        comissao_total: formData.comissaoTotal,
-        porcentagem_vendedor: formData.porcentagemVendedor,
-        comissao_vendedor: formData.comissaoVendedor,
-        vendedor: formData.vendedor,
-        status: formData.status,
-      };
+      if (!user) throw new Error("Usuário não autenticado");
 
       if (mode === 'add') {
-        const { error } = await supabase.from('orders').insert(orderData);
+        // Insert one row per product
+        const rows = formData.items.map(item => ({
+          user_id: user.id,
+          cliente: formData.cliente,
+          email_cliente: formData.emailCliente,
+          data: formData.data,
+          pedido: formData.pedido,
+          vendedor: formData.vendedor,
+          status: formData.status,
+          produto: item.produto,
+          fornecedor: item.fornecedor,
+          venda: item.venda,
+          comissao: item.comissao,
+          comissao_total: item.comissaoTotal,
+          porcentagem_vendedor: item.porcentagemVendedor,
+          comissao_vendedor: item.comissaoVendedor,
+        }));
+        const { error } = await supabase.from('orders').insert(rows);
         if (error) throw error;
       } else {
-        // Edit mode: update by matching pedido + vendedor, or insert if not found
+        // Edit mode: single product update
+        const item = formData.items[0];
+        const orderData = {
+          user_id: user.id,
+          cliente: formData.cliente,
+          email_cliente: formData.emailCliente,
+          data: formData.data,
+          pedido: formData.pedido,
+          vendedor: formData.vendedor,
+          status: formData.status,
+          produto: item.produto,
+          fornecedor: item.fornecedor,
+          venda: item.venda,
+          comissao: item.comissao,
+          comissao_total: item.comissaoTotal,
+          porcentagem_vendedor: item.porcentagemVendedor,
+          comissao_vendedor: item.comissaoVendedor,
+        };
+
         const { data: existing } = await supabase
           .from('orders')
           .select('id')
@@ -171,11 +251,13 @@ export function OrderFormDialog({
 
       toast({
         title: mode === 'add' ? "Pedido adicionado!" : "Pedido salvo!",
-        description: "Os dados foram salvos no sistema.",
+        description: mode === 'add' && formData.items.length > 1
+          ? `${formData.items.length} produtos foram salvos no sistema.`
+          : "Os dados foram salvos no sistema.",
       });
 
       setOpen(false);
-      setFormData(emptyOrder);
+      setFormData({ ...emptyOrder, items: [{ ...emptyItem }] });
       onSuccess?.();
     } catch (error) {
       console.error('Error:', error);
@@ -189,10 +271,6 @@ export function OrderFormDialog({
     }
   };
 
-  const formatCurrency = (value: number) => {
-    return `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  };
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -203,19 +281,18 @@ export function OrderFormDialog({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{mode === 'add' ? 'Adicionar Novo Pedido' : 'Editar Pedido'}</DialogTitle>
           <DialogDescription>
-            {mode === 'add' 
-              ? 'Preencha os dados do novo pedido.'
-              : 'Atualize os dados do pedido.'
-            }
+            {mode === 'add'
+              ? 'Preencha os dados do pedido. Adicione múltiplos produtos se necessário.'
+              : 'Atualize os dados do pedido.'}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-          {/* Row 1: Data, Pedido, Vendedor */}
+          {/* Header: Data, Pedido, Vendedor */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>Data do Pedido</Label>
@@ -223,10 +300,7 @@ export function OrderFormDialog({
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !formData.data && "text-muted-foreground"
-                    )}
+                    className={cn("w-full justify-start text-left font-normal", !formData.data && "text-muted-foreground")}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {formData.data || "Selecione a data"}
@@ -235,25 +309,9 @@ export function OrderFormDialog({
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
-                    selected={(() => {
-                      if (!formData.data) return undefined;
-                      // Try ISO format
-                      if (/^\d{4}-\d{2}-\d{2}$/.test(formData.data)) {
-                        return new Date(formData.data + 'T12:00:00');
-                      }
-                      // Try DD/MM/YYYY
-                      const parts = formData.data.split('/');
-                      if (parts.length === 3) {
-                        const y = parts[2].length === 2 ? 2000 + parseInt(parts[2]) : parseInt(parts[2]);
-                        return new Date(y, parseInt(parts[1]) - 1, parseInt(parts[0]), 12);
-                      }
-                      return undefined;
-                    })()}
+                    selected={parseDate(formData.data)}
                     onSelect={(date) => {
-                      if (date) {
-                        const formatted = format(date, 'dd/MM/yyyy');
-                        handleFieldChange('data', formatted);
-                      }
+                      if (date) handleHeaderChange('data', format(date, 'dd/MM/yyyy'));
                     }}
                     locale={ptBR}
                     initialFocus
@@ -264,145 +322,37 @@ export function OrderFormDialog({
             </div>
             <div className="space-y-2">
               <Label htmlFor="pedido">Nº Pedido</Label>
-              <Input
-                id="pedido"
-                type="text"
-                placeholder="Ex: 12345"
-                value={formData.pedido}
-                onChange={(e) => handleFieldChange('pedido', e.target.value)}
-              />
+              <Input id="pedido" placeholder="Ex: 12345" value={formData.pedido} onChange={(e) => handleHeaderChange('pedido', e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="vendedor">Vendedor *</Label>
-              <Select 
-                value={formData.vendedor} 
-                onValueChange={(value) => handleFieldChange('vendedor', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
+              <Label>Vendedor *</Label>
+              <Select value={formData.vendedor} onValueChange={(v) => handleHeaderChange('vendedor', v)}>
+                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                 <SelectContent>
-                  {availableVendedores.map(v => (
-                    <SelectItem key={v} value={v}>{v}</SelectItem>
-                  ))}
+                  {availableVendedores.map(v => (<SelectItem key={v} value={v}>{v}</SelectItem>))}
                 </SelectContent>
               </Select>
             </div>
           </div>
 
-          {/* Row 2: Cliente e Email */}
+          {/* Cliente e Email */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="cliente">Cliente</Label>
-              <Input
-                id="cliente"
-                type="text"
-                placeholder="Nome do cliente"
-                value={formData.cliente}
-                onChange={(e) => handleFieldChange('cliente', e.target.value)}
-              />
+              <Label>Cliente</Label>
+              <Input placeholder="Nome do cliente" value={formData.cliente} onChange={(e) => handleHeaderChange('cliente', e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="emailCliente">Email do Cliente</Label>
-              <Input
-                id="emailCliente"
-                type="email"
-                placeholder="email@exemplo.com"
-                value={formData.emailCliente}
-                onChange={(e) => handleFieldChange('emailCliente', e.target.value)}
-              />
+              <Label>Email do Cliente</Label>
+              <Input type="email" placeholder="email@exemplo.com" value={formData.emailCliente} onChange={(e) => handleHeaderChange('emailCliente', e.target.value)} />
             </div>
           </div>
 
-          {/* Row 3: Produto, Fornecedor */}
+          {/* Status */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="produto">Produto</Label>
-              <Select 
-                value={formData.produto} 
-                onValueChange={(value) => handleFieldChange('produto', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione ou digite" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableProdutos.map(p => (
-                    <SelectItem key={p} value={p}>{p}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="fornecedor">Fornecedor</Label>
-              <Select 
-                value={formData.fornecedor} 
-                onValueChange={(value) => handleFieldChange('fornecedor', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableFornecedores.map(f => (
-                    <SelectItem key={f} value={f}>{f}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Row 4: Venda, Comissão % */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="venda">Valor da Venda (R$)</Label>
-              <Input
-                id="venda"
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="0.00"
-                value={formData.venda || ''}
-                onChange={(e) => handleFieldChange('venda', parseFloat(e.target.value) || 0)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="comissao">Comissão (%)</Label>
-              <Input
-                id="comissao"
-                type="number"
-                step="0.1"
-                min="0"
-                max="100"
-                placeholder="0"
-                value={formData.comissao || ''}
-                onChange={(e) => handleFieldChange('comissao', parseFloat(e.target.value) || 0)}
-              />
-            </div>
-          </div>
-
-          {/* Row 5: Porcentagem Vendedor e Status */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="porcentagemVendedor">% Vendedor</Label>
-              <Input
-                id="porcentagemVendedor"
-                type="number"
-                step="1"
-                min="0"
-                max="100"
-                placeholder="0"
-                value={formData.porcentagemVendedor || ''}
-                onChange={(e) => handleFieldChange('porcentagemVendedor', parseFloat(e.target.value) || 0)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select 
-                value={formData.status} 
-                onValueChange={(value) => handleFieldChange('status', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
+              <Label>Status</Label>
+              <Select value={formData.status} onValueChange={(v) => handleHeaderChange('status', v)}>
+                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Pendente">Pendente</SelectItem>
                   <SelectItem value="Enviado">Enviado</SelectItem>
@@ -411,23 +361,101 @@ export function OrderFormDialog({
             </div>
           </div>
 
-          {/* Calculated values */}
-          <div className="grid grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg">
+          {/* Product line items */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-base font-semibold">Produtos</Label>
+              {mode === 'add' && (
+                <Button type="button" variant="outline" size="sm" className="gap-1" onClick={addItem}>
+                  <Plus className="h-3 w-3" /> Adicionar Produto
+                </Button>
+              )}
+            </div>
+
+            {formData.items.map((item, idx) => (
+              <div key={idx} className="border rounded-lg p-4 space-y-3 relative bg-card">
+                {formData.items.length > 1 && (
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-medium text-muted-foreground">Produto {idx + 1}</span>
+                    <Button type="button" variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive hover:text-destructive" onClick={() => removeItem(idx)}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Produto</Label>
+                    <Select value={item.produto} onValueChange={(v) => handleItemChange(idx, 'produto', v)}>
+                      <SelectTrigger className="h-9"><SelectValue placeholder="Selecione" /></SelectTrigger>
+                      <SelectContent>
+                        {availableProdutos.map(p => (<SelectItem key={p} value={p}>{p}</SelectItem>))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Fornecedor</Label>
+                    <Select value={item.fornecedor} onValueChange={(v) => handleItemChange(idx, 'fornecedor', v)}>
+                      <SelectTrigger className="h-9"><SelectValue placeholder="Selecione" /></SelectTrigger>
+                      <SelectContent>
+                        {availableFornecedores.map(f => (<SelectItem key={f} value={f}>{f}</SelectItem>))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Valor (R$)</Label>
+                    <Input className="h-9" type="number" step="0.01" min="0" placeholder="0.00"
+                      value={item.venda || ''} onChange={(e) => handleItemChange(idx, 'venda', parseFloat(e.target.value) || 0)} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Comissão (%)</Label>
+                    <Input className="h-9" type="number" step="0.1" min="0" max="100" placeholder="0"
+                      value={item.comissao || ''} onChange={(e) => handleItemChange(idx, 'comissao', parseFloat(e.target.value) || 0)} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">% Vendedor</Label>
+                    <Input className="h-9" type="number" step="1" min="0" max="100" placeholder="0"
+                      value={item.porcentagemVendedor || ''} onChange={(e) => handleItemChange(idx, 'porcentagemVendedor', parseFloat(e.target.value) || 0)} />
+                  </div>
+                </div>
+
+                {/* Item calculated values */}
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                  <div className="text-xs">
+                    <span className="text-muted-foreground">Comissão: </span>
+                    <span className="font-semibold text-warning">{formatCurrency(item.comissaoTotal)}</span>
+                  </div>
+                  <div className="text-xs">
+                    <span className="text-muted-foreground">Vendedor: </span>
+                    <span className="font-semibold text-success">{formatCurrency(item.comissaoVendedor)}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Grand totals */}
+          <div className="grid grid-cols-3 gap-4 p-4 bg-muted/30 rounded-lg">
             <div>
-              <span className="text-xs text-muted-foreground">Comissão Total</span>
-              <p className="text-lg font-semibold text-warning">{formatCurrency(formData.comissaoTotal)}</p>
+              <span className="text-xs text-muted-foreground">Total Venda</span>
+              <p className="text-lg font-semibold">{formatCurrency(totalVenda)}</p>
             </div>
             <div>
-              <span className="text-xs text-muted-foreground">Comissão Vendedor</span>
-              <p className="text-lg font-semibold text-success">{formatCurrency(formData.comissaoVendedor)}</p>
+              <span className="text-xs text-muted-foreground">Total Comissão</span>
+              <p className="text-lg font-semibold text-warning">{formatCurrency(totalComissao)}</p>
+            </div>
+            <div>
+              <span className="text-xs text-muted-foreground">Total Vendedor</span>
+              <p className="text-lg font-semibold text-success">{formatCurrency(totalComissaoVendedor)}</p>
             </div>
           </div>
 
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Cancelar
-            </Button>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
             <Button type="submit" disabled={loading}>
               {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               {mode === 'add' ? 'Adicionar Pedido' : 'Salvar Alterações'}
