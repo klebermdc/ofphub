@@ -9,7 +9,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { OrderFormDialog } from "@/components/OrderFormDialog";
 import { MetricCard } from "@/components/MetricCard";
 import { formatCurrency } from "@/utils/formatters";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from "recharts";
 import { ptBR } from "date-fns/locale";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -193,6 +193,19 @@ export function DailyOrdersList({
     return Object.entries(map)
       .map(([name, total]) => ({ name, total }))
       .sort((a, b) => b.total - a.total);
+  }, [displayOrders]);
+
+  // Pie chart: % of total sales each rep represents
+  const rentabilityPie = useMemo(() => {
+    const totalVenda = displayOrders.reduce((s, o) => s + o.venda, 0);
+    if (totalVenda === 0) return [];
+    const map: Record<string, number> = {};
+    displayOrders.forEach(o => {
+      map[o.vendedor] = (map[o.vendedor] || 0) + o.venda;
+    });
+    return Object.entries(map)
+      .map(([name, value]) => ({ name, value, percent: ((value / totalVenda) * 100) }))
+      .sort((a, b) => b.value - a.value);
   }, [displayOrders]);
 
   const chartColors = [
@@ -453,7 +466,7 @@ export function DailyOrdersList({
           </div>
 
           {/* Charts side by side */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Sales Chart */}
             <div className="glass rounded-xl p-4">
               <div className="flex items-center gap-2 mb-3">
@@ -504,6 +517,48 @@ export function DailyOrdersList({
                   <p className="text-[10px] text-muted-foreground">💰 Mais rentável {isFiltering ? 'do período' : 'do mês'}</p>
                   <p className="text-sm font-bold text-foreground">{profitByRep[0].name}</p>
                   <p className="text-xs text-success font-medium">{formatCurrency(profitByRep[0].total)}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Rentability Pie Chart */}
+            <div className="glass rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <DollarSign className="h-4 w-4 text-primary" />
+                <span className="text-sm font-semibold text-foreground">Rentabilidade por Vendedor</span>
+              </div>
+              <div className="h-[200px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={rentabilityPie}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={70}
+                      innerRadius={35}
+                      paddingAngle={2}
+                      label={({ name, percent }: { name: string; percent: number }) => `${name.split(' ')[0]} ${percent.toFixed(0)}%`}
+                      labelLine={false}
+                    >
+                      {rentabilityPie.map((_, i) => (
+                        <Cell key={i} fill={chartColors[i % chartColors.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(value: number) => formatCurrency(value)}
+                      contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }}
+                      labelStyle={{ color: "hsl(var(--foreground))" }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              {rentabilityPie.length > 0 && (
+                <div className="mt-2 pt-2 border-t border-border/30 text-center">
+                  <p className="text-[10px] text-muted-foreground">📊 Maior participação {isFiltering ? 'do período' : 'do mês'}</p>
+                  <p className="text-sm font-bold text-foreground">{rentabilityPie[0].name}</p>
+                  <p className="text-xs text-primary font-medium">{rentabilityPie[0].percent.toFixed(1)}% das vendas</p>
                 </div>
               )}
             </div>
