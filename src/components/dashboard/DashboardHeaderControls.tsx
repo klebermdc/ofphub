@@ -155,19 +155,6 @@ export function DashboardHeaderControls({
           </Button>
         )}
         <OperationalCostsDialog onSave={onSaveOperationalCosts} getCostForMonth={getCostForMonth} />
-        {savedUrl && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleSyncSheet}
-            disabled={syncing || isLoading}
-            className="gap-1 sm:gap-2 text-xs sm:text-sm"
-          >
-            {syncing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CloudDownload className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
-            <span className="hidden sm:inline">Sincronizar Planilha</span>
-            <span className="sm:hidden">Planilha</span>
-          </Button>
-        )}
         <Button
           variant="outline"
           size="sm"
