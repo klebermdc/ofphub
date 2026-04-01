@@ -203,6 +203,22 @@ export function DailyOrdersList({
     "hsl(var(--secondary))",
   ];
 
+  const handleDeleteOrder = async (order: DailyOrder) => {
+    if (!order.id) {
+      toast({ title: "Erro", description: "Pedido sem ID, não é possível excluir.", variant: "destructive" });
+      return;
+    }
+    const confirmed = window.confirm(`Excluir pedido ${order.pedido} de ${order.cliente}?`);
+    if (!confirmed) return;
+    const { error } = await supabase.from('orders').delete().eq('id', order.id);
+    if (error) {
+      toast({ title: "Erro ao excluir", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Pedido excluído" });
+      onOrderSuccess?.();
+    }
+  };
+
   const handleSelectToday = () => {
     setMode('single');
     setSingleDate(new Date(y, m - 1, today));
