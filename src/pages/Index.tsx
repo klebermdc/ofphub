@@ -70,7 +70,7 @@ const Index = () => {
   // Core state
   const [isLoading, setIsLoading] = useState(false);
   const [hasData, setHasData] = useState(false);
-  const [hasAutoSyncedOnEntry, setHasAutoSyncedOnEntry] = useState(false);
+  const [hasLoadedOnEntry, setHasLoadedOnEntry] = useState(false);
   const [salesReps, setSalesReps] = useState<SalesRep[]>([]);
   const [totals, setTotals] = useState<SalesTotals | null>(null);
   const [dataSource, setDataSource] = useState<'sheet' | 'history'>('sheet');
