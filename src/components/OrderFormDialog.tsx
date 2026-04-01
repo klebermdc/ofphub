@@ -59,7 +59,7 @@ interface OrderFormDataLegacy {
 
 interface OrderFormDialogProps {
   mode: 'add' | 'edit';
-  order?: OrderFormDataLegacy & { rowIndex?: number };
+  order?: OrderFormDataLegacy & { rowIndex?: number; id?: string };
   sheetUrl?: string;
   availableVendedores?: string[];
   availableProdutos?: string[];

@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
-import { Plus, Package, Trophy, CalendarIcon, RotateCcw, DollarSign, TrendingUp, Wallet, Pencil } from "lucide-react";
+import { Plus, Package, Trophy, CalendarIcon, RotateCcw, DollarSign, TrendingUp, Wallet, Pencil, Trash2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -14,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
 
 interface DailyOrder {
+  id?: string;
   cliente: string;
   emailCliente: string;
   pedido: string;
@@ -26,6 +29,7 @@ interface DailyOrder {
   porcentagemVendedor: number;
   comissaoVendedor: number;
   dia: string;
+  createdAt?: string;
 }
 
 interface DailyOrdersListProps {
@@ -106,6 +110,7 @@ export function DailyOrdersList({
         if (!parsed) return;
         if (parsed.month === m && parsed.year === y) {
           orders.push({
+            id: order.id || undefined,
             cliente: order.cliente || '-',
             emailCliente: order.emailCliente || '',
             pedido: order.pedido || '-',
@@ -118,6 +123,7 @@ export function DailyOrdersList({
             porcentagemVendedor: order.porcentagemVendedor || 0,
             comissaoVendedor: order.comissaoVendedor || 0,
             dia: `${parsed.day.toString().padStart(2, '0')}/${parsed.month.toString().padStart(2, '0')}`,
+            createdAt: order.createdAt || order.created_at || '',
           });
         }
       });
@@ -125,7 +131,10 @@ export function DailyOrdersList({
     return orders.sort((a, b) => {
       const dayA = parseInt(a.dia.split('/')[0], 10);
       const dayB = parseInt(b.dia.split('/')[0], 10);
-      return dayB - dayA;
+      if (dayB !== dayA) return dayB - dayA;
+      // Within same day, sort by insertion order (most recent first)
+      if (a.createdAt && b.createdAt) return b.createdAt.localeCompare(a.createdAt);
+      return 0;
     });
   }, [salesReps, m, y]);
 
@@ -174,6 +183,18 @@ export function DailyOrdersList({
       .sort((a, b) => b.total - a.total);
   }, [displayOrders]);
 
+  // Profit chart data
+  const profitByRep = useMemo(() => {
+    const map: Record<string, number> = {};
+    displayOrders.forEach(o => {
+      const ganho = o.comissaoTotal - o.comissaoVendedor;
+      map[o.vendedor] = (map[o.vendedor] || 0) + ganho;
+    });
+    return Object.entries(map)
+      .map(([name, total]) => ({ name, total }))
+      .sort((a, b) => b.total - a.total);
+  }, [displayOrders]);
+
   const chartColors = [
     "hsl(var(--primary))",
     "hsl(var(--accent))",
@@ -181,6 +202,22 @@ export function DailyOrdersList({
     "hsl(var(--success))",
     "hsl(var(--secondary))",
   ];
+
+  const handleDeleteOrder = async (order: DailyOrder) => {
+    if (!order.id) {
+      toast({ title: "Erro", description: "Pedido sem ID, não é possível excluir.", variant: "destructive" });
+      return;
+    }
+    const confirmed = window.confirm(`Excluir pedido ${order.pedido} de ${order.cliente}?`);
+    if (!confirmed) return;
+    const { error } = await supabase.from('orders').delete().eq('id', order.id);
+    if (error) {
+      toast({ title: "Erro ao excluir", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Pedido excluído" });
+      onOrderSuccess?.();
+    }
+  };
 
   const handleSelectToday = () => {
     setMode('single');
@@ -355,33 +392,44 @@ export function DailyOrdersList({
                     {displayOrders.map((order, idx) => (
                       <TableRow key={idx} className="border-border/30">
                         <TableCell className="p-1">
-                          <OrderFormDialog
-                            mode="edit"
-                            order={{
-                              cliente: order.cliente,
-                              emailCliente: order.emailCliente,
-                              data: `${order.dia}/${y}`,
-                              pedido: order.pedido,
-                              venda: order.venda,
-                              fornecedor: order.fornecedor,
-                              produto: order.produto,
-                              comissao: order.comissao,
-                              comissaoTotal: order.comissaoTotal,
-                              porcentagemVendedor: order.porcentagemVendedor,
-                              comissaoVendedor: order.comissaoVendedor,
-                              vendedor: order.vendedor,
-                              status: 'Pendente',
-                            }}
-                            availableVendedores={availableVendedores}
-                            availableProdutos={availableProdutos}
-                            availableFornecedores={availableFornecedores}
-                            onSuccess={onOrderSuccess}
-                            trigger={
-                              <Button variant="ghost" size="icon" className="h-6 w-6">
-                                <Pencil className="h-3 w-3 text-muted-foreground hover:text-primary" />
-                              </Button>
-                            }
-                          />
+                          <div className="flex items-center gap-0.5">
+                            <OrderFormDialog
+                              mode="edit"
+                              order={{
+                                id: order.id,
+                                cliente: order.cliente,
+                                emailCliente: order.emailCliente,
+                                data: `${order.dia}/${y}`,
+                                pedido: order.pedido,
+                                venda: order.venda,
+                                fornecedor: order.fornecedor,
+                                produto: order.produto,
+                                comissao: order.comissao,
+                                comissaoTotal: order.comissaoTotal,
+                                porcentagemVendedor: order.porcentagemVendedor,
+                                comissaoVendedor: order.comissaoVendedor,
+                                vendedor: order.vendedor,
+                                status: 'Pendente',
+                              }}
+                              availableVendedores={availableVendedores}
+                              availableProdutos={availableProdutos}
+                              availableFornecedores={availableFornecedores}
+                              onSuccess={onOrderSuccess}
+                              trigger={
+                                <Button variant="ghost" size="icon" className="h-6 w-6">
+                                  <Pencil className="h-3 w-3 text-muted-foreground hover:text-primary" />
+                                </Button>
+                              }
+                            />
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6"
+                              onClick={() => handleDeleteOrder(order)}
+                            >
+                              <Trash2 className="h-3 w-3 text-muted-foreground hover:text-destructive" />
+                            </Button>
+                          </div>
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground">{order.dia}</TableCell>
                         <TableCell className="text-xs font-medium">{order.pedido}</TableCell>
@@ -404,49 +452,61 @@ export function DailyOrdersList({
             </div>
           </div>
 
-          {/* Top Seller Chart */}
-          <div className="glass rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Trophy className="h-4 w-4 text-warning" />
-              <span className="text-sm font-semibold text-foreground">Vendas por Vendedor</span>
-            </div>
-            <div className="h-[200px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={salesByRep} layout="vertical" margin={{ left: 0, right: 8, top: 4, bottom: 4 }}>
-                  <XAxis type="number" hide />
-                  <YAxis
-                    type="category"
-                    dataKey="name"
-                    width={100}
-                    tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <Tooltip
-                    formatter={(value: number) => formatCurrency(value)}
-                    contentStyle={{
-                      background: "hsl(var(--popover))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: 8,
-                      fontSize: 12,
-                    }}
-                    labelStyle={{ color: "hsl(var(--foreground))" }}
-                  />
-                  <Bar dataKey="total" radius={[0, 6, 6, 0]} barSize={20}>
-                    {salesByRep.map((_, i) => (
-                      <Cell key={i} fill={chartColors[i % chartColors.length]} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            {salesByRep.length > 0 && (
-              <div className="mt-2 pt-2 border-t border-border/30 text-center">
-                <p className="text-[10px] text-muted-foreground">🏆 Líder {isFiltering ? 'do período' : 'do mês'}</p>
-                <p className="text-sm font-bold text-foreground">{salesByRep[0].name}</p>
-                <p className="text-xs text-primary font-medium">{formatCurrency(salesByRep[0].total)}</p>
+          {/* Charts side by side */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Sales Chart */}
+            <div className="glass rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Trophy className="h-4 w-4 text-warning" />
+                <span className="text-sm font-semibold text-foreground">Vendas por Vendedor</span>
               </div>
-            )}
+              <div className="h-[200px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={salesByRep} layout="vertical" margin={{ left: 0, right: 8, top: 4, bottom: 4 }}>
+                    <XAxis type="number" hide />
+                    <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                    <Tooltip formatter={(value: number) => formatCurrency(value)} contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} labelStyle={{ color: "hsl(var(--foreground))" }} />
+                    <Bar dataKey="total" radius={[0, 6, 6, 0]} barSize={20}>
+                      {salesByRep.map((_, i) => (<Cell key={i} fill={chartColors[i % chartColors.length]} />))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              {salesByRep.length > 0 && (
+                <div className="mt-2 pt-2 border-t border-border/30 text-center">
+                  <p className="text-[10px] text-muted-foreground">🏆 Líder {isFiltering ? 'do período' : 'do mês'}</p>
+                  <p className="text-sm font-bold text-foreground">{salesByRep[0].name}</p>
+                  <p className="text-xs text-primary font-medium">{formatCurrency(salesByRep[0].total)}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Profit Chart */}
+            <div className="glass rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <TrendingUp className="h-4 w-4 text-success" />
+                <span className="text-sm font-semibold text-foreground">Ganho por Vendedor</span>
+              </div>
+              <div className="h-[200px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={profitByRep} layout="vertical" margin={{ left: 0, right: 8, top: 4, bottom: 4 }}>
+                    <XAxis type="number" hide />
+                    <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                    <Tooltip formatter={(value: number) => formatCurrency(value)} contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} labelStyle={{ color: "hsl(var(--foreground))" }} />
+                    <Bar dataKey="total" radius={[0, 6, 6, 0]} barSize={20}>
+                      {profitByRep.map((_, i) => (<Cell key={i} fill={["hsl(var(--success))", "hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--warning))", "hsl(var(--secondary))"][i % 5]} />))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              {profitByRep.length > 0 && (
+                <div className="mt-2 pt-2 border-t border-border/30 text-center">
+                  <p className="text-[10px] text-muted-foreground">💰 Mais rentável {isFiltering ? 'do período' : 'do mês'}</p>
+                  <p className="text-sm font-bold text-foreground">{profitByRep[0].name}</p>
+                  <p className="text-xs text-success font-medium">{formatCurrency(profitByRep[0].total)}</p>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Period KPI Cards */}
