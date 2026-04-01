@@ -208,8 +208,8 @@ export function OrderFormDialog({
           <DialogTitle>{mode === 'add' ? 'Adicionar Novo Pedido' : 'Editar Pedido'}</DialogTitle>
           <DialogDescription>
             {mode === 'add' 
-              ? 'Preencha os dados do novo pedido. Ele será adicionado automaticamente à planilha.'
-              : 'Atualize os dados do pedido. As alterações serão sincronizadas com a planilha.'
+              ? 'Preencha os dados do novo pedido.'
+              : 'Atualize os dados do pedido.'
             }
           </DialogDescription>
         </DialogHeader>
