@@ -58,7 +58,7 @@ const DailyOrdersList = lazy(() => import("@/components/dashboard/DailyOrdersLis
 const DashboardOperationalMetrics = lazy(() => import("@/components/dashboard/DashboardOperationalMetrics").then(m => ({ default: m.DashboardOperationalMetrics })));
 const DashboardHeaderControls = lazy(() => import("@/components/dashboard/DashboardHeaderControls").then(m => ({ default: m.DashboardHeaderControls })));
 
-
+// Data source: database-only (no Google Sheets dependency)
 
 const Index = () => {
   const { user, loading } = useAuth();
