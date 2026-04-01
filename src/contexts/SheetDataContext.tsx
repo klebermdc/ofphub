@@ -21,6 +21,7 @@ function groupOrdersIntoReps(rows: any[]): SalesRep[] {
   rows.forEach((row) => {
     const name = resolveSalespersonName(row.vendedor);
     const order: OrderDetail = {
+      id: row.id,
       cliente: row.cliente || '',
       emailCliente: row.email_cliente || undefined,
       data: row.data || '',
@@ -33,6 +34,7 @@ function groupOrdersIntoReps(rows: any[]): SalesRep[] {
       porcentagemVendedor: Number(row.porcentagem_vendedor) || 0,
       comissaoVendedor: Number(row.comissao_vendedor) || 0,
       status: row.status || undefined,
+      created_at: row.created_at || '',
     };
 
     const existing = repMap.get(name);

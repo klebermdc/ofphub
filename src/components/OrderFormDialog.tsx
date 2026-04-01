@@ -233,19 +233,27 @@ export function OrderFormDialog({
           comissao_vendedor: item.comissaoVendedor,
         };
 
-        const { data: existing } = await supabase
-          .from('orders')
-          .select('id')
-          .eq('pedido', formData.pedido)
-          .eq('vendedor', formData.vendedor)
-          .maybeSingle();
-
-        if (existing) {
-          const { error } = await supabase.from('orders').update(orderData).eq('id', existing.id);
+        if (order?.id) {
+          // Update by ID directly
+          const { error } = await supabase.from('orders').update(orderData).eq('id', order.id);
           if (error) throw error;
         } else {
-          const { error } = await supabase.from('orders').insert(orderData);
-          if (error) throw error;
+          // Fallback: lookup by pedido + vendedor + produto
+          const { data: existing } = await supabase
+            .from('orders')
+            .select('id')
+            .eq('pedido', formData.pedido)
+            .eq('vendedor', formData.vendedor)
+            .eq('produto', item.produto)
+            .maybeSingle();
+
+          if (existing) {
+            const { error } = await supabase.from('orders').update(orderData).eq('id', existing.id);
+            if (error) throw error;
+          } else {
+            const { error } = await supabase.from('orders').insert(orderData);
+            if (error) throw error;
+          }
         }
       }
 
