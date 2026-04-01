@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Plus, Package, Trophy, CalendarIcon, RotateCcw, DollarSign, TrendingUp, Wallet, Pencil, Trash2 } from "lucide-react";
+import { Plus, Package, Trophy, CalendarIcon, RotateCcw, DollarSign, TrendingUp, Wallet, Pencil, Trash2, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -209,6 +209,26 @@ export function DailyOrdersList({
     return Object.entries(ganhoMap)
       .map(([name, value]) => ({ name, value, vendas: vendaMap[name] || 0, percent: ((value / totalGanho) * 100) }))
       .sort((a, b) => b.value - a.value);
+  }, [displayOrders]);
+
+  // Commission alert: flag sellers with avg commission <= 3%
+  const commissionAlerts = useMemo(() => {
+    const vendaMap: Record<string, number> = {};
+    const comissaoMap: Record<string, number> = {};
+    displayOrders.forEach(o => {
+      vendaMap[o.vendedor] = (vendaMap[o.vendedor] || 0) + o.venda;
+      comissaoMap[o.vendedor] = (comissaoMap[o.vendedor] || 0) + o.comissaoTotal;
+    });
+    return Object.entries(vendaMap)
+      .filter(([, venda]) => venda > 0)
+      .map(([name, venda]) => ({
+        name,
+        avgPercent: (comissaoMap[name] / venda) * 100,
+        totalVenda: venda,
+        totalComissao: comissaoMap[name],
+      }))
+      .filter(item => item.avgPercent <= 3)
+      .sort((a, b) => a.avgPercent - b.avgPercent);
   }, [displayOrders]);
 
   const chartColors = [
@@ -467,6 +487,32 @@ export function DailyOrdersList({
               </Table>
             </div>
           </div>
+
+          {/* Commission Alerts */}
+          {commissionAlerts.length > 0 && (
+            <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 space-y-2">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-destructive animate-pulse" />
+                <span className="text-sm font-bold text-destructive">⚠️ Alerta de Comissão Baixa (≤ 3%)</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                {commissionAlerts.map(alert => (
+                  <div key={alert.name} className="flex items-center gap-3 p-2.5 rounded-lg bg-background border border-destructive/20">
+                    <div className={cn(
+                      "h-3 w-3 rounded-full shrink-0 animate-pulse",
+                      alert.avgPercent <= 1 ? "bg-destructive" : alert.avgPercent <= 2 ? "bg-warning" : "bg-accent"
+                    )} />
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-xs font-semibold text-foreground truncate">{alert.name}</span>
+                      <span className="text-[10px] text-muted-foreground">
+                        Comissão média: <span className="font-bold text-destructive">{alert.avgPercent.toFixed(1)}%</span> · Vendas: {formatCurrency(alert.totalVenda)} · Comissão: {formatCurrency(alert.totalComissao)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Charts side by side */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
