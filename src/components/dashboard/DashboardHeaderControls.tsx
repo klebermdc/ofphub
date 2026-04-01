@@ -114,7 +114,7 @@ export function DashboardHeaderControls({
       <div className="flex flex-wrap items-center gap-2 sm:gap-3">
         <span className="text-xs sm:text-sm text-muted-foreground">Fonte:</span>
         <Badge variant="default" className="gap-1 text-xs">
-          <FileSpreadsheet className="h-3 w-3" />
+          <Database className="h-3 w-3" />
           Banco de Dados
         </Badge>
         
