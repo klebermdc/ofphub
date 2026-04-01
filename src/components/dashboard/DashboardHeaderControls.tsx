@@ -8,7 +8,6 @@ import { OperationalCostsDialog } from "@/components/OperationalCostsDialog";
 import { getMonthName } from "@/utils/dateUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { useSheetSettings } from "@/hooks/useSheetSettings";
 
 interface DashboardHeaderControlsProps {
   dataSource: 'sheet' | 'history';
