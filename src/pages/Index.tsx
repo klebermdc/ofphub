@@ -20,7 +20,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useCRMLeadsCount } from "@/hooks/useCRMLeadsCount";
 import { useFilteredSalesReps, useDashboardMetrics } from "@/hooks/useSalesData";
 import { useSalesGoals } from "@/hooks/useSheetData";
-import { useSheetSettings } from "@/hooks/useSheetSettings";
+
 import { useCostCalculation } from "@/hooks/useCostCalculation";
 import { useDiscounts } from "@/hooks/useDiscounts";
 import { useApiIntegrations } from "@/hooks/useApiIntegrations";
