@@ -183,6 +183,18 @@ export function DailyOrdersList({
       .sort((a, b) => b.total - a.total);
   }, [displayOrders]);
 
+  // Profit chart data
+  const profitByRep = useMemo(() => {
+    const map: Record<string, number> = {};
+    displayOrders.forEach(o => {
+      const ganho = o.comissaoTotal - o.comissaoVendedor;
+      map[o.vendedor] = (map[o.vendedor] || 0) + ganho;
+    });
+    return Object.entries(map)
+      .map(([name, total]) => ({ name, total }))
+      .sort((a, b) => b.total - a.total);
+  }, [displayOrders]);
+
   const chartColors = [
     "hsl(var(--primary))",
     "hsl(var(--accent))",
