@@ -64,7 +64,7 @@ const Index = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { savedUrl } = useSheetSettings(user?.id);
+  
   const initialTab = searchParams.get('tab') || 'dashboard';
   
   // Core state
