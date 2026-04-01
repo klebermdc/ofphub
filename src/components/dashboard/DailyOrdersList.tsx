@@ -520,6 +520,48 @@ export function DailyOrdersList({
                 </div>
               )}
             </div>
+
+            {/* Rentability Pie Chart */}
+            <div className="glass rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <DollarSign className="h-4 w-4 text-primary" />
+                <span className="text-sm font-semibold text-foreground">Rentabilidade por Vendedor</span>
+              </div>
+              <div className="h-[200px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={rentabilityPie}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={70}
+                      innerRadius={35}
+                      paddingAngle={2}
+                      label={({ name, percent }: { name: string; percent: number }) => `${name.split(' ')[0]} ${percent.toFixed(0)}%`}
+                      labelLine={false}
+                    >
+                      {rentabilityPie.map((_, i) => (
+                        <Cell key={i} fill={chartColors[i % chartColors.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(value: number) => formatCurrency(value)}
+                      contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }}
+                      labelStyle={{ color: "hsl(var(--foreground))" }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              {rentabilityPie.length > 0 && (
+                <div className="mt-2 pt-2 border-t border-border/30 text-center">
+                  <p className="text-[10px] text-muted-foreground">📊 Maior participação {isFiltering ? 'do período' : 'do mês'}</p>
+                  <p className="text-sm font-bold text-foreground">{rentabilityPie[0].name}</p>
+                  <p className="text-xs text-primary font-medium">{rentabilityPie[0].percent.toFixed(1)}% das vendas</p>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Period KPI Cards */}
