@@ -197,15 +197,17 @@ export function DailyOrdersList({
 
   // Pie chart: % of total profit (ganho) each rep represents
   const rentabilityPie = useMemo(() => {
-    const map: Record<string, number> = {};
+    const ganhoMap: Record<string, number> = {};
+    const vendaMap: Record<string, number> = {};
     displayOrders.forEach(o => {
       const ganho = o.comissaoTotal - o.comissaoVendedor;
-      map[o.vendedor] = (map[o.vendedor] || 0) + ganho;
+      ganhoMap[o.vendedor] = (ganhoMap[o.vendedor] || 0) + ganho;
+      vendaMap[o.vendedor] = (vendaMap[o.vendedor] || 0) + o.venda;
     });
-    const totalGanho = Object.values(map).reduce((s, v) => s + v, 0);
+    const totalGanho = Object.values(ganhoMap).reduce((s, v) => s + v, 0);
     if (totalGanho === 0) return [];
-    return Object.entries(map)
-      .map(([name, value]) => ({ name, value, percent: ((value / totalGanho) * 100) }))
+    return Object.entries(ganhoMap)
+      .map(([name, value]) => ({ name, value, vendas: vendaMap[name] || 0, percent: ((value / totalGanho) * 100) }))
       .sort((a, b) => b.value - a.value);
   }, [displayOrders]);
 
