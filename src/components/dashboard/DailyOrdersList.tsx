@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
 
 interface DailyOrder {
+  id?: string;
   cliente: string;
   emailCliente: string;
   pedido: string;
@@ -28,6 +29,7 @@ interface DailyOrder {
   porcentagemVendedor: number;
   comissaoVendedor: number;
   dia: string;
+  createdAt?: string;
 }
 
 interface DailyOrdersListProps {
