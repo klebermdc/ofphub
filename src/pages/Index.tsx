@@ -229,7 +229,7 @@ const Index = () => {
         vendedoresAtivos: reps.length,
       });
       setHasData(reps.length > 0);
-      setDataSource('sheet');
+      // data loaded from DB
       refetchGoals();
     } catch (err) {
       console.error('Error loading orders from DB:', err);
