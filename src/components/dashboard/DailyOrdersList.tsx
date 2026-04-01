@@ -559,13 +559,16 @@ export function DailyOrdersList({
               </ResponsiveContainer>
             </div>
             {rentabilityPie.length > 0 && (
-              <div className="mt-2 pt-2 border-t border-border/30 flex flex-wrap justify-center gap-4">
+              <div className="mt-2 pt-2 border-t border-border/30 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 {rentabilityPie.map((item, i) => (
-                  <div key={item.name} className="flex items-center gap-1.5">
-                    <div className="h-3 w-3 rounded-sm" style={{ backgroundColor: chartColors[i % chartColors.length] }} />
-                    <span className="text-xs text-muted-foreground">{item.name}</span>
-                    <span className="text-xs font-semibold text-foreground">{item.percent.toFixed(1)}%</span>
-                    <span className="text-[10px] text-muted-foreground">({formatCurrency(item.value)})</span>
+                  <div key={item.name} className="flex items-center gap-2 p-2 rounded-lg bg-muted/30">
+                    <div className="h-3 w-3 rounded-sm shrink-0" style={{ backgroundColor: chartColors[i % chartColors.length] }} />
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-xs font-semibold text-foreground truncate">{item.name}</span>
+                      <span className="text-[10px] text-muted-foreground">
+                        Vendeu {formatCurrency(item.vendas)} → Ganho {formatCurrency(item.value)} ({item.percent.toFixed(1)}%)
+                      </span>
+                    </div>
                   </div>
                 ))}
               </div>
