@@ -36,8 +36,6 @@ export function DashboardHeaderControls({
 }: DashboardHeaderControlsProps) {
   const navigate = useNavigate();
   const [importing, setImporting] = useState(false);
-  const [syncing, setSyncing] = useState(false);
-  const { savedUrl } = useSheetSettings(userId);
 
   const handleImportCosts = async () => {
     if (!userId) return;
