@@ -197,15 +197,17 @@ export function DailyOrdersList({
 
   // Pie chart: % of total profit (ganho) each rep represents
   const rentabilityPie = useMemo(() => {
-    const map: Record<string, number> = {};
+    const ganhoMap: Record<string, number> = {};
+    const vendaMap: Record<string, number> = {};
     displayOrders.forEach(o => {
       const ganho = o.comissaoTotal - o.comissaoVendedor;
-      map[o.vendedor] = (map[o.vendedor] || 0) + ganho;
+      ganhoMap[o.vendedor] = (ganhoMap[o.vendedor] || 0) + ganho;
+      vendaMap[o.vendedor] = (vendaMap[o.vendedor] || 0) + o.venda;
     });
-    const totalGanho = Object.values(map).reduce((s, v) => s + v, 0);
+    const totalGanho = Object.values(ganhoMap).reduce((s, v) => s + v, 0);
     if (totalGanho === 0) return [];
-    return Object.entries(map)
-      .map(([name, value]) => ({ name, value, percent: ((value / totalGanho) * 100) }))
+    return Object.entries(ganhoMap)
+      .map(([name, value]) => ({ name, value, vendas: vendaMap[name] || 0, percent: ((value / totalGanho) * 100) }))
       .sort((a, b) => b.value - a.value);
   }, [displayOrders]);
 
@@ -557,13 +559,16 @@ export function DailyOrdersList({
               </ResponsiveContainer>
             </div>
             {rentabilityPie.length > 0 && (
-              <div className="mt-2 pt-2 border-t border-border/30 flex flex-wrap justify-center gap-4">
+              <div className="mt-2 pt-2 border-t border-border/30 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 {rentabilityPie.map((item, i) => (
-                  <div key={item.name} className="flex items-center gap-1.5">
-                    <div className="h-3 w-3 rounded-sm" style={{ backgroundColor: chartColors[i % chartColors.length] }} />
-                    <span className="text-xs text-muted-foreground">{item.name}</span>
-                    <span className="text-xs font-semibold text-foreground">{item.percent.toFixed(1)}%</span>
-                    <span className="text-[10px] text-muted-foreground">({formatCurrency(item.value)})</span>
+                  <div key={item.name} className="flex items-center gap-2 p-2 rounded-lg bg-muted/30">
+                    <div className="h-3 w-3 rounded-sm shrink-0" style={{ backgroundColor: chartColors[i % chartColors.length] }} />
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-xs font-semibold text-foreground truncate">{item.name}</span>
+                      <span className="text-[10px] text-muted-foreground">
+                        Vendeu {formatCurrency(item.vendas)} → Ganho {formatCurrency(item.value)} ({item.percent.toFixed(1)}%)
+                      </span>
+                    </div>
                   </div>
                 ))}
               </div>
