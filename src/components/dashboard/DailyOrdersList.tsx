@@ -392,33 +392,44 @@ export function DailyOrdersList({
                     {displayOrders.map((order, idx) => (
                       <TableRow key={idx} className="border-border/30">
                         <TableCell className="p-1">
-                          <OrderFormDialog
-                            mode="edit"
-                            order={{
-                              cliente: order.cliente,
-                              emailCliente: order.emailCliente,
-                              data: `${order.dia}/${y}`,
-                              pedido: order.pedido,
-                              venda: order.venda,
-                              fornecedor: order.fornecedor,
-                              produto: order.produto,
-                              comissao: order.comissao,
-                              comissaoTotal: order.comissaoTotal,
-                              porcentagemVendedor: order.porcentagemVendedor,
-                              comissaoVendedor: order.comissaoVendedor,
-                              vendedor: order.vendedor,
-                              status: 'Pendente',
-                            }}
-                            availableVendedores={availableVendedores}
-                            availableProdutos={availableProdutos}
-                            availableFornecedores={availableFornecedores}
-                            onSuccess={onOrderSuccess}
-                            trigger={
-                              <Button variant="ghost" size="icon" className="h-6 w-6">
-                                <Pencil className="h-3 w-3 text-muted-foreground hover:text-primary" />
-                              </Button>
-                            }
-                          />
+                          <div className="flex items-center gap-0.5">
+                            <OrderFormDialog
+                              mode="edit"
+                              order={{
+                                id: order.id,
+                                cliente: order.cliente,
+                                emailCliente: order.emailCliente,
+                                data: `${order.dia}/${y}`,
+                                pedido: order.pedido,
+                                venda: order.venda,
+                                fornecedor: order.fornecedor,
+                                produto: order.produto,
+                                comissao: order.comissao,
+                                comissaoTotal: order.comissaoTotal,
+                                porcentagemVendedor: order.porcentagemVendedor,
+                                comissaoVendedor: order.comissaoVendedor,
+                                vendedor: order.vendedor,
+                                status: 'Pendente',
+                              }}
+                              availableVendedores={availableVendedores}
+                              availableProdutos={availableProdutos}
+                              availableFornecedores={availableFornecedores}
+                              onSuccess={onOrderSuccess}
+                              trigger={
+                                <Button variant="ghost" size="icon" className="h-6 w-6">
+                                  <Pencil className="h-3 w-3 text-muted-foreground hover:text-primary" />
+                                </Button>
+                              }
+                            />
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6"
+                              onClick={() => handleDeleteOrder(order)}
+                            >
+                              <Trash2 className="h-3 w-3 text-muted-foreground hover:text-destructive" />
+                            </Button>
+                          </div>
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground">{order.dia}</TableCell>
                         <TableCell className="text-xs font-medium">{order.pedido}</TableCell>
