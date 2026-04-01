@@ -107,12 +107,15 @@ export function DailyOrdersList({
         if (parsed.month === m && parsed.year === y) {
           orders.push({
             cliente: order.cliente || '-',
+            emailCliente: order.emailCliente || '',
             pedido: order.pedido || '-',
             venda: order.venda || 0,
             produto: order.produto || '-',
             fornecedor: order.fornecedor || '-',
             vendedor: rep.name,
-            comissaoTotal: order.comissaoTotal || order.comissao || 0,
+            comissao: order.comissao || 0,
+            comissaoTotal: order.comissaoTotal || 0,
+            porcentagemVendedor: order.porcentagemVendedor || 0,
             comissaoVendedor: order.comissaoVendedor || 0,
             dia: `${parsed.day.toString().padStart(2, '0')}/${parsed.month.toString().padStart(2, '0')}`,
           });
