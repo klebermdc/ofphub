@@ -15,12 +15,15 @@ import { DateRange } from "react-day-picker";
 
 interface DailyOrder {
   cliente: string;
+  emailCliente: string;
   pedido: string;
   venda: number;
   produto: string;
   fornecedor: string;
   vendedor: string;
+  comissao: number;
   comissaoTotal: number;
+  porcentagemVendedor: number;
   comissaoVendedor: number;
   dia: string;
 }
@@ -104,12 +107,15 @@ export function DailyOrdersList({
         if (parsed.month === m && parsed.year === y) {
           orders.push({
             cliente: order.cliente || '-',
+            emailCliente: order.emailCliente || '',
             pedido: order.pedido || '-',
             venda: order.venda || 0,
             produto: order.produto || '-',
             fornecedor: order.fornecedor || '-',
             vendedor: rep.name,
-            comissaoTotal: order.comissaoTotal || order.comissao || 0,
+            comissao: order.comissao || 0,
+            comissaoTotal: order.comissaoTotal || 0,
+            porcentagemVendedor: order.porcentagemVendedor || 0,
             comissaoVendedor: order.comissaoVendedor || 0,
             dia: `${parsed.day.toString().padStart(2, '0')}/${parsed.month.toString().padStart(2, '0')}`,
           });
@@ -353,15 +359,15 @@ export function DailyOrdersList({
                             mode="edit"
                             order={{
                               cliente: order.cliente,
-                              emailCliente: '',
+                              emailCliente: order.emailCliente,
                               data: `${order.dia}/${y}`,
                               pedido: order.pedido,
                               venda: order.venda,
                               fornecedor: order.fornecedor,
                               produto: order.produto,
-                              comissao: 0,
+                              comissao: order.comissao,
                               comissaoTotal: order.comissaoTotal,
-                              porcentagemVendedor: 0,
+                              porcentagemVendedor: order.porcentagemVendedor,
                               comissaoVendedor: order.comissaoVendedor,
                               vendedor: order.vendedor,
                               status: 'Pendente',
