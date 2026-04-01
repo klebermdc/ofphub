@@ -243,58 +243,27 @@ const Index = () => {
     }
   }, [user, refetchGoals]);
 
-  const autoSyncOrdersOnEntry = useCallback(async () => {
-    if (!user) return;
-
-    const targetUrl = savedUrl || DEFAULT_ORDERS_SHEET_URL;
-
-    try {
-      if (!savedUrl) {
-        await saveUrl(targetUrl);
-      }
-
-      const { data, error } = await supabase.functions.invoke('parse-google-sheet', {
-        body: { sheetUrl: targetUrl }
-      });
-
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-    } catch (err) {
-      console.error('Auto sync on app entry failed:', err);
-      toast({
-        title: "Aviso",
-        description: "Não foi possível sincronizar automaticamente agora. Mostrando os pedidos já salvos.",
-        variant: "destructive",
-      });
-    }
-  }, [user, savedUrl, saveUrl]);
-
   useEffect(() => {
-    setHasAutoSyncedOnEntry(false);
+    setHasLoadedOnEntry(false);
   }, [user?.id]);
 
   useEffect(() => {
-    const runInitialSyncAndLoad = async () => {
-      if (!user || loading || roleLoading || sheetSettingsLoading || role !== 'manager' || hasAutoSyncedOnEntry) {
+    const runInitialLoad = async () => {
+      if (!user || loading || roleLoading || role !== 'manager' || hasLoadedOnEntry) {
         return;
       }
 
-      setHasAutoSyncedOnEntry(true);
-      setIsLoading(true);
-      await autoSyncOrdersOnEntry();
+      setHasLoadedOnEntry(true);
       await loadOrdersFromDB();
-      setIsLoading(false);
     };
 
-    runInitialSyncAndLoad();
+    runInitialLoad();
   }, [
     user,
     loading,
     roleLoading,
-    sheetSettingsLoading,
     role,
-    hasAutoSyncedOnEntry,
-    autoSyncOrdersOnEntry,
+    hasLoadedOnEntry,
     loadOrdersFromDB,
   ]);
 
