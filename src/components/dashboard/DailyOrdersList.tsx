@@ -359,15 +359,15 @@ export function DailyOrdersList({
                             mode="edit"
                             order={{
                               cliente: order.cliente,
-                              emailCliente: '',
+                              emailCliente: order.emailCliente,
                               data: `${order.dia}/${y}`,
                               pedido: order.pedido,
                               venda: order.venda,
                               fornecedor: order.fornecedor,
                               produto: order.produto,
-                              comissao: 0,
+                              comissao: order.comissao,
                               comissaoTotal: order.comissaoTotal,
-                              porcentagemVendedor: 0,
+                              porcentagemVendedor: order.porcentagemVendedor,
                               comissaoVendedor: order.comissaoVendedor,
                               vendedor: order.vendedor,
                               status: 'Pendente',
