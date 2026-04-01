@@ -58,7 +58,7 @@ const DailyOrdersList = lazy(() => import("@/components/dashboard/DailyOrdersLis
 const DashboardOperationalMetrics = lazy(() => import("@/components/dashboard/DashboardOperationalMetrics").then(m => ({ default: m.DashboardOperationalMetrics })));
 const DashboardHeaderControls = lazy(() => import("@/components/dashboard/DashboardHeaderControls").then(m => ({ default: m.DashboardHeaderControls })));
 
-const DEFAULT_ORDERS_SHEET_URL = "https://docs.google.com/spreadsheets/d/1xex6meJ3-FwNkOHA0u6A5sna-pTgAbzQk2TL_hDQjbk/edit?usp=drivesdk";
+
 
 const Index = () => {
   const { user, loading } = useAuth();
