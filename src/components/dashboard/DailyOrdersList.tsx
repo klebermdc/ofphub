@@ -195,6 +195,19 @@ export function DailyOrdersList({
       .sort((a, b) => b.total - a.total);
   }, [displayOrders]);
 
+  // Pie chart: % of total sales each rep represents
+  const rentabilityPie = useMemo(() => {
+    const totalVenda = displayOrders.reduce((s, o) => s + o.venda, 0);
+    if (totalVenda === 0) return [];
+    const map: Record<string, number> = {};
+    displayOrders.forEach(o => {
+      map[o.vendedor] = (map[o.vendedor] || 0) + o.venda;
+    });
+    return Object.entries(map)
+      .map(([name, value]) => ({ name, value, percent: ((value / totalVenda) * 100) }))
+      .sort((a, b) => b.value - a.value);
+  }, [displayOrders]);
+
   const chartColors = [
     "hsl(var(--primary))",
     "hsl(var(--accent))",
