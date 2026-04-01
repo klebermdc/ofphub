@@ -73,7 +73,7 @@ const Index = () => {
   const [hasLoadedOnEntry, setHasLoadedOnEntry] = useState(false);
   const [salesReps, setSalesReps] = useState<SalesRep[]>([]);
   const [totals, setTotals] = useState<SalesTotals | null>(null);
-  const [dataSource, setDataSource] = useState<'sheet' | 'history'>('sheet');
+  const [dataSource] = useState<'sheet' | 'history'>('sheet');
   const [comercialView, setComercialView] = useState<'equipe' | 'crm'>('equipe');
   
   // Month filters

@@ -1,9 +1,8 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { SalesRep, SalesTotals, OrderDetail } from "@/types/sales";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { useSheetSettings } from "@/hooks/useSheetSettings";
 import { resolveSalespersonName } from "@/config/salaries";
 
 interface SheetDataContextType {
@@ -11,39 +10,17 @@ interface SheetDataContextType {
   totals: SalesTotals | null;
   isLoading: boolean;
   hasData: boolean;
-  refreshData: (url?: string) => Promise<void>;
-  sheetUrl: string;
+  refreshData: () => Promise<void>;
 }
 
 const SheetDataContext = createContext<SheetDataContextType | undefined>(undefined);
 
-/**
- * Fetch manual orders from the DB (orders without sheet_row_index).
- * These are orders added directly in the system, not imported from the sheet.
- */
-async function fetchManualOrders(userId: string): Promise<{ vendedor: string; order: OrderDetail }[]> {
-  const pageSize = 1000;
-  const allRows: any[] = [];
-  for (let offset = 0; ; offset += pageSize) {
-    const { data, error } = await supabase
-      .from('orders')
-      .select('*')
-      .eq('user_id', userId)
-      .is('sheet_row_index', null)
-      .range(offset, offset + pageSize - 1);
+function groupOrdersIntoReps(rows: any[]): SalesRep[] {
+  const repMap = new Map<string, SalesRep>();
 
-    if (error) {
-      console.error('Error fetching manual orders:', error);
-      break;
-    }
-    if (!data || data.length === 0) break;
-    allRows.push(...data);
-    if (data.length < pageSize) break;
-  }
-
-  return allRows.map((row) => ({
-    vendedor: row.vendedor,
-    order: {
+  rows.forEach((row) => {
+    const name = resolveSalespersonName(row.vendedor);
+    const order: OrderDetail = {
       cliente: row.cliente || '',
       emailCliente: row.email_cliente || undefined,
       data: row.data || '',
@@ -56,41 +33,17 @@ async function fetchManualOrders(userId: string): Promise<{ vendedor: string; or
       porcentagemVendedor: Number(row.porcentagem_vendedor) || 0,
       comissaoVendedor: Number(row.comissao_vendedor) || 0,
       status: row.status || undefined,
-    },
-  }));
-}
+    };
 
-/**
- * Merge manual (DB-only) orders into salesReps that came from the sheet.
- * If a vendedor doesn't exist in sheet data, a new SalesRep entry is created.
- */
-function mergeManualOrders(
-  sheetReps: SalesRep[],
-  manualOrders: { vendedor: string; order: OrderDetail }[]
-): SalesRep[] {
-  if (manualOrders.length === 0) return sheetReps;
-
-  // Clone to avoid mutating original
-  const repMap = new Map<string, SalesRep>();
-  sheetReps.forEach((r) => repMap.set(r.name, { ...r, orders: [...r.orders] }));
-
-  for (const { vendedor, order } of manualOrders) {
-    const name = resolveSalespersonName(vendedor);
     const existing = repMap.get(name);
-
     if (existing) {
-      // Avoid duplicates by pedido number (if present)
-      const isDuplicate = order.pedido && existing.orders.some((o) => o.pedido === order.pedido);
-      if (!isDuplicate) {
-        existing.orders.push(order);
-        existing.sales += order.venda;
-        existing.commission += order.comissaoVendedor;
-        existing.deals += 1;
-      }
+      existing.orders.push(order);
+      existing.sales += order.venda;
+      existing.commission += order.comissaoVendedor;
+      existing.deals += 1;
     } else {
-      // New vendedor not in sheet
       repMap.set(name, {
-        id: `rep-manual-${repMap.size}`,
+        id: `rep-${repMap.size}`,
         name,
         sales: order.venda,
         commission: order.comissaoVendedor,
@@ -99,9 +52,16 @@ function mergeManualOrders(
         orders: [order],
       });
     }
-  }
+  });
 
-  return Array.from(repMap.values());
+  const reps = Array.from(repMap.values());
+  reps.forEach((r) => {
+    r.rate = r.orders.length > 0
+      ? r.orders.reduce((s, o) => s + o.porcentagemVendedor, 0) / r.orders.length
+      : 0;
+  });
+
+  return reps;
 }
 
 function calculateTotals(reps: SalesRep[]): SalesTotals {
@@ -116,99 +76,58 @@ function calculateTotals(reps: SalesRep[]): SalesTotals {
 
 export function SheetDataProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
-  const { savedUrl, saveUrl } = useSheetSettings(user?.id);
-  
+
   const [salesReps, setSalesReps] = useState<SalesRep[]>([]);
   const [totals, setTotals] = useState<SalesTotals | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasData, setHasData] = useState(false);
-  const [sheetUrl, setSheetUrl] = useState("");
 
-  const refreshData = async (url?: string) => {
-    const targetUrl = url || savedUrl || sheetUrl;
-    if (!targetUrl && !user) return;
+  const refreshData = useCallback(async () => {
+    if (!user) return;
 
     setIsLoading(true);
     try {
-      let sheetReps: SalesRep[] = [];
+      const pageSize = 1000;
+      const allRows: any[] = [];
 
-      // 1) Load sheet data if URL available
-      if (targetUrl) {
-        const { data, error } = await supabase.functions.invoke('parse-google-sheet', {
-          body: { sheetUrl: targetUrl }
-        });
+      for (let offset = 0; ; offset += pageSize) {
+        const { data, error } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .range(offset, offset + pageSize - 1);
 
         if (error) throw error;
-
-        if (data.success && data.data) {
-          sheetReps = data.data.map((item: any, index: number) => ({
-            id: `rep-${index}`,
-            name: resolveSalespersonName(item.vendedor),
-            sales: item.vendas,
-            commission: item.comissao,
-            deals: item.negocios,
-            rate: item.taxa,
-            orders: item.pedidos?.map((p: any) => ({
-              cliente: p.cliente,
-              data: p.data,
-              pedido: p.pedido,
-              venda: p.venda,
-              fornecedor: p.fornecedor,
-              produto: p.produto,
-              comissao: p.comissao,
-              comissaoTotal: p.comissaoTotal,
-              porcentagemVendedor: p.porcentagemVendedor,
-              comissaoVendedor: p.comissaoVendedor
-            })) || []
-          }));
-
-          setSheetUrl(targetUrl);
-
-          if (url && url !== savedUrl) {
-            await saveUrl(url);
-          }
-        }
+        if (!data || data.length === 0) break;
+        allRows.push(...data);
+        if (data.length < pageSize) break;
       }
 
-      // 2) Fetch manual orders from DB and merge
-      if (user) {
-        const manualOrders = await fetchManualOrders(user.id);
-        sheetReps = mergeManualOrders(sheetReps, manualOrders);
-        if (manualOrders.length > 0) {
-          console.log(`Merged ${manualOrders.length} manual orders from DB`);
-        }
-      }
+      const reps = groupOrdersIntoReps(allRows);
+      const calculatedTotals = calculateTotals(reps);
 
-      // 3) Recalculate totals with merged data
-      const calculatedTotals = calculateTotals(sheetReps);
-
-      setSalesReps(sheetReps);
+      setSalesReps(reps);
       setTotals(calculatedTotals);
-      setHasData(sheetReps.length > 0);
-
-      const totalOrders = sheetReps.reduce((sum, r) => sum + r.deals, 0);
-      toast({
-        title: "Dados atualizados",
-        description: `${totalOrders} pedidos carregados.`,
-      });
+      setHasData(reps.length > 0);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error fetching orders from DB:', error);
       toast({
         title: "Erro ao carregar dados",
-        description: "Não foi possível carregar os dados.",
+        description: "Não foi possível carregar os pedidos.",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
 
-  // Auto-load saved sheet URL on mount
+  // Auto-load on mount
   useEffect(() => {
-    if (savedUrl && !hasData && !isLoading) {
-      refreshData(savedUrl);
+    if (user && !hasData && !isLoading) {
+      refreshData();
     }
-  }, [savedUrl]);
+  }, [user, hasData, isLoading, refreshData]);
 
   return (
     <SheetDataContext.Provider value={{
@@ -217,7 +136,6 @@ export function SheetDataProvider({ children }: { children: ReactNode }) {
       isLoading,
       hasData,
       refreshData,
-      sheetUrl
     }}>
       {children}
     </SheetDataContext.Provider>
