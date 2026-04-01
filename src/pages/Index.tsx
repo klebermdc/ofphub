@@ -20,7 +20,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useCRMLeadsCount } from "@/hooks/useCRMLeadsCount";
 import { useFilteredSalesReps, useDashboardMetrics } from "@/hooks/useSalesData";
 import { useSalesGoals } from "@/hooks/useSheetData";
-import { useSheetSettings } from "@/hooks/useSheetSettings";
+
 import { useCostCalculation } from "@/hooks/useCostCalculation";
 import { useDiscounts } from "@/hooks/useDiscounts";
 import { useApiIntegrations } from "@/hooks/useApiIntegrations";
@@ -58,22 +58,22 @@ const DailyOrdersList = lazy(() => import("@/components/dashboard/DailyOrdersLis
 const DashboardOperationalMetrics = lazy(() => import("@/components/dashboard/DashboardOperationalMetrics").then(m => ({ default: m.DashboardOperationalMetrics })));
 const DashboardHeaderControls = lazy(() => import("@/components/dashboard/DashboardHeaderControls").then(m => ({ default: m.DashboardHeaderControls })));
 
-const DEFAULT_ORDERS_SHEET_URL = "https://docs.google.com/spreadsheets/d/1xex6meJ3-FwNkOHA0u6A5sna-pTgAbzQk2TL_hDQjbk/edit?usp=drivesdk";
+
 
 const Index = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { savedUrl, saveUrl, isLoading: sheetSettingsLoading } = useSheetSettings(user?.id);
+  
   const initialTab = searchParams.get('tab') || 'dashboard';
   
   // Core state
   const [isLoading, setIsLoading] = useState(false);
   const [hasData, setHasData] = useState(false);
-  const [hasAutoSyncedOnEntry, setHasAutoSyncedOnEntry] = useState(false);
+  const [hasLoadedOnEntry, setHasLoadedOnEntry] = useState(false);
   const [salesReps, setSalesReps] = useState<SalesRep[]>([]);
   const [totals, setTotals] = useState<SalesTotals | null>(null);
-  const [dataSource, setDataSource] = useState<'sheet' | 'history'>('sheet');
+  const [dataSource] = useState<'sheet' | 'history'>('sheet');
   const [comercialView, setComercialView] = useState<'equipe' | 'crm'>('equipe');
   
   // Month filters
@@ -229,7 +229,7 @@ const Index = () => {
         vendedoresAtivos: reps.length,
       });
       setHasData(reps.length > 0);
-      setDataSource('sheet');
+      // data loaded from DB
       refetchGoals();
     } catch (err) {
       console.error('Error loading orders from DB:', err);
@@ -243,58 +243,27 @@ const Index = () => {
     }
   }, [user, refetchGoals]);
 
-  const autoSyncOrdersOnEntry = useCallback(async () => {
-    if (!user) return;
-
-    const targetUrl = savedUrl || DEFAULT_ORDERS_SHEET_URL;
-
-    try {
-      if (!savedUrl) {
-        await saveUrl(targetUrl);
-      }
-
-      const { data, error } = await supabase.functions.invoke('parse-google-sheet', {
-        body: { sheetUrl: targetUrl }
-      });
-
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-    } catch (err) {
-      console.error('Auto sync on app entry failed:', err);
-      toast({
-        title: "Aviso",
-        description: "Não foi possível sincronizar automaticamente agora. Mostrando os pedidos já salvos.",
-        variant: "destructive",
-      });
-    }
-  }, [user, savedUrl, saveUrl]);
-
   useEffect(() => {
-    setHasAutoSyncedOnEntry(false);
+    setHasLoadedOnEntry(false);
   }, [user?.id]);
 
   useEffect(() => {
-    const runInitialSyncAndLoad = async () => {
-      if (!user || loading || roleLoading || sheetSettingsLoading || role !== 'manager' || hasAutoSyncedOnEntry) {
+    const runInitialLoad = async () => {
+      if (!user || loading || roleLoading || role !== 'manager' || hasLoadedOnEntry) {
         return;
       }
 
-      setHasAutoSyncedOnEntry(true);
-      setIsLoading(true);
-      await autoSyncOrdersOnEntry();
+      setHasLoadedOnEntry(true);
       await loadOrdersFromDB();
-      setIsLoading(false);
     };
 
-    runInitialSyncAndLoad();
+    runInitialLoad();
   }, [
     user,
     loading,
     roleLoading,
-    sheetSettingsLoading,
     role,
-    hasAutoSyncedOnEntry,
-    autoSyncOrdersOnEntry,
+    hasLoadedOnEntry,
     loadOrdersFromDB,
   ]);
 
