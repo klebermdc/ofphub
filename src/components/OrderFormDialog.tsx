@@ -175,6 +175,8 @@ export function OrderFormDialog({
           comissaoTotal: order.comissaoTotal,
           porcentagemVendedor: order.porcentagemVendedor,
           comissaoVendedor: order.comissaoVendedor,
+          guia: (order as any).guia || '',
+          comissaoGuia: (order as any).comissaoGuia || 0,
         }],
       });
     } else {
