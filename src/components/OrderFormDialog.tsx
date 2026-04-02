@@ -460,6 +460,44 @@ export function OrderFormDialog({
                   </div>
                 </div>
 
+                {/* Guia selection - only for guiamento products */}
+                {item.produto.toLowerCase().includes('guiamento') && (
+                  <div className="border border-primary/30 rounded-lg p-3 bg-primary/5 space-y-2">
+                    <Label className="text-xs font-semibold text-primary">🧭 Guiamento</Label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs">Guia</Label>
+                        <Select value={item.guia} onValueChange={(v) => handleItemChange(idx, 'guia', v)}>
+                          <SelectTrigger className="h-9"><SelectValue placeholder="Selecione o guia" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Kleber">Kleber (100%)</SelectItem>
+                            <SelectItem value="Rafael">Rafael (50%)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {item.guia && (
+                        <div className="space-y-1">
+                          <Label className="text-xs">Pagamento Guia</Label>
+                          <div className="h-9 flex items-center px-3 rounded-md border bg-muted/50 text-sm font-semibold text-primary">
+                            {formatCurrency(item.comissaoGuia)}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    {item.guia && (
+                      <div className="text-[11px] text-muted-foreground mt-1">
+                        {item.guia === 'Kleber' 
+                          ? (formData.vendedor === 'Kleber' 
+                              ? 'Kleber é o vendedor — recebe 100% sem desconto de comissão.'
+                              : `Comissão do vendedor: ${formatCurrency(item.comissaoVendedor)} | Kleber recebe: ${formatCurrency(item.comissaoGuia)}`)
+                          : (formData.vendedor === 'Rafael' || formData.vendedor === 'Kleber'
+                              ? `${formData.vendedor} é o vendedor — Rafael recebe 50%: ${formatCurrency(item.comissaoGuia)}`
+                              : `Comissão vendedor: ${formatCurrency(item.comissaoVendedor)} | Rafael (50%): ${formatCurrency(item.comissaoGuia)}`)}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-1">
                     <Label className="text-xs">Valor (R$)</Label>
@@ -479,7 +517,7 @@ export function OrderFormDialog({
                 </div>
 
                 {/* Item calculated values */}
-                <div className="grid grid-cols-2 gap-3 pt-1">
+                <div className={`grid gap-3 pt-1 ${item.guia && item.produto.toLowerCase().includes('guiamento') ? 'grid-cols-3' : 'grid-cols-2'}`}>
                   <div className="text-xs">
                     <span className="text-muted-foreground">Comissão: </span>
                     <span className="font-semibold text-warning">{formatCurrency(item.comissaoTotal)}</span>
@@ -488,6 +526,12 @@ export function OrderFormDialog({
                     <span className="text-muted-foreground">Vendedor: </span>
                     <span className="font-semibold text-success">{formatCurrency(item.comissaoVendedor)}</span>
                   </div>
+                  {item.guia && item.produto.toLowerCase().includes('guiamento') && (
+                    <div className="text-xs">
+                      <span className="text-muted-foreground">Guia: </span>
+                      <span className="font-semibold text-primary">{formatCurrency(item.comissaoGuia)}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
