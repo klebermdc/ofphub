@@ -277,6 +277,8 @@ export function OrderFormDialog({
           comissao_total: item.comissaoTotal,
           porcentagem_vendedor: item.porcentagemVendedor,
           comissao_vendedor: item.comissaoVendedor,
+          guia: item.guia || null,
+          comissao_guia: item.comissaoGuia,
         };
 
         if (order?.id) {
