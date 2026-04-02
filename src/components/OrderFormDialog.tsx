@@ -110,7 +110,6 @@ function calcItem(item: ProductLineItem, vendedor: string): ProductLineItem {
   // Guiamento is always 100% commission (OFP product)
   const effectiveComissao = isGuiamento ? 100 : item.comissao;
   const comissaoTotal = item.venda * (effectiveComissao / 100);
-  const isGuiamento = item.produto.toLowerCase().includes('guiamento');
   
   if (isGuiamento && item.guia) {
     const guiaIsVendedor = vendedor === item.guia;
