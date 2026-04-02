@@ -95,10 +95,69 @@ export function DailyOrdersList({
   const now = new Date();
   const today = now.getDate();
 
+  const { user } = useAuth();
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [singleDate, setSingleDate] = useState<Date | undefined>(undefined);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [mode, setMode] = useState<'single' | 'range'>('single');
+
+  // Search state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState<DailyOrder[] | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+
+  const handleSearch = useCallback(async (term: string) => {
+    setSearchTerm(term);
+    if (!term.trim()) {
+      setSearchResults(null);
+      return;
+    }
+    if (term.trim().length < 2) return;
+
+    setIsSearching(true);
+    try {
+      const searchLower = term.trim().toLowerCase();
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .or(`pedido.ilike.%${searchLower}%,cliente.ilike.%${searchLower}%`)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+
+      const results: DailyOrder[] = (data || []).map((row: any) => {
+        const parsed = parseOrderDate(row.data);
+        const dia = parsed ? `${parsed.day.toString().padStart(2, '0')}/${parsed.month.toString().padStart(2, '0')}` : row.data;
+        return {
+          id: row.id,
+          cliente: row.cliente || '-',
+          emailCliente: row.email_cliente || '',
+          pedido: row.pedido || '-',
+          venda: Number(row.venda) || 0,
+          produto: row.produto || '-',
+          fornecedor: row.fornecedor || '-',
+          vendedor: row.vendedor || '-',
+          comissao: Number(row.comissao) || 0,
+          comissaoTotal: Number(row.comissao_total) || 0,
+          porcentagemVendedor: Number(row.porcentagem_vendedor) || 0,
+          comissaoVendedor: Number(row.comissao_vendedor) || 0,
+          dia,
+          createdAt: row.created_at || '',
+        };
+      });
+      setSearchResults(results);
+    } catch (err) {
+      console.error('Search error:', err);
+    } finally {
+      setIsSearching(false);
+    }
+  }, []);
+
+  const clearSearch = () => {
+    setSearchTerm('');
+    setSearchResults(null);
+  };
 
   const isFiltering = mode === 'single' ? !!singleDate : !!(dateRange?.from);
 
