@@ -28,6 +28,8 @@ interface ProductLineItem {
   comissaoTotal: number;
   porcentagemVendedor: number;
   comissaoVendedor: number;
+  guia: string;
+  comissaoGuia: number;
 }
 
 interface OrderFormData {
