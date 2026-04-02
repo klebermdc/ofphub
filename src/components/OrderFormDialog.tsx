@@ -105,6 +105,32 @@ function parseDate(dateStr: string): Date | undefined {
   return undefined;
 }
 
+// Pre-fill rules by product category
+const COMMISSION_PRESETS: Record<string, { comissao: number; porcentagemVendedor: number; porcentagemVendedorEspecial: number }> = {
+  'ingresso': { comissao: 4.5, porcentagemVendedor: 20, porcentagemVendedorEspecial: 30 },
+  'hotel': { comissao: 8, porcentagemVendedor: 30, porcentagemVendedorEspecial: 40 },
+  'seguro': { comissao: 20, porcentagemVendedor: 30, porcentagemVendedorEspecial: 40 },
+  'carro': { comissao: 10, porcentagemVendedor: 30, porcentagemVendedorEspecial: 40 },
+};
+
+const VENDEDORES_ESPECIAIS = ['maria gabriela', 'gabriela'];
+
+function getCommissionPreset(produto: string, vendedor: string): { comissao: number; porcentagemVendedor: number } | null {
+  const produtoLower = produto.toLowerCase();
+  const vendedorLower = vendedor.toLowerCase().trim();
+  const isEspecial = VENDEDORES_ESPECIAIS.some(v => vendedorLower.includes(v));
+
+  for (const [key, preset] of Object.entries(COMMISSION_PRESETS)) {
+    if (produtoLower.includes(key)) {
+      return {
+        comissao: preset.comissao,
+        porcentagemVendedor: isEspecial ? preset.porcentagemVendedorEspecial : preset.porcentagemVendedor,
+      };
+    }
+  }
+  return null;
+}
+
 function calcItem(item: ProductLineItem, vendedor: string): ProductLineItem {
   const isGuiamento = item.produto.toLowerCase().includes('guiamento');
   // Guiamento is always 100% commission (OFP product)
@@ -189,9 +215,14 @@ export function OrderFormDialog({
   const handleHeaderChange = (field: keyof Omit<OrderFormData, 'items'>, value: string) => {
     setFormData(prev => {
       const updated = { ...prev, [field]: value };
-      // Recalculate items when vendedor changes (affects guiamento logic)
       if (field === 'vendedor') {
-        updated.items = prev.items.map(item => calcItem(item, value));
+        updated.items = prev.items.map(item => {
+          const preset = getCommissionPreset(item.produto, value);
+          const updatedItem = preset
+            ? { ...item, comissao: preset.comissao, porcentagemVendedor: preset.porcentagemVendedor }
+            : item;
+          return calcItem(updatedItem, value);
+        });
       }
       return updated;
     });
@@ -201,6 +232,14 @@ export function OrderFormDialog({
     setFormData(prev => {
       const newItems = [...prev.items];
       newItems[index] = { ...newItems[index], [field]: value };
+      // Auto-fill commission presets when product changes
+      if (field === 'produto') {
+        const preset = getCommissionPreset(String(value), prev.vendedor);
+        if (preset) {
+          newItems[index].comissao = preset.comissao;
+          newItems[index].porcentagemVendedor = preset.porcentagemVendedor;
+        }
+      }
       if (['venda', 'comissao', 'porcentagemVendedor', 'guia', 'produto'].includes(field)) {
         newItems[index] = calcItem(newItems[index], prev.vendedor);
       }
