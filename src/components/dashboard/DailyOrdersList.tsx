@@ -364,7 +364,7 @@ export function DailyOrdersList({
           <div className="h-8 w-1 bg-primary rounded-full" />
           <h3 className="text-lg sm:text-xl font-semibold text-foreground">{getLabel()}</h3>
           <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-            {displayOrders.length} {displayOrders.length === 1 ? 'pedido' : 'pedidos'}
+            {(searchResults !== null ? searchResults : displayOrders).length} {(searchResults !== null ? searchResults : displayOrders).length === 1 ? 'pedido' : 'pedidos'}
           </span>
         </div>
         <div className="flex items-center gap-2">
