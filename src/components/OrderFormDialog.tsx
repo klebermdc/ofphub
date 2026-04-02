@@ -105,6 +105,32 @@ function parseDate(dateStr: string): Date | undefined {
   return undefined;
 }
 
+// Pre-fill rules by product category
+const COMMISSION_PRESETS: Record<string, { comissao: number; porcentagemVendedor: number; porcentagemVendedorEspecial: number }> = {
+  'ingresso': { comissao: 4.5, porcentagemVendedor: 20, porcentagemVendedorEspecial: 30 },
+  'hotel': { comissao: 8, porcentagemVendedor: 30, porcentagemVendedorEspecial: 40 },
+  'seguro': { comissao: 20, porcentagemVendedor: 30, porcentagemVendedorEspecial: 40 },
+  'carro': { comissao: 10, porcentagemVendedor: 30, porcentagemVendedorEspecial: 40 },
+};
+
+const VENDEDORES_ESPECIAIS = ['maria gabriela', 'gabriela'];
+
+function getCommissionPreset(produto: string, vendedor: string): { comissao: number; porcentagemVendedor: number } | null {
+  const produtoLower = produto.toLowerCase();
+  const vendedorLower = vendedor.toLowerCase().trim();
+  const isEspecial = VENDEDORES_ESPECIAIS.some(v => vendedorLower.includes(v));
+
+  for (const [key, preset] of Object.entries(COMMISSION_PRESETS)) {
+    if (produtoLower.includes(key)) {
+      return {
+        comissao: preset.comissao,
+        porcentagemVendedor: isEspecial ? preset.porcentagemVendedorEspecial : preset.porcentagemVendedor,
+      };
+    }
+  }
+  return null;
+}
+
 function calcItem(item: ProductLineItem, vendedor: string): ProductLineItem {
   const isGuiamento = item.produto.toLowerCase().includes('guiamento');
   // Guiamento is always 100% commission (OFP product)
