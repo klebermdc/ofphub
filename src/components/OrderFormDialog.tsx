@@ -106,7 +106,10 @@ function parseDate(dateStr: string): Date | undefined {
 }
 
 function calcItem(item: ProductLineItem, vendedor: string): ProductLineItem {
-  const comissaoTotal = item.venda * (item.comissao / 100);
+  const isGuiamento = item.produto.toLowerCase().includes('guiamento');
+  // Guiamento is always 100% commission (OFP product)
+  const effectiveComissao = isGuiamento ? 100 : item.comissao;
+  const comissaoTotal = item.venda * (effectiveComissao / 100);
   const isGuiamento = item.produto.toLowerCase().includes('guiamento');
   
   if (isGuiamento && item.guia) {
