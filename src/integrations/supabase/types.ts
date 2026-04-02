@@ -697,6 +697,7 @@ export type Database = {
         Row: {
           cliente: string | null
           comissao: number
+          comissao_guia: number
           comissao_total: number
           comissao_vendedor: number
           created_at: string
@@ -704,6 +705,7 @@ export type Database = {
           email_cliente: string | null
           enviado: boolean
           fornecedor: string | null
+          guia: string | null
           id: string
           pedido: string | null
           porcentagem_vendedor: number
@@ -718,6 +720,7 @@ export type Database = {
         Insert: {
           cliente?: string | null
           comissao?: number
+          comissao_guia?: number
           comissao_total?: number
           comissao_vendedor?: number
           created_at?: string
@@ -725,6 +728,7 @@ export type Database = {
           email_cliente?: string | null
           enviado?: boolean
           fornecedor?: string | null
+          guia?: string | null
           id?: string
           pedido?: string | null
           porcentagem_vendedor?: number
@@ -739,6 +743,7 @@ export type Database = {
         Update: {
           cliente?: string | null
           comissao?: number
+          comissao_guia?: number
           comissao_total?: number
           comissao_vendedor?: number
           created_at?: string
@@ -746,6 +751,7 @@ export type Database = {
           email_cliente?: string | null
           enviado?: boolean
           fornecedor?: string | null
+          guia?: string | null
           id?: string
           pedido?: string | null
           porcentagem_vendedor?: number
