@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react";
-import { Plus, Package, Trophy, CalendarIcon, RotateCcw, DollarSign, TrendingUp, Wallet, Pencil, Trash2, AlertTriangle } from "lucide-react";
+import { useMemo, useState, useCallback } from "react";
+import { Plus, Package, Trophy, CalendarIcon, RotateCcw, DollarSign, TrendingUp, Wallet, Pencil, Trash2, AlertTriangle, Search, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -14,6 +15,7 @@ import { ptBR } from "date-fns/locale";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
+import { useAuth } from "@/hooks/useAuth";
 
 interface DailyOrder {
   id?: string;
@@ -93,10 +95,69 @@ export function DailyOrdersList({
   const now = new Date();
   const today = now.getDate();
 
+  const { user } = useAuth();
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [singleDate, setSingleDate] = useState<Date | undefined>(undefined);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [mode, setMode] = useState<'single' | 'range'>('single');
+
+  // Search state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState<DailyOrder[] | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+
+  const handleSearch = useCallback(async (term: string) => {
+    setSearchTerm(term);
+    if (!term.trim()) {
+      setSearchResults(null);
+      return;
+    }
+    if (term.trim().length < 2) return;
+
+    setIsSearching(true);
+    try {
+      const searchLower = term.trim().toLowerCase();
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .or(`pedido.ilike.%${searchLower}%,cliente.ilike.%${searchLower}%`)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+
+      const results: DailyOrder[] = (data || []).map((row: any) => {
+        const parsed = parseOrderDate(row.data);
+        const dia = parsed ? `${parsed.day.toString().padStart(2, '0')}/${parsed.month.toString().padStart(2, '0')}` : row.data;
+        return {
+          id: row.id,
+          cliente: row.cliente || '-',
+          emailCliente: row.email_cliente || '',
+          pedido: row.pedido || '-',
+          venda: Number(row.venda) || 0,
+          produto: row.produto || '-',
+          fornecedor: row.fornecedor || '-',
+          vendedor: row.vendedor || '-',
+          comissao: Number(row.comissao) || 0,
+          comissaoTotal: Number(row.comissao_total) || 0,
+          porcentagemVendedor: Number(row.porcentagem_vendedor) || 0,
+          comissaoVendedor: Number(row.comissao_vendedor) || 0,
+          dia,
+          createdAt: row.created_at || '',
+        };
+      });
+      setSearchResults(results);
+    } catch (err) {
+      console.error('Search error:', err);
+    } finally {
+      setIsSearching(false);
+    }
+  }, []);
+
+  const clearSearch = () => {
+    setSearchTerm('');
+    setSearchResults(null);
+  };
 
   const isFiltering = mode === 'single' ? !!singleDate : !!(dateRange?.from);
 
@@ -303,7 +364,7 @@ export function DailyOrdersList({
           <div className="h-8 w-1 bg-primary rounded-full" />
           <h3 className="text-lg sm:text-xl font-semibold text-foreground">{getLabel()}</h3>
           <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-            {displayOrders.length} {displayOrders.length === 1 ? 'pedido' : 'pedidos'}
+            {(searchResults !== null ? searchResults : displayOrders).length} {(searchResults !== null ? searchResults : displayOrders).length === 1 ? 'pedido' : 'pedidos'}
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -399,11 +460,36 @@ export function DailyOrdersList({
         </div>
       </div>
 
-      {displayOrders.length === 0 ? (
+      {/* Search box */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Buscar por nº pedido ou nome do cliente (busca geral)..."
+          value={searchTerm}
+          onChange={(e) => handleSearch(e.target.value)}
+          className="pl-9 pr-9 h-9 text-sm"
+        />
+        {searchTerm && (
+          <button
+            onClick={clearSearch}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+
+      {searchResults !== null && (
+        <div className="text-xs text-muted-foreground">
+          {isSearching ? 'Buscando...' : `${searchResults.length} resultado(s) encontrado(s) em todos os pedidos`}
+        </div>
+      )}
+
+      {(searchResults !== null ? searchResults : displayOrders).length === 0 ? (
         <div className="glass rounded-xl p-6 text-center">
           <Package className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
-            {isFiltering ? "Nenhum pedido neste período." : "Nenhum pedido registrado neste mês."}
+            {searchResults !== null ? "Nenhum pedido encontrado." : isFiltering ? "Nenhum pedido neste período." : "Nenhum pedido registrado neste mês."}
           </p>
         </div>
       ) : (
@@ -425,7 +511,7 @@ export function DailyOrdersList({
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {displayOrders.map((order, idx) => (
+                    {(searchResults !== null ? searchResults : displayOrders).map((order, idx) => (
                       <TableRow key={idx} className="border-border/30">
                         <TableCell className="p-1">
                           <div className="flex items-center gap-0.5">
