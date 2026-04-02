@@ -78,6 +78,8 @@ const emptyItem: ProductLineItem = {
   comissaoTotal: 0,
   porcentagemVendedor: 0,
   comissaoVendedor: 0,
+  guia: '',
+  comissaoGuia: 0,
 };
 
 const emptyOrder: OrderFormData = {
