@@ -28,6 +28,7 @@ const SalespersonDashboard = () => {
   const { user, loading, signOut } = useAuth();
   const { role, salespersonName: userSalespersonName, isLoading: roleLoading } = useUserRole(user?.id);
   const [allOrders, setAllOrders] = useState<OrderDetail[]>([]);
+  const [guiaOrders, setGuiaOrders] = useState<OrderDetail[]>([]);
   const [dbLoading, setDbLoading] = useState(true);
   const navigate = useNavigate();
   const { theme } = useTheme();
