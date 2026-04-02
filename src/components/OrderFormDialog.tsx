@@ -28,6 +28,8 @@ interface ProductLineItem {
   comissaoTotal: number;
   porcentagemVendedor: number;
   comissaoVendedor: number;
+  guia: string;
+  comissaoGuia: number;
 }
 
 interface OrderFormData {
@@ -76,6 +78,8 @@ const emptyItem: ProductLineItem = {
   comissaoTotal: 0,
   porcentagemVendedor: 0,
   comissaoVendedor: 0,
+  guia: '',
+  comissaoGuia: 0,
 };
 
 const emptyOrder: OrderFormData = {
@@ -101,10 +105,41 @@ function parseDate(dateStr: string): Date | undefined {
   return undefined;
 }
 
-function calcItem(item: ProductLineItem): ProductLineItem {
+function calcItem(item: ProductLineItem, vendedor: string): ProductLineItem {
   const comissaoTotal = item.venda * (item.comissao / 100);
+  const isGuiamento = item.produto.toLowerCase().includes('guiamento');
+  
+  if (isGuiamento && item.guia) {
+    const guiaIsVendedor = vendedor === item.guia;
+    
+    if (item.guia === 'Kleber') {
+      // Kleber gets 100% of the value (minus commission if vendedor is different)
+      if (guiaIsVendedor) {
+        // Kleber is the vendedor: no commission deduction, he gets everything
+        return { ...item, comissaoTotal, comissaoVendedor: 0, comissaoGuia: item.venda };
+      } else {
+        // Different vendedor: deduct vendedor commission, Kleber gets the rest
+        const comissaoVendedor = comissaoTotal * (item.porcentagemVendedor / 100);
+        const comissaoGuia = item.venda - comissaoVendedor;
+        return { ...item, comissaoTotal, comissaoVendedor, comissaoGuia };
+      }
+    } else if (item.guia === 'Rafael') {
+      // Rafael gets 50% of the payment
+      if (guiaIsVendedor) {
+        // Rafael is the vendedor: no commission deduction, he gets 50%
+        const comissaoGuia = item.venda * 0.5;
+        return { ...item, comissaoTotal, comissaoVendedor: 0, comissaoGuia };
+      } else {
+        // Different vendedor: deduct commission first, then Rafael gets 50% of total
+        const comissaoVendedor = comissaoTotal * (item.porcentagemVendedor / 100);
+        const comissaoGuia = item.venda * 0.5;
+        return { ...item, comissaoTotal, comissaoVendedor, comissaoGuia };
+      }
+    }
+  }
+  
   const comissaoVendedor = comissaoTotal * (item.porcentagemVendedor / 100);
-  return { ...item, comissaoTotal, comissaoVendedor };
+  return { ...item, comissaoTotal, comissaoVendedor, comissaoGuia: 0 };
 }
 
 const formatCurrency = (value: number) =>
@@ -140,6 +175,8 @@ export function OrderFormDialog({
           comissaoTotal: order.comissaoTotal,
           porcentagemVendedor: order.porcentagemVendedor,
           comissaoVendedor: order.comissaoVendedor,
+          guia: (order as any).guia || '',
+          comissaoGuia: (order as any).comissaoGuia || 0,
         }],
       });
     } else {
@@ -148,15 +185,22 @@ export function OrderFormDialog({
   }, [order, open]);
 
   const handleHeaderChange = (field: keyof Omit<OrderFormData, 'items'>, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+      // Recalculate items when vendedor changes (affects guiamento logic)
+      if (field === 'vendedor') {
+        updated.items = prev.items.map(item => calcItem(item, value));
+      }
+      return updated;
+    });
   };
 
   const handleItemChange = (index: number, field: keyof ProductLineItem, value: string | number) => {
     setFormData(prev => {
       const newItems = [...prev.items];
       newItems[index] = { ...newItems[index], [field]: value };
-      if (['venda', 'comissao', 'porcentagemVendedor'].includes(field)) {
-        newItems[index] = calcItem(newItems[index]);
+      if (['venda', 'comissao', 'porcentagemVendedor', 'guia', 'produto'].includes(field)) {
+        newItems[index] = calcItem(newItems[index], prev.vendedor);
       }
       return { ...prev, items: newItems };
     });
@@ -210,6 +254,8 @@ export function OrderFormDialog({
           comissao_total: item.comissaoTotal,
           porcentagem_vendedor: item.porcentagemVendedor,
           comissao_vendedor: item.comissaoVendedor,
+          guia: item.guia || null,
+          comissao_guia: item.comissaoGuia,
         }));
         const { error } = await supabase.from('orders').insert(rows);
         if (error) throw error;
@@ -231,6 +277,8 @@ export function OrderFormDialog({
           comissao_total: item.comissaoTotal,
           porcentagem_vendedor: item.porcentagemVendedor,
           comissao_vendedor: item.comissaoVendedor,
+          guia: item.guia || null,
+          comissao_guia: item.comissaoGuia,
         };
 
         if (order?.id) {
@@ -412,6 +460,44 @@ export function OrderFormDialog({
                   </div>
                 </div>
 
+                {/* Guia selection - only for guiamento products */}
+                {item.produto.toLowerCase().includes('guiamento') && (
+                  <div className="border border-primary/30 rounded-lg p-3 bg-primary/5 space-y-2">
+                    <Label className="text-xs font-semibold text-primary">🧭 Guiamento</Label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs">Guia</Label>
+                        <Select value={item.guia} onValueChange={(v) => handleItemChange(idx, 'guia', v)}>
+                          <SelectTrigger className="h-9"><SelectValue placeholder="Selecione o guia" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Kleber">Kleber (100%)</SelectItem>
+                            <SelectItem value="Rafael">Rafael (50%)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {item.guia && (
+                        <div className="space-y-1">
+                          <Label className="text-xs">Pagamento Guia</Label>
+                          <div className="h-9 flex items-center px-3 rounded-md border bg-muted/50 text-sm font-semibold text-primary">
+                            {formatCurrency(item.comissaoGuia)}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    {item.guia && (
+                      <div className="text-[11px] text-muted-foreground mt-1">
+                        {item.guia === 'Kleber' 
+                          ? (formData.vendedor === 'Kleber' 
+                              ? 'Kleber é o vendedor — recebe 100% sem desconto de comissão.'
+                              : `Comissão do vendedor: ${formatCurrency(item.comissaoVendedor)} | Kleber recebe: ${formatCurrency(item.comissaoGuia)}`)
+                          : (formData.vendedor === 'Rafael' || formData.vendedor === 'Kleber'
+                              ? `${formData.vendedor} é o vendedor — Rafael recebe 50%: ${formatCurrency(item.comissaoGuia)}`
+                              : `Comissão vendedor: ${formatCurrency(item.comissaoVendedor)} | Rafael (50%): ${formatCurrency(item.comissaoGuia)}`)}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-1">
                     <Label className="text-xs">Valor (R$)</Label>
@@ -431,7 +517,7 @@ export function OrderFormDialog({
                 </div>
 
                 {/* Item calculated values */}
-                <div className="grid grid-cols-2 gap-3 pt-1">
+                <div className={`grid gap-3 pt-1 ${item.guia && item.produto.toLowerCase().includes('guiamento') ? 'grid-cols-3' : 'grid-cols-2'}`}>
                   <div className="text-xs">
                     <span className="text-muted-foreground">Comissão: </span>
                     <span className="font-semibold text-warning">{formatCurrency(item.comissaoTotal)}</span>
@@ -440,6 +526,12 @@ export function OrderFormDialog({
                     <span className="text-muted-foreground">Vendedor: </span>
                     <span className="font-semibold text-success">{formatCurrency(item.comissaoVendedor)}</span>
                   </div>
+                  {item.guia && item.produto.toLowerCase().includes('guiamento') && (
+                    <div className="text-xs">
+                      <span className="text-muted-foreground">Guia: </span>
+                      <span className="font-semibold text-primary">{formatCurrency(item.comissaoGuia)}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
