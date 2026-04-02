@@ -59,6 +59,7 @@ const SalespersonDashboard = () => {
       const pageSize = 1000;
       const fetchedOrders: OrderDetail[] = [];
       
+      // Fetch orders where vendedor = name
       for (let offset = 0; ; offset += pageSize) {
         let query = supabase
           .from('orders')
@@ -67,7 +68,6 @@ const SalespersonDashboard = () => {
           .order('created_at', { ascending: false })
           .range(offset, offset + pageSize - 1);
 
-        // Manager view must stay scoped to manager tenant to avoid cross-account mixing
         if (role === 'manager' && user?.id) {
           query = query.eq('user_id', user.id);
         }
@@ -98,6 +98,48 @@ const SalespersonDashboard = () => {
       }
       
       setAllOrders(fetchedOrders);
+
+      // Fetch orders where guia = name BUT vendedor != name (to avoid double-counting)
+      const fetchedGuiaOrders: OrderDetail[] = [];
+      for (let offset = 0; ; offset += pageSize) {
+        let query = supabase
+          .from('orders')
+          .select('*')
+          .eq('guia', displaySalespersonName)
+          .neq('vendedor', displaySalespersonName)
+          .order('created_at', { ascending: false })
+          .range(offset, offset + pageSize - 1);
+
+        if (role === 'manager' && user?.id) {
+          query = query.eq('user_id', user.id);
+        }
+
+        const { data, error } = await query;
+        
+        if (error) throw error;
+        if (!data || data.length === 0) break;
+        
+        data.forEach((row: any) => {
+          fetchedGuiaOrders.push({
+            cliente: row.cliente || '',
+            emailCliente: row.email_cliente || undefined,
+            data: row.data || '',
+            pedido: row.pedido ? `${row.pedido} (Guia)` : '(Guia)',
+            venda: Number(row.venda) || 0,
+            fornecedor: row.fornecedor || '',
+            produto: `🧭 ${row.produto || 'Guiamento'}`,
+            comissao: Number(row.comissao) || 0,
+            comissaoTotal: Number(row.comissao_guia) || 0,
+            porcentagemVendedor: 0,
+            comissaoVendedor: Number(row.comissao_guia) || 0,
+            status: row.status || undefined,
+          });
+        });
+        
+        if (data.length < pageSize) break;
+      }
+      
+      setGuiaOrders(fetchedGuiaOrders);
     } catch (err) {
       console.error('Error loading salesperson orders:', err);
     } finally {
