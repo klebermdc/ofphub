@@ -240,8 +240,8 @@ const SalespersonDashboard = () => {
     }
   }, [user, loading, role, roleLoading, navigate, urlSalespersonName]);
 
-  // Orders already loaded from DB
-  const salespersonOrders = allOrders;
+  // Combine regular orders + guia orders
+  const salespersonOrders = useMemo(() => [...allOrders, ...guiaOrders], [allOrders, guiaOrders]);
 
   // Extract available months
   const availableMonths = useMemo(() => {
