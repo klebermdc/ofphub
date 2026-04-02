@@ -227,6 +227,14 @@ export function OrderFormDialog({
     setFormData(prev => {
       const newItems = [...prev.items];
       newItems[index] = { ...newItems[index], [field]: value };
+      // Auto-fill commission presets when product changes
+      if (field === 'produto') {
+        const preset = getCommissionPreset(String(value), prev.vendedor);
+        if (preset) {
+          newItems[index].comissao = preset.comissao;
+          newItems[index].porcentagemVendedor = preset.porcentagemVendedor;
+        }
+      }
       if (['venda', 'comissao', 'porcentagemVendedor', 'guia', 'produto'].includes(field)) {
         newItems[index] = calcItem(newItems[index], prev.vendedor);
       }
