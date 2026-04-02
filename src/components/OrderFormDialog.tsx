@@ -215,9 +215,14 @@ export function OrderFormDialog({
   const handleHeaderChange = (field: keyof Omit<OrderFormData, 'items'>, value: string) => {
     setFormData(prev => {
       const updated = { ...prev, [field]: value };
-      // Recalculate items when vendedor changes (affects guiamento logic)
       if (field === 'vendedor') {
-        updated.items = prev.items.map(item => calcItem(item, value));
+        updated.items = prev.items.map(item => {
+          const preset = getCommissionPreset(item.produto, value);
+          const updatedItem = preset
+            ? { ...item, comissao: preset.comissao, porcentagemVendedor: preset.porcentagemVendedor }
+            : item;
+          return calcItem(updatedItem, value);
+        });
       }
       return updated;
     });
