@@ -500,23 +500,30 @@ export function OrderFormDialog({
                   </div>
                 )}
 
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="space-y-1">
-                    <Label className="text-xs">Valor (R$)</Label>
-                    <Input className="h-9" type="number" step="0.01" min="0" placeholder="0.00"
-                      value={item.venda || ''} onChange={(e) => handleItemChange(idx, 'venda', parseFloat(e.target.value) || 0)} />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Comissão (%)</Label>
-                    <Input className="h-9" type="number" step="0.1" min="0" max="100" placeholder="0"
-                      value={item.comissao || ''} onChange={(e) => handleItemChange(idx, 'comissao', parseFloat(e.target.value) || 0)} />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">% Vendedor</Label>
-                    <Input className="h-9" type="number" step="1" min="0" max="100" placeholder="0"
-                      value={item.porcentagemVendedor || ''} onChange={(e) => handleItemChange(idx, 'porcentagemVendedor', parseFloat(e.target.value) || 0)} />
-                  </div>
-                </div>
+                {(() => {
+                  const isGuia = item.produto.toLowerCase().includes('guiamento');
+                  return (
+                    <div className={`grid ${isGuia ? 'grid-cols-2' : 'grid-cols-3'} gap-3`}>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Valor (R$)</Label>
+                        <Input className="h-9" type="number" step="0.01" min="0" placeholder="0.00"
+                          value={item.venda || ''} onChange={(e) => handleItemChange(idx, 'venda', parseFloat(e.target.value) || 0)} />
+                      </div>
+                      {!isGuia && (
+                        <div className="space-y-1">
+                          <Label className="text-xs">Comissão (%)</Label>
+                          <Input className="h-9" type="number" step="0.1" min="0" max="100" placeholder="0"
+                            value={item.comissao || ''} onChange={(e) => handleItemChange(idx, 'comissao', parseFloat(e.target.value) || 0)} />
+                        </div>
+                      )}
+                      <div className="space-y-1">
+                        <Label className="text-xs">% Vendedor</Label>
+                        <Input className="h-9" type="number" step="1" min="0" max="100" placeholder="0"
+                          value={item.porcentagemVendedor || ''} onChange={(e) => handleItemChange(idx, 'porcentagemVendedor', parseFloat(e.target.value) || 0)} />
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Item calculated values */}
                 <div className={`grid gap-3 pt-1 ${item.guia && item.produto.toLowerCase().includes('guiamento') ? 'grid-cols-3' : 'grid-cols-2'}`}>
