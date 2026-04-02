@@ -130,9 +130,9 @@ function calcItem(item: ProductLineItem, vendedor: string): ProductLineItem {
         const comissaoGuia = item.venda * 0.5;
         return { ...item, comissaoTotal, comissaoVendedor: 0, comissaoGuia };
       } else {
-        // Different vendedor: deduct commission first, then Rafael gets 50% of total
+        // Different vendedor: deduct vendedor commission first, then Rafael gets 50% of remainder
         const comissaoVendedor = comissaoTotal * (item.porcentagemVendedor / 100);
-        const comissaoGuia = item.venda * 0.5;
+        const comissaoGuia = (item.venda - comissaoVendedor) * 0.5;
         return { ...item, comissaoTotal, comissaoVendedor, comissaoGuia };
       }
     }
