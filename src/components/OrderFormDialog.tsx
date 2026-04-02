@@ -105,10 +105,41 @@ function parseDate(dateStr: string): Date | undefined {
   return undefined;
 }
 
-function calcItem(item: ProductLineItem): ProductLineItem {
+function calcItem(item: ProductLineItem, vendedor: string): ProductLineItem {
   const comissaoTotal = item.venda * (item.comissao / 100);
+  const isGuiamento = item.produto.toLowerCase().includes('guiamento');
+  
+  if (isGuiamento && item.guia) {
+    const guiaIsVendedor = vendedor === item.guia;
+    
+    if (item.guia === 'Kleber') {
+      // Kleber gets 100% of the value (minus commission if vendedor is different)
+      if (guiaIsVendedor) {
+        // Kleber is the vendedor: no commission deduction, he gets everything
+        return { ...item, comissaoTotal, comissaoVendedor: 0, comissaoGuia: item.venda };
+      } else {
+        // Different vendedor: deduct vendedor commission, Kleber gets the rest
+        const comissaoVendedor = comissaoTotal * (item.porcentagemVendedor / 100);
+        const comissaoGuia = item.venda - comissaoVendedor;
+        return { ...item, comissaoTotal, comissaoVendedor, comissaoGuia };
+      }
+    } else if (item.guia === 'Rafael') {
+      // Rafael gets 50% of the payment
+      if (guiaIsVendedor) {
+        // Rafael is the vendedor: no commission deduction, he gets 50%
+        const comissaoGuia = item.venda * 0.5;
+        return { ...item, comissaoTotal, comissaoVendedor: 0, comissaoGuia };
+      } else {
+        // Different vendedor: deduct commission first, then Rafael gets 50% of total
+        const comissaoVendedor = comissaoTotal * (item.porcentagemVendedor / 100);
+        const comissaoGuia = item.venda * 0.5;
+        return { ...item, comissaoTotal, comissaoVendedor, comissaoGuia };
+      }
+    }
+  }
+  
   const comissaoVendedor = comissaoTotal * (item.porcentagemVendedor / 100);
-  return { ...item, comissaoTotal, comissaoVendedor };
+  return { ...item, comissaoTotal, comissaoVendedor, comissaoGuia: 0 };
 }
 
 const formatCurrency = (value: number) =>
