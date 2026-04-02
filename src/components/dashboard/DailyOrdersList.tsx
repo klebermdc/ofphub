@@ -511,7 +511,7 @@ export function DailyOrdersList({
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {displayOrders.map((order, idx) => (
+                    {(searchResults !== null ? searchResults : displayOrders).map((order, idx) => (
                       <TableRow key={idx} className="border-border/30">
                         <TableCell className="p-1">
                           <div className="flex items-center gap-0.5">
