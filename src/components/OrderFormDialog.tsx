@@ -192,8 +192,8 @@ export function OrderFormDialog({
     setFormData(prev => {
       const newItems = [...prev.items];
       newItems[index] = { ...newItems[index], [field]: value };
-      if (['venda', 'comissao', 'porcentagemVendedor'].includes(field)) {
-        newItems[index] = calcItem(newItems[index]);
+      if (['venda', 'comissao', 'porcentagemVendedor', 'guia', 'produto'].includes(field)) {
+        newItems[index] = calcItem(newItems[index], prev.vendedor);
       }
       return { ...prev, items: newItems };
     });
