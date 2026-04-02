@@ -460,11 +460,36 @@ export function DailyOrdersList({
         </div>
       </div>
 
-      {displayOrders.length === 0 ? (
+      {/* Search box */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Buscar por nº pedido ou nome do cliente (busca geral)..."
+          value={searchTerm}
+          onChange={(e) => handleSearch(e.target.value)}
+          className="pl-9 pr-9 h-9 text-sm"
+        />
+        {searchTerm && (
+          <button
+            onClick={clearSearch}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+
+      {searchResults !== null && (
+        <div className="text-xs text-muted-foreground">
+          {isSearching ? 'Buscando...' : `${searchResults.length} resultado(s) encontrado(s) em todos os pedidos`}
+        </div>
+      )}
+
+      {(searchResults !== null ? searchResults : displayOrders).length === 0 ? (
         <div className="glass rounded-xl p-6 text-center">
           <Package className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
-            {isFiltering ? "Nenhum pedido neste período." : "Nenhum pedido registrado neste mês."}
+            {searchResults !== null ? "Nenhum pedido encontrado." : isFiltering ? "Nenhum pedido neste período." : "Nenhum pedido registrado neste mês."}
           </p>
         </div>
       ) : (
