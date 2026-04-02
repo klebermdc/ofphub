@@ -185,7 +185,14 @@ export function OrderFormDialog({
   }, [order, open]);
 
   const handleHeaderChange = (field: keyof Omit<OrderFormData, 'items'>, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+      // Recalculate items when vendedor changes (affects guiamento logic)
+      if (field === 'vendedor') {
+        updated.items = prev.items.map(item => calcItem(item, value));
+      }
+      return updated;
+    });
   };
 
   const handleItemChange = (index: number, field: keyof ProductLineItem, value: string | number) => {
