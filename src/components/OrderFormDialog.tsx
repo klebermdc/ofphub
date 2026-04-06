@@ -240,9 +240,17 @@ export function OrderFormDialog({
           newItems[index].porcentagemVendedor = preset.porcentagemVendedor;
         }
       }
+      // Recalculate when relevant fields change, but preserve manual comissaoGuia
       if (['venda', 'comissao', 'porcentagemVendedor', 'guia', 'produto'].includes(field)) {
+        const previousGuia = newItems[index].comissaoGuia;
         newItems[index] = calcItem(newItems[index], prev.vendedor);
+        // Only auto-fill comissaoGuia when guia or produto changes (suggestion);
+        // for other fields (venda, comissao, porcentagemVendedor), keep manual value
+        if (!['guia', 'produto'].includes(field) && field !== 'venda') {
+          newItems[index].comissaoGuia = previousGuia;
+        }
       }
+      // If user manually edits comissaoGuia, don't recalculate it
       return { ...prev, items: newItems };
     });
   };
