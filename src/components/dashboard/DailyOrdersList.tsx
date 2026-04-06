@@ -608,7 +608,7 @@ export function DailyOrdersList({
                 <Trophy className="h-4 w-4 text-warning" />
                 <span className="text-sm font-semibold text-foreground">Vendas por Vendedor</span>
               </div>
-              <div className="h-[200px]">
+              <div style={{ height: Math.max(200, salesByRep.length * 40) }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={salesByRep} layout="vertical" margin={{ left: 0, right: 8, top: 4, bottom: 4 }}>
                     <XAxis type="number" hide />
