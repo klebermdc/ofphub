@@ -7,7 +7,8 @@ const formatCurrency = (value: number) => {
 
 const formatPercent = (value: number) => {
   if (value === 0) return '-';
-  return `${value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}%`;
+  const hasDecimal = value % 1 !== 0;
+  return `${value.toLocaleString('pt-BR', { minimumFractionDigits: hasDecimal ? 1 : 0, maximumFractionDigits: 2 })}%`;
 };
 
 // Orange brand colors
