@@ -240,9 +240,17 @@ export function OrderFormDialog({
           newItems[index].porcentagemVendedor = preset.porcentagemVendedor;
         }
       }
+      // Recalculate when relevant fields change, but preserve manual comissaoGuia
       if (['venda', 'comissao', 'porcentagemVendedor', 'guia', 'produto'].includes(field)) {
+        const previousGuia = newItems[index].comissaoGuia;
         newItems[index] = calcItem(newItems[index], prev.vendedor);
+        // Only auto-fill comissaoGuia when guia or produto changes (suggestion);
+        // for other fields (venda, comissao, porcentagemVendedor), keep manual value
+        if (!['guia', 'produto'].includes(field) && field !== 'venda') {
+          newItems[index].comissaoGuia = previousGuia;
+        }
       }
+      // If user manually edits comissaoGuia, don't recalculate it
       return { ...prev, items: newItems };
     });
   };
@@ -518,10 +526,14 @@ export function OrderFormDialog({
                       </div>
                       {item.guia && (
                         <div className="space-y-1">
-                          <Label className="text-xs">Pagamento Guia</Label>
-                          <div className="h-9 flex items-center px-3 rounded-md border bg-muted/50 text-sm font-semibold text-primary">
-                            {formatCurrency(item.comissaoGuia)}
-                          </div>
+                          <Label className="text-xs">Pagamento Guia (R$)</Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            className="h-9"
+                            value={item.comissaoGuia || ''}
+                            onChange={(e) => handleItemChange(idx, 'comissaoGuia', Number(e.target.value) || 0)}
+                          />
                         </div>
                       )}
                     </div>
