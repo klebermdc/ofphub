@@ -104,7 +104,7 @@ export function DailySalesTracker({
    const dailyCostWithTax = dailyCost + impostoEstimadoDia;
   
   // Resultado do Dia = Ganho do Dia - Custo diário proporcional
-  const resultadoDia = ganhoDia - dailyCost;
+  const resultadoDia = ganhoDia - dailyCostWithTax;
   
   const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
