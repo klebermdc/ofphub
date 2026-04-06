@@ -518,10 +518,14 @@ export function OrderFormDialog({
                       </div>
                       {item.guia && (
                         <div className="space-y-1">
-                          <Label className="text-xs">Pagamento Guia</Label>
-                          <div className="h-9 flex items-center px-3 rounded-md border bg-muted/50 text-sm font-semibold text-primary">
-                            {formatCurrency(item.comissaoGuia)}
-                          </div>
+                          <Label className="text-xs">Pagamento Guia (R$)</Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            className="h-9"
+                            value={item.comissaoGuia || ''}
+                            onChange={(e) => handleItemChange(idx, 'comissaoGuia', Number(e.target.value) || 0)}
+                          />
                         </div>
                       )}
                     </div>
