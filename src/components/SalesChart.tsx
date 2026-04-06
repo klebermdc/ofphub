@@ -40,7 +40,7 @@ export function SalesChart({ salesReps }: SalesChartProps) {
       {/* Bar Chart - Vendas por Vendedor */}
       <div className="glass rounded-xl p-6 animate-slide-up" style={{ animationDelay: '200ms' }}>
         <h3 className="text-lg font-semibold mb-6">Vendas por Vendedor</h3>
-        <div className="h-[350px]">
+        <div style={{ height: Math.max(350, chartData.length * 50) }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
