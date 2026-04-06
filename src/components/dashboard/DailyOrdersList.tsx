@@ -272,11 +272,11 @@ export function DailyOrdersList({
       .sort((a, b) => b.value - a.value);
   }, [displayOrders]);
 
-  // Commission alert: flag sellers with avg commission <= 3%
+  // Commission alert: flag sellers with avg commission <= 3% (always uses full month data)
   const commissionAlerts = useMemo(() => {
     const vendaMap: Record<string, number> = {};
     const comissaoMap: Record<string, number> = {};
-    displayOrders.forEach(o => {
+    allMonthOrders.forEach(o => {
       vendaMap[o.vendedor] = (vendaMap[o.vendedor] || 0) + o.venda;
       comissaoMap[o.vendedor] = (comissaoMap[o.vendedor] || 0) + o.comissaoTotal;
     });
@@ -290,7 +290,7 @@ export function DailyOrdersList({
       }))
       .filter(item => item.avgPercent <= 3)
       .sort((a, b) => a.avgPercent - b.avgPercent);
-  }, [displayOrders]);
+  }, [allMonthOrders]);
 
   const chartColors = [
     "hsl(var(--primary))",
