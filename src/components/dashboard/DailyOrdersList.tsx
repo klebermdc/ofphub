@@ -635,7 +635,7 @@ export function DailyOrdersList({
                 <TrendingUp className="h-4 w-4 text-success" />
                 <span className="text-sm font-semibold text-foreground">Ganho por Vendedor</span>
               </div>
-              <div className="h-[200px]">
+              <div style={{ height: Math.max(200, profitByRep.length * 40) }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={profitByRep} layout="vertical" margin={{ left: 0, right: 8, top: 4, bottom: 4 }}>
                     <XAxis type="number" hide />
