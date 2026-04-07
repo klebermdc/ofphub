@@ -594,6 +594,78 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_daily_stats: {
+        Row: {
+          cpl_real_meta: number
+          created_at: string
+          date: string
+          google_campaigns: Json | null
+          google_clicks: number
+          google_conversions: number
+          google_cpl: number
+          google_spend: number
+          id: string
+          leads_google: number
+          leads_meta: number
+          leads_organic: number
+          leads_total: number
+          meta_campaigns: Json | null
+          meta_clicks: number
+          meta_conversions: number
+          meta_cpl: number
+          meta_ctr: number
+          meta_impressions: number
+          meta_spend: number
+          updated_at: string
+        }
+        Insert: {
+          cpl_real_meta?: number
+          created_at?: string
+          date: string
+          google_campaigns?: Json | null
+          google_clicks?: number
+          google_conversions?: number
+          google_cpl?: number
+          google_spend?: number
+          id?: string
+          leads_google?: number
+          leads_meta?: number
+          leads_organic?: number
+          leads_total?: number
+          meta_campaigns?: Json | null
+          meta_clicks?: number
+          meta_conversions?: number
+          meta_cpl?: number
+          meta_ctr?: number
+          meta_impressions?: number
+          meta_spend?: number
+          updated_at?: string
+        }
+        Update: {
+          cpl_real_meta?: number
+          created_at?: string
+          date?: string
+          google_campaigns?: Json | null
+          google_clicks?: number
+          google_conversions?: number
+          google_cpl?: number
+          google_spend?: number
+          id?: string
+          leads_google?: number
+          leads_meta?: number
+          leads_organic?: number
+          leads_total?: number
+          meta_campaigns?: Json | null
+          meta_clicks?: number
+          meta_conversions?: number
+          meta_cpl?: number
+          meta_ctr?: number
+          meta_impressions?: number
+          meta_spend?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       marketing_files: {
         Row: {
           category: string | null
