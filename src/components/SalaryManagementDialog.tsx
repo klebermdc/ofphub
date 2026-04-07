@@ -36,14 +36,23 @@ export function SalaryManagementDialog({ salaries, onSave }: SalaryManagementDia
     setEntries(entries.filter((_, i) => i !== index));
   };
 
+  const [salaryInputs, setSalaryInputs] = useState<Record<number, string>>({});
+
   const handleUpdateEntry = (index: number, field: 'salesperson_name' | 'salary', value: string | number) => {
     const updated = [...entries];
     if (field === 'salary') {
-      updated[index][field] = Number(value) || 0;
+      const strVal = String(value);
+      setSalaryInputs(prev => ({ ...prev, [index]: strVal }));
+      updated[index][field] = strVal === '' ? 0 : Number(strVal) || 0;
     } else {
       updated[index][field] = value as string;
     }
     setEntries(updated);
+  };
+
+  const getSalaryInputValue = (index: number, salary: number) => {
+    if (salaryInputs[index] !== undefined) return salaryInputs[index];
+    return salary === 0 ? '' : String(salary);
   };
 
   const handleSave = async () => {
