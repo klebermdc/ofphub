@@ -108,14 +108,28 @@ export function SalaryManagementDialog({ salaries, onSave }: SalaryManagementDia
                   placeholder="Nome do vendedor"
                 />
               </div>
-              <div className="w-32 space-y-1">
+              <div className="w-36 space-y-1">
                 <Label htmlFor={`salary-${index}`} className="text-xs">Salário (R$)</Label>
                 <Input
                   id={`salary-${index}`}
                   type="number"
-                  value={entry.salary}
+                  inputMode="numeric"
+                  value={getSalaryInputValue(index, entry.salary)}
                   onChange={(e) => handleUpdateEntry(index, 'salary', e.target.value)}
-                  placeholder="0"
+                  onFocus={(e) => {
+                    if (entry.salary === 0) {
+                      setSalaryInputs(prev => ({ ...prev, [index]: '' }));
+                    }
+                    e.target.select();
+                  }}
+                  onBlur={() => {
+                    setSalaryInputs(prev => {
+                      const next = { ...prev };
+                      delete next[index];
+                      return next;
+                    });
+                  }}
+                  placeholder="1500"
                 />
               </div>
               <Button
