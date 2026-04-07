@@ -62,13 +62,13 @@ export function MarketingAdsTab() {
     const since = thirtyDaysAgo.toISOString().split("T")[0];
 
     const { data, error } = await supabase
-      .from("marketing_daily_stats")
+      .from("marketing_daily_stats" as any)
       .select("*")
       .gte("date", since)
       .order("date", { ascending: true });
 
     if (!error && data) {
-      setStats(data as DailyStat[]);
+      setStats(data as unknown as DailyStat[]);
     }
     setLoading(false);
   };
