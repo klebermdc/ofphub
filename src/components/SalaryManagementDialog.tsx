@@ -25,6 +25,7 @@ export function SalaryManagementDialog({ salaries, onSave }: SalaryManagementDia
   useEffect(() => {
     if (open) {
       setEntries([...salaries]);
+      setSalaryInputs({});
     }
   }, [open, salaries]);
 
