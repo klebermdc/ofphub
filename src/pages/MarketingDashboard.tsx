@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Megaphone, DollarSign, TrendingUp, Calendar, LogOut, UserPlus, Target, User, Settings, Upload, FileText, Download, Trash2, File, Banknote, Percent, Users, RefreshCw, Sun, Moon } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MarketingAdsTab } from "@/components/MarketingAdsTab";
 import { MetricCard } from "@/components/MetricCard";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -408,6 +410,17 @@ const MarketingDashboard = () => {
       </header>
       
       <main className="container mx-auto px-6 py-6 relative space-y-6">
+        <Tabs defaultValue="historico">
+          <TabsList className="mb-2">
+            <TabsTrigger value="historico">📊 Histórico</TabsTrigger>
+            <TabsTrigger value="trafego">🚀 Tráfego Pago</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="trafego">
+            <MarketingAdsTab />
+          </TabsContent>
+
+          <TabsContent value="historico" className="space-y-6">
         {/* Filters */}
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-4">
@@ -853,6 +866,8 @@ const MarketingDashboard = () => {
             </div>
           )}
         </div>
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
