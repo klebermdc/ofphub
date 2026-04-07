@@ -611,6 +611,18 @@ const Index = () => {
             </TabsContent>
 
             <TabsContent value="marketing" className="space-y-6">
+              <div className="glass rounded-xl p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="space-y-1">
+                  <h2 className="text-sm font-semibold">Novo painel de tráfego pago</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Abra a nova página de marketing para ver a aba de Tráfego Pago publicada.
+                  </p>
+                </div>
+                <Button variant="outline" onClick={() => navigate("/marketing?tab=trafego")}>
+                  Abrir tráfego pago
+                </Button>
+              </div>
+
               <ErrorBoundary>
                 <Suspense fallback={<DashboardSkeleton />}>
                   <MarketingTab 

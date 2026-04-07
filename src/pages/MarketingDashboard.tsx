@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Megaphone, DollarSign, TrendingUp, Calendar, LogOut, UserPlus, Target, User, Settings, Upload, FileText, Download, Trash2, File, Banknote, Percent, Users, RefreshCw, Sun, Moon } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MarketingAdsTab } from "@/components/MarketingAdsTab";
@@ -64,7 +64,9 @@ const MarketingDashboard = () => {
   const { user, loading, signOut } = useAuth();
   const { role, isLoading: roleLoading } = useUserRole(user?.id);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { theme } = useTheme();
+  const initialTab = searchParams.get("tab") === "historico" ? "historico" : "trafego";
   
   const { salesReps, isLoading: sheetLoading } = useSheetData();
   const { costs, isLoading: costsLoading, saveCost, getCostForMonth } = useMarketingCosts(user?.id, true);
@@ -96,13 +98,11 @@ const MarketingDashboard = () => {
     "Outro",
   ];
 
-  // Redirect if not marketing
+  // Redirect if not authorized for marketing dashboard
   useEffect(() => {
     if (!loading && !roleLoading) {
       if (!user) {
         navigate("/auth");
-      } else if (role === 'manager') {
-        navigate("/");
       } else if (role === 'salesperson') {
         navigate("/vendedor");
       }
@@ -410,7 +410,7 @@ const MarketingDashboard = () => {
       </header>
       
       <main className="container mx-auto px-6 py-6 relative space-y-6">
-        <Tabs defaultValue="historico">
+        <Tabs defaultValue={initialTab}>
           <TabsList className="mb-2">
             <TabsTrigger value="historico">📊 Histórico</TabsTrigger>
             <TabsTrigger value="trafego">🚀 Tráfego Pago</TabsTrigger>
