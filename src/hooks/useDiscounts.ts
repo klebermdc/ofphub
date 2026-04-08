@@ -77,7 +77,7 @@ export function useDiscounts(month: number, year: number) {
 
       toast({
         title: "Descontos salvos",
-        description: `Descontos de ${month}/${year} atualizados com sucesso.`,
+        description: `Descontos de ${m}/${y} atualizados com sucesso.`,
       });
 
       fetchDiscounts();
