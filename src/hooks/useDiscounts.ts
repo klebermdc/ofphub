@@ -43,8 +43,10 @@ export function useDiscounts(month: number, year: number) {
     }
   }, [user, month, year]);
 
-  const saveDiscounts = async (entries: Discount[]): Promise<boolean> => {
+  const saveDiscounts = async (entries: Discount[], targetMonth?: number, targetYear?: number): Promise<boolean> => {
     if (!user) return false;
+    const m = targetMonth ?? month;
+    const y = targetYear ?? year;
 
     try {
       // Delete existing discounts for this month/year
@@ -52,8 +54,8 @@ export function useDiscounts(month: number, year: number) {
         .from('salesperson_discounts')
         .delete()
         .eq('user_id', user.id)
-        .eq('period_month', month)
-        .eq('period_year', year);
+        .eq('period_month', m)
+        .eq('period_year', y);
 
       // Insert new discounts
       if (entries.length > 0) {
