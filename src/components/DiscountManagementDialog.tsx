@@ -10,10 +10,11 @@ import { Discount } from '@/hooks/useDiscounts';
 
 interface DiscountManagementDialogProps {
   discounts: Discount[];
-  onSave: (entries: Discount[]) => Promise<boolean>;
+  onSave: (entries: Discount[], month: number, year: number) => Promise<boolean>;
   salespeople: string[];
   month: number;
   year: number;
+  onPeriodChange?: (month: number, year: number) => void;
 }
 
 const monthNames = [
@@ -26,19 +27,31 @@ export function DiscountManagementDialog({
   onSave, 
   salespeople,
   month,
-  year 
+  year,
+  onPeriodChange
 }: DiscountManagementDialogProps) {
   const [open, setOpen] = useState(false);
   const [entries, setEntries] = useState<Discount[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [amountInputs, setAmountInputs] = useState<Record<number, string>>({});
+  const [selectedMonth, setSelectedMonth] = useState(month);
+  const [selectedYear, setSelectedYear] = useState(year);
 
   useEffect(() => {
     if (open) {
+      setSelectedMonth(month);
+      setSelectedYear(year);
       setEntries([...discounts]);
       setAmountInputs({});
     }
-  }, [open, discounts]);
+  }, [open, discounts, month, year]);
+
+  // When period changes inside dialog, notify parent to refetch
+  useEffect(() => {
+    if (open && onPeriodChange && (selectedMonth !== month || selectedYear !== year)) {
+      onPeriodChange(selectedMonth, selectedYear);
+    }
+  }, [selectedMonth, selectedYear, open]);
 
   // Get salespeople that are not yet added
   const availableSalespeople = salespeople.filter(
