@@ -31,10 +31,12 @@ export function DiscountManagementDialog({
   const [open, setOpen] = useState(false);
   const [entries, setEntries] = useState<Discount[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [amountInputs, setAmountInputs] = useState<Record<number, string>>({});
 
   useEffect(() => {
     if (open) {
       setEntries([...discounts]);
+      setAmountInputs({});
     }
   }, [open, discounts]);
 
@@ -59,11 +61,18 @@ export function DiscountManagementDialog({
   const handleUpdateEntry = (index: number, field: keyof Discount, value: string | number) => {
     const updated = [...entries];
     if (field === 'amount') {
-      updated[index][field] = Number(value) || 0;
+      const strVal = String(value);
+      setAmountInputs(prev => ({ ...prev, [index]: strVal }));
+      updated[index][field] = strVal === '' ? 0 : Number(strVal) || 0;
     } else {
       updated[index][field] = value as string;
     }
     setEntries(updated);
+  };
+
+  const getAmountInputValue = (index: number, amount: number) => {
+    if (amountInputs[index] !== undefined) return amountInputs[index];
+    return amount === 0 ? '' : String(amount);
   };
 
   const handleSave = async () => {
@@ -134,14 +143,28 @@ export function DiscountManagementDialog({
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="w-28 space-y-1">
+                  <div className="w-36 space-y-1">
                     <Label htmlFor={`amount-${index}`} className="text-xs">Valor (R$)</Label>
                     <Input
                       id={`amount-${index}`}
                       type="number"
-                      value={entry.amount}
+                      inputMode="numeric"
+                      value={getAmountInputValue(index, entry.amount)}
                       onChange={(e) => handleUpdateEntry(index, 'amount', e.target.value)}
-                      placeholder="0"
+                      onFocus={(e) => {
+                        if (entry.amount === 0) {
+                          setAmountInputs(prev => ({ ...prev, [index]: '' }));
+                        }
+                        e.target.select();
+                      }}
+                      onBlur={() => {
+                        setAmountInputs(prev => {
+                          const next = { ...prev };
+                          delete next[index];
+                          return next;
+                        });
+                      }}
+                      placeholder="500"
                     />
                   </div>
                   <Button
