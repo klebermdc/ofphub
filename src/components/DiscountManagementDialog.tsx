@@ -92,7 +92,7 @@ export function DiscountManagementDialog({
     const validEntries = entries.filter(e => e.salesperson_name.trim() !== '' && e.amount > 0);
     
     setIsSaving(true);
-    const success = await onSave(validEntries);
+    const success = await onSave(validEntries, selectedMonth, selectedYear);
     setIsSaving(false);
 
     if (success) {
