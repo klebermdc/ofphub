@@ -549,8 +549,6 @@ const Index = () => {
                         <Suspense fallback={null}>
                           <SalaryManagementDialog salaries={salaries} onSave={saveSalaries} />
                           <DiscountManagementDialog
-                            discounts={discounts}
-                            onSave={saveDiscounts}
                             salespeople={salesReps.map(r => r.name)}
                             month={currentGoalMonth}
                             year={currentGoalYear}
