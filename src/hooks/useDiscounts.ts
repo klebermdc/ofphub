@@ -65,8 +65,8 @@ export function useDiscounts(month: number, year: number) {
             entries.map(e => ({
               user_id: user.id,
               salesperson_name: e.salesperson_name,
-              period_month: month,
-              period_year: year,
+              period_month: m,
+              period_year: y,
               amount: e.amount,
               description: e.description || null
             }))
