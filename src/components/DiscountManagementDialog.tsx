@@ -122,11 +122,48 @@ export function DiscountManagementDialog({
         <DialogHeader>
           <DialogTitle>Descontos dos Vendedores</DialogTitle>
           <DialogDescription>
-            Lançar descontos para {monthNames[month - 1]} {year}
+            Lançar descontos por período
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          {/* Period selector */}
+          <div className="flex items-center gap-2">
+            <div className="flex-1 space-y-1">
+              <Label className="text-xs">Mês</Label>
+              <Select
+                value={String(selectedMonth)}
+                onValueChange={(v) => setSelectedMonth(Number(v))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {monthNames.map((name, i) => (
+                    <SelectItem key={i + 1} value={String(i + 1)}>{name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="w-28 space-y-1">
+              <Label className="text-xs">Ano</Label>
+              <Select
+                value={String(selectedYear)}
+                onValueChange={(v) => setSelectedYear(Number(v))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[2024, 2025, 2026, 2027].map(y => (
+                    <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="border-t" />
           {entries.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
               Nenhum desconto lançado para este mês.
