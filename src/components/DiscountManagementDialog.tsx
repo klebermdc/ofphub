@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,15 +6,12 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Percent, Plus, Trash2, Save } from 'lucide-react';
 import { toast } from 'sonner';
-import { Discount } from '@/hooks/useDiscounts';
+import { useDiscounts, Discount } from '@/hooks/useDiscounts';
 
 interface DiscountManagementDialogProps {
-  discounts: Discount[];
-  onSave: (entries: Discount[], month: number, year: number) => Promise<boolean>;
   salespeople: string[];
   month: number;
   year: number;
-  onPeriodChange?: (month: number, year: number) => void;
 }
 
 const monthNames = [
@@ -23,37 +20,34 @@ const monthNames = [
 ];
 
 export function DiscountManagementDialog({ 
-  discounts, 
-  onSave, 
   salespeople,
   month,
-  year,
-  onPeriodChange
+  year 
 }: DiscountManagementDialogProps) {
   const [open, setOpen] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState(month);
+  const [selectedYear, setSelectedYear] = useState(year);
   const [entries, setEntries] = useState<Discount[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [amountInputs, setAmountInputs] = useState<Record<number, string>>({});
-  const [selectedMonth, setSelectedMonth] = useState(month);
-  const [selectedYear, setSelectedYear] = useState(year);
+
+  const { discounts, saveDiscounts } = useDiscounts(selectedMonth, selectedYear);
 
   useEffect(() => {
     if (open) {
       setSelectedMonth(month);
       setSelectedYear(year);
+    }
+  }, [open, month, year]);
+
+  // Sync entries when discounts change (period change or initial load)
+  useEffect(() => {
+    if (open) {
       setEntries([...discounts]);
       setAmountInputs({});
     }
-  }, [open, discounts, month, year]);
+  }, [open, discounts]);
 
-  // When period changes inside dialog, notify parent to refetch
-  useEffect(() => {
-    if (open && onPeriodChange && (selectedMonth !== month || selectedYear !== year)) {
-      onPeriodChange(selectedMonth, selectedYear);
-    }
-  }, [selectedMonth, selectedYear, open]);
-
-  // Get salespeople that are not yet added
   const availableSalespeople = salespeople.filter(
     sp => !entries.some(e => e.salesperson_name === sp)
   );
@@ -92,7 +86,7 @@ export function DiscountManagementDialog({
     const validEntries = entries.filter(e => e.salesperson_name.trim() !== '' && e.amount > 0);
     
     setIsSaving(true);
-    const success = await onSave(validEntries, selectedMonth, selectedYear);
+    const success = await saveDiscounts(validEntries, selectedMonth, selectedYear);
     setIsSaving(false);
 
     if (success) {
@@ -122,7 +116,7 @@ export function DiscountManagementDialog({
         <DialogHeader>
           <DialogTitle>Descontos dos Vendedores</DialogTitle>
           <DialogDescription>
-            Lançar descontos por período
+            Selecione o período e lance os descontos
           </DialogDescription>
         </DialogHeader>
 
@@ -164,9 +158,10 @@ export function DiscountManagementDialog({
           </div>
 
           <div className="border-t" />
+
           {entries.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
-              Nenhum desconto lançado para este mês.
+              Nenhum desconto lançado para {monthNames[selectedMonth - 1]} {selectedYear}.
             </p>
           ) : (
             entries.map((entry, index) => (
@@ -258,7 +253,7 @@ export function DiscountManagementDialog({
               className="w-full gap-2"
             >
               <Save className="h-4 w-4" />
-              {isSaving ? 'Salvando...' : 'Salvar Descontos'}
+              {isSaving ? 'Salvando...' : `Salvar Descontos - ${monthNames[selectedMonth - 1]} ${selectedYear}`}
             </Button>
           </div>
         </div>
