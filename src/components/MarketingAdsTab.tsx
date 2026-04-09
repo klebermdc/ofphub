@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { MetricCard } from "@/components/MetricCard";
-import { DollarSign, TrendingUp, UserPlus, Target, RefreshCw, BarChart2, Calendar, Clock } from "lucide-react";
+import { DollarSign, TrendingUp, TrendingDown, UserPlus, Target, RefreshCw, BarChart2, Calendar, Clock, Eye, MousePointerClick, Gauge, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
