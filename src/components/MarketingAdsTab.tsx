@@ -19,6 +19,10 @@ interface DailyStat {
   meta_conversions: number;
   meta_cpl: number;
   meta_campaigns: Campaign[];
+  meta_reach?: number;
+  meta_landing_page_views?: number;
+  meta_frequency?: number;
+  monthly_budget?: number;
   google_spend: number;
   google_clicks: number;
   google_conversions: number;
@@ -285,6 +289,93 @@ export function MarketingAdsTab() {
             <MetricCard title="Cliques Hoje" value={todayClicks.toString()} icon={TrendingUp} variant="default" />
             <MetricCard title="Conversões Hoje" value={todayConversions.toString()} icon={Target} variant="success" />
           </div>
+          {/* Third row of daily KPIs */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <MetricCard 
+              title="Frequência Meta" 
+              value={today.meta_frequency?.toFixed(2) || "0"} 
+              icon={Eye} 
+              variant="default" 
+              formula="Vezes que cada pessoa viu o anúncio" 
+            />
+            <MetricCard 
+              title="LP View Rate" 
+              value={(() => {
+                const lpv = today.meta_landing_page_views || 0;
+                const clicks = today.meta_clicks || 0;
+                return lpv > 0 && clicks > 0 ? `${(lpv / clicks * 100).toFixed(1)}%` : "—";
+              })()} 
+              icon={MousePointerClick} 
+              variant="info" 
+              formula="% dos cliques que viram a LP" 
+            />
+            <MetricCard 
+              title="CPL vs Semana" 
+              value={(() => {
+                const last7 = stats.slice(-7);
+                const avgCpl7 = last7.length > 0 
+                  ? last7.reduce((s, d) => {
+                      const l = d.leads_total || 0;
+                      const spend = (d.meta_spend || 0) + (d.google_spend || 0);
+                      return s + (l > 0 ? spend / l : 0);
+                    }, 0) / last7.length 
+                  : 0;
+                if (avgCpl7 === 0) return "—";
+                const diff = ((todayCpl - avgCpl7) / avgCpl7) * 100;
+                return `${diff > 0 ? "↑" : "↓"} ${Math.abs(diff).toFixed(1)}%`;
+              })()} 
+              icon={(() => {
+                const last7 = stats.slice(-7);
+                const avgCpl7 = last7.length > 0 
+                  ? last7.reduce((s, d) => {
+                      const l = d.leads_total || 0;
+                      const spend = (d.meta_spend || 0) + (d.google_spend || 0);
+                      return s + (l > 0 ? spend / l : 0);
+                    }, 0) / last7.length 
+                  : 0;
+                return todayCpl <= avgCpl7 ? TrendingDown : TrendingUp;
+              })()} 
+              variant={(() => {
+                const last7 = stats.slice(-7);
+                const avgCpl7 = last7.length > 0 
+                  ? last7.reduce((s, d) => {
+                      const l = d.leads_total || 0;
+                      const spend = (d.meta_spend || 0) + (d.google_spend || 0);
+                      return s + (l > 0 ? spend / l : 0);
+                    }, 0) / last7.length 
+                  : 0;
+                return todayCpl <= avgCpl7 ? "success" : "destructive";
+              })() as any} 
+              formula="CPL hoje vs média dos últimos 7 dias" 
+            />
+            <MetricCard 
+              title="Budget Pace" 
+              value={(() => {
+                const budget = today.monthly_budget || 25000;
+                const spentPct = (totalInvestment / budget) * 100;
+                const now = new Date();
+                const daysInMonth = new Date(selected.year, selected.month, 0).getDate();
+                const daysPassed = selected.year === now.getFullYear() && selected.month === (now.getMonth() + 1) 
+                  ? now.getDate() 
+                  : daysInMonth;
+                const timePct = (daysPassed / daysInMonth) * 100;
+                return `${spentPct.toFixed(0)}% gasto | ${timePct.toFixed(0)}% do mês`;
+              })()} 
+              icon={Gauge} 
+              variant={(() => {
+                const budget = today.monthly_budget || 25000;
+                const spentPct = (totalInvestment / budget) * 100;
+                const now = new Date();
+                const daysInMonth = new Date(selected.year, selected.month, 0).getDate();
+                const daysPassed = selected.year === now.getFullYear() && selected.month === (now.getMonth() + 1) 
+                  ? now.getDate() 
+                  : daysInMonth;
+                const timePct = (daysPassed / daysInMonth) * 100;
+                return spentPct > timePct + 10 ? "destructive" : "success";
+              })() as any} 
+              formula="Ritmo de gasto vs dias do mês" 
+            />
+          </div>
         </div>
       )}
 
@@ -305,6 +396,40 @@ export function MarketingAdsTab() {
           <MetricCard title="Google Ads Total" value={formatBRL(totalGoogle)} icon={DollarSign} variant="info" />
           <MetricCard title="Cliques Total" value={totalClicks.toString()} icon={TrendingUp} variant="default" />
           <MetricCard title="Leads Orgânicos" value={totalLeadsOrganic.toString()} icon={UserPlus} variant="success" />
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <MetricCard 
+            title="Alcance Total" 
+            value={stats.reduce((s, d) => s + ((d as any).meta_reach || 0), 0).toLocaleString("pt-BR")} 
+            icon={Users} 
+            variant="default" 
+            formula="Soma de alcance Meta no mês" 
+          />
+          <MetricCard 
+            title="LP Views Total" 
+            value={stats.reduce((s, d) => s + ((d as any).meta_landing_page_views || 0), 0).toLocaleString("pt-BR")} 
+            icon={MousePointerClick} 
+            variant="info" 
+            formula="Total de visualizações de landing page" 
+          />
+          <MetricCard 
+            title="Frequência Média" 
+            value={(stats.reduce((s, d) => s + ((d as any).meta_frequency || 0), 0) / stats.length).toFixed(2)} 
+            icon={Eye} 
+            variant="default" 
+            formula="Frequência média do Meta no mês" 
+          />
+          <MetricCard 
+            title="LP View Rate Mês" 
+            value={(() => {
+              const totalLpViews = stats.reduce((s, d) => s + ((d as any).meta_landing_page_views || 0), 0);
+              const totalMetaClicks = stats.reduce((s, d) => s + (d.meta_clicks || 0), 0);
+              return totalMetaClicks > 0 ? `${(totalLpViews / totalMetaClicks * 100).toFixed(1)}%` : "—";
+            })()} 
+            icon={Target} 
+            variant="success" 
+            formula="% dos cliques que viram a LP no mês" 
+          />
         </div>
       </div>
 
