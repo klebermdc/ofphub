@@ -54,7 +54,7 @@ export function MarketingAttributionCard({ stats, selectedMonth }: MarketingAttr
       const filtered = data.filter((o) => {
         const parsed = parseOrderDate(o.data);
         if (!parsed) return false;
-        return parsed.getMonth() + 1 === month && parsed.getFullYear() === year;
+        return parsed.month === month && parsed.year === year;
       });
       setOrders(filtered);
     };
