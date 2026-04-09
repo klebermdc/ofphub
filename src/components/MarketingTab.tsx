@@ -104,6 +104,7 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
 
   // All daily stats aggregated by month (for charts)
   const [dailyStatsAgg, setDailyStatsAgg] = useState<DailyStatsAggregated[]>([]);
+  const [aggLoading, setAggLoading] = useState(true);
 
   // Fetch aggregated monthly data
   useEffect(() => {
