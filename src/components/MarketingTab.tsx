@@ -11,6 +11,7 @@ import { getMonthName } from "@/hooks/useCommissionHistory";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, BarChart, Bar, LineChart, Line } from "recharts";
 import { SalesRep } from "@/types/sales";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 
 interface MarketingCost {
   id: string;
@@ -23,6 +24,17 @@ interface MarketingCost {
   description: string | null;
 }
 
+interface DailyStatsAggregated {
+  month: number;
+  year: number;
+  meta_spend: number;
+  google_spend: number;
+  leads_total: number;
+  leads_meta: number;
+  leads_google: number;
+  leads_organic: number;
+}
+
 interface MarketingTabProps {
   costs: MarketingCost[];
   onSave: (month: number, year: number, googleAds: number, metaAds: number, otherMarketing: number, leads: number, description?: string) => Promise<boolean>;
@@ -31,52 +43,63 @@ interface MarketingTabProps {
 }
 
 const chartConfig = {
-  investment: {
-    label: "Investimento",
-    color: "hsl(var(--warning))",
-  },
-  leads: {
-    label: "Leads",
-    color: "hsl(var(--info))",
-  },
-  google_ads: {
-    label: "Google Ads",
-    color: "hsl(217, 91%, 60%)",
-  },
-  meta_ads: {
-    label: "Meta Ads",
-    color: "hsl(270, 70%, 60%)",
-  },
-  other: {
-    label: "Outros",
-    color: "hsl(25, 95%, 53%)",
-  },
-  cpl: {
-    label: "Custo por Lead",
-    color: "hsl(var(--destructive))",
-  },
-  revenue: {
-    label: "Faturamento",
-    color: "hsl(var(--success))",
-  },
+  investment: { label: "Investimento", color: "hsl(var(--warning))" },
+  leads: { label: "Leads", color: "hsl(var(--info))" },
+  google_ads: { label: "Google Ads", color: "hsl(217, 91%, 60%)" },
+  meta_ads: { label: "Meta Ads", color: "hsl(270, 70%, 60%)" },
+  other: { label: "Outros", color: "hsl(25, 95%, 53%)" },
+  cpl: { label: "Custo por Lead", color: "hsl(var(--destructive))" },
+  revenue: { label: "Faturamento", color: "hsl(var(--success))" },
 };
 
 export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }: MarketingTabProps) {
-  // CRM Leads data hook (connected to Notion)
   const { leadsData, isLoading: leadsLoading, fetchLeadsData, getLeadsCountForMonth, getLeadsBySalespersonForMonth } = useCRMLeadsCount();
 
-  // Get current month in format MM/YYYY
+  const [dailyStatsAgg, setDailyStatsAgg] = useState<DailyStatsAggregated[]>([]);
+
+  // Fetch and aggregate marketing_daily_stats by month
+  useEffect(() => {
+    const fetchDailyStats = async () => {
+      const { data, error } = await supabase
+        .from("marketing_daily_stats" as any)
+        .select("date, meta_spend, google_spend, leads_total, leads_meta, leads_google, leads_organic");
+
+      if (error || !data) return;
+
+      const grouped: Record<string, DailyStatsAggregated> = {};
+      (data as any[]).forEach((row: any) => {
+        const d = new Date(row.date);
+        const month = d.getMonth() + 1;
+        const year = d.getFullYear();
+        const key = `${year}-${month}`;
+        if (!grouped[key]) {
+          grouped[key] = { month, year, meta_spend: 0, google_spend: 0, leads_total: 0, leads_meta: 0, leads_google: 0, leads_organic: 0 };
+        }
+        grouped[key].meta_spend += Number(row.meta_spend) || 0;
+        grouped[key].google_spend += Number(row.google_spend) || 0;
+        grouped[key].leads_total += Number(row.leads_total) || 0;
+        grouped[key].leads_meta += Number(row.leads_meta) || 0;
+        grouped[key].leads_google += Number(row.leads_google) || 0;
+        grouped[key].leads_organic += Number(row.leads_organic) || 0;
+      });
+      setDailyStatsAgg(Object.values(grouped));
+    };
+    fetchDailyStats();
+  }, []);
+
+  const getDailyStatsForMonth = (month: number, year: number) => {
+    return dailyStatsAgg.find(d => d.month === month && d.year === year);
+  };
+
   const getCurrentMonthKey = () => {
     const now = new Date();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const year = now.getFullYear();
-    return `${month}/${year}`;
+    return `${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
   };
-  
+
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
   const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonthKey());
 
-  // Extract available months from sales data
+  // Extract available months from sales data + daily stats
   const availableMonths = useMemo(() => {
     const months = new Set<string>();
     salesReps.forEach(rep => {
@@ -86,54 +109,73 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
           if (parts.length >= 2) {
             const month = parts[1].padStart(2, '0');
             let year = parts[2] || new Date().getFullYear().toString();
-            if (year.length === 2) {
-              year = `20${year}`;
-            }
+            if (year.length === 2) year = `20${year}`;
             months.add(`${month}/${year}`);
           }
         }
       });
     });
-    // Also add months from marketing costs
     costs.forEach(cost => {
       months.add(`${cost.period_month.toString().padStart(2, '0')}/${cost.period_year}`);
+    });
+    dailyStatsAgg.forEach(d => {
+      months.add(`${d.month.toString().padStart(2, '0')}/${d.year}`);
     });
     return Array.from(months).sort((a, b) => {
       const [mA, yA] = a.split('/').map(Number);
       const [mB, yB] = b.split('/').map(Number);
       return yB - yA || mB - mA;
     });
-  }, [salesReps, costs]);
+  }, [salesReps, costs, dailyStatsAgg]);
 
-  // Available years from costs data
   const availableYears = useMemo(() => {
     const years = new Set<string>();
-    const currentYear = new Date().getFullYear();
-    years.add(currentYear.toString());
-    costs.forEach(cost => {
-      years.add(cost.period_year.toString());
-    });
-    availableMonths.forEach(m => {
-      const year = m.split('/')[1];
-      years.add(year);
-    });
+    years.add(new Date().getFullYear().toString());
+    costs.forEach(cost => years.add(cost.period_year.toString()));
+    dailyStatsAgg.forEach(d => years.add(d.year.toString()));
+    availableMonths.forEach(m => years.add(m.split('/')[1]));
     return Array.from(years).sort((a, b) => Number(b) - Number(a));
-  }, [costs, availableMonths]);
+  }, [costs, availableMonths, dailyStatsAgg]);
 
-  // Filter costs by year and optionally month
-  const filteredCosts = useMemo(() => {
-    let filtered = costs.filter(cost => cost.period_year.toString() === selectedYear);
+  // Build merged monthly data: daily stats for meta/google/leads, manual costs for other_marketing
+  const mergedMonthlyData = useMemo(() => {
+    const allMonthKeys = new Set<string>();
+    costs.forEach(c => allMonthKeys.add(`${c.period_year}-${c.period_month}`));
+    dailyStatsAgg.forEach(d => allMonthKeys.add(`${d.year}-${d.month}`));
+
+    return Array.from(allMonthKeys).map(key => {
+      const [yearStr, monthStr] = key.split('-');
+      const year = parseInt(yearStr);
+      const month = parseInt(monthStr);
+      const ds = getDailyStatsForMonth(month, year);
+      const mc = costs.find(c => c.period_month === month && c.period_year === year);
+
+      return {
+        id: mc?.id || key,
+        period_month: month,
+        period_year: year,
+        google_ads: ds?.google_spend || 0,
+        meta_ads: ds?.meta_spend || 0,
+        other_marketing: mc?.other_marketing || 0,
+        leads: ds?.leads_total || 0,
+        description: mc?.description || null,
+      };
+    });
+  }, [costs, dailyStatsAgg]);
+
+  // Filter by year and month
+  const filteredData = useMemo(() => {
+    let filtered = mergedMonthlyData.filter(d => d.period_year.toString() === selectedYear);
     if (selectedMonth !== 'all') {
       const [month] = selectedMonth.split('/');
-      filtered = filtered.filter(cost => cost.period_month === parseInt(month));
+      filtered = filtered.filter(d => d.period_month === parseInt(month));
     }
     return filtered.sort((a, b) => b.period_month - a.period_month);
-  }, [costs, selectedYear, selectedMonth]);
+  }, [mergedMonthlyData, selectedYear, selectedMonth]);
 
   // Calculate revenue from sales for the selected period
   const revenue = useMemo(() => {
     if (selectedMonth === 'all') {
-      // Sum all sales for the year
       return salesReps.reduce((total, rep) => {
         const yearSales = rep.orders?.filter(order => {
           if (!order.data) return false;
@@ -145,7 +187,6 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
         return total + yearSales;
       }, 0);
     } else {
-      // Sum sales for specific month
       return salesReps.reduce((total, rep) => {
         const monthSales = rep.orders?.filter(order => {
           if (!order.data) return false;
@@ -160,7 +201,6 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
     }
   }, [salesReps, selectedYear, selectedMonth]);
 
-  // Calculate orders count for conversion rate
   const ordersCount = useMemo(() => {
     if (selectedMonth === 'all') {
       return salesReps.reduce((total, rep) => {
@@ -188,15 +228,14 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
     }
   }, [salesReps, selectedYear, selectedMonth]);
 
-  // Prepare chart data (sorted by month ascending for charts) - using CRM leads
+  // Chart data using merged monthly data
   const chartData = useMemo(() => {
-    const yearCosts = costs.filter(cost => cost.period_year.toString() === selectedYear)
+    const yearData = mergedMonthlyData
+      .filter(d => d.period_year.toString() === selectedYear)
       .sort((a, b) => a.period_month - b.period_month);
-    
-    return yearCosts.map(cost => {
-      const total = cost.google_ads + cost.meta_ads + cost.other_marketing;
-      
-      // Calculate revenue for this specific month
+
+    return yearData.map(d => {
+      const total = d.google_ads + d.meta_ads + d.other_marketing;
       const monthRevenue = salesReps.reduce((sum, rep) => {
         const sales = rep.orders?.filter(order => {
           if (!order.data) return false;
@@ -204,70 +243,48 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
           const month = parseInt(parts[1]);
           let year = parts[2] || '';
           if (year.length === 2) year = `20${year}`;
-          return month === cost.period_month && year === cost.period_year.toString();
+          return month === d.period_month && year === d.period_year.toString();
         }).reduce((s, o) => s + o.venda, 0) || 0;
         return sum + sales;
       }, 0);
 
-      // Priority: manual leads from marketing_costs > CRM count
-      const manualLeads = cost.leads || 0;
-      const crmLeads = getLeadsCountForMonth(cost.period_month, cost.period_year);
-      const monthLeads = manualLeads > 0 ? manualLeads : crmLeads;
-      
       return {
-        month: getMonthName(cost.period_month).substring(0, 3),
-        fullMonth: getMonthName(cost.period_month),
+        month: getMonthName(d.period_month).substring(0, 3),
+        fullMonth: getMonthName(d.period_month),
         investment: total,
-        leads: monthLeads,
-        google_ads: cost.google_ads,
-        meta_ads: cost.meta_ads,
-        other: cost.other_marketing,
-        cpl: monthLeads > 0 ? total / monthLeads : 0,
+        leads: d.leads,
+        google_ads: d.google_ads,
+        meta_ads: d.meta_ads,
+        other: d.other_marketing,
+        cpl: d.leads > 0 ? total / d.leads : 0,
         revenue: monthRevenue,
       };
     });
-  }, [costs, salesReps, selectedYear, getLeadsCountForMonth]);
+  }, [mergedMonthlyData, salesReps, selectedYear]);
 
-  // Calculate totals - using CRM leads from Notion
+  // Calculate totals from merged data
   const totals = useMemo(() => {
-    const totalGoogleAds = filteredCosts.reduce((sum, c) => sum + c.google_ads, 0);
-    const totalMetaAds = filteredCosts.reduce((sum, c) => sum + c.meta_ads, 0);
-    const totalOther = filteredCosts.reduce((sum, c) => sum + c.other_marketing, 0);
+    const totalGoogleAds = filteredData.reduce((sum, d) => sum + d.google_ads, 0);
+    const totalMetaAds = filteredData.reduce((sum, d) => sum + d.meta_ads, 0);
+    const totalOther = filteredData.reduce((sum, d) => sum + d.other_marketing, 0);
     const totalInvestment = totalGoogleAds + totalMetaAds + totalOther;
-    
-    // Priority: manual leads from marketing_costs > CRM count
-    let totalLeads = 0;
-    const manualLeadsTotal = filteredCosts.reduce((sum, c) => sum + (c.leads || 0), 0);
-    if (manualLeadsTotal > 0) {
-      totalLeads = manualLeadsTotal;
-    } else if (selectedMonth === 'all') {
-      totalLeads = leadsData?.monthBreakdown
-        .filter(m => m.year === parseInt(selectedYear))
-        .reduce((sum, m) => sum + m.total, 0) || 0;
-    } else {
-      const [month] = selectedMonth.split('/');
-      totalLeads = getLeadsCountForMonth(parseInt(month), parseInt(selectedYear));
-    }
-    
+    const totalLeads = filteredData.reduce((sum, d) => sum + d.leads, 0);
     const costPerLead = totalLeads > 0 ? totalInvestment / totalLeads : 0;
     const conversionRate = totalLeads > 0 ? (ordersCount / totalLeads) * 100 : 0;
     const roi = totalInvestment > 0 ? ((revenue - totalInvestment) / totalInvestment) * 100 : 0;
-    
+
     return { totalGoogleAds, totalMetaAds, totalOther, totalLeads, totalInvestment, costPerLead, conversionRate, roi };
-  }, [filteredCosts, ordersCount, revenue, leadsData, selectedMonth, selectedYear, getLeadsCountForMonth]);
+  }, [filteredData, ordersCount, revenue]);
 
   const formatCurrency = (value: number) => {
     return `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
   const formatCurrencyShort = (value: number) => {
-    if (value >= 1000) {
-      return `R$ ${(value / 1000).toFixed(1)}k`;
-    }
+    if (value >= 1000) return `R$ ${(value / 1000).toFixed(1)}k`;
     return `R$ ${value.toFixed(0)}`;
   };
 
-  // Get months for filter based on selected year
   const monthsForYear = availableMonths.filter(m => m.endsWith(`/${selectedYear}`));
 
   return (
@@ -282,9 +299,7 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
             </SelectTrigger>
             <SelectContent>
               {availableYears.map(year => (
-                <SelectItem key={year} value={year}>
-                  {year}
-                </SelectItem>
+                <SelectItem key={year} value={year}>{year}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -297,70 +312,29 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
               {monthsForYear.map(month => {
                 const [m] = month.split('/');
                 return (
-                  <SelectItem key={month} value={month}>
-                    {getMonthName(parseInt(m))}
-                  </SelectItem>
+                  <SelectItem key={month} value={month}>{getMonthName(parseInt(m))}</SelectItem>
                 );
               })}
             </SelectContent>
           </Select>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => fetchLeadsData()}
-            disabled={leadsLoading}
-            className="gap-2"
-          >
+          <Button variant="outline" size="sm" onClick={() => fetchLeadsData()} disabled={leadsLoading} className="gap-2">
             <RefreshCw className={`h-4 w-4 ${leadsLoading ? 'animate-spin' : ''}`} />
             Sync Notion
           </Button>
-          <MarketingCostsDialog 
-            onSave={onSave}
-            getCostForMonth={getCostForMonth}
-          />
+          <MarketingCostsDialog onSave={onSave} getCostForMonth={getCostForMonth} />
         </div>
       </div>
 
       {/* Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <MetricCard
-          title="Faturamento"
-          value={formatCurrency(revenue)}
-          icon={Banknote}
-          variant="success"
-        />
-        <MetricCard
-          title="Investimento"
-          value={formatCurrency(totals.totalInvestment)}
-          icon={DollarSign}
-          variant="warning"
-        />
-        <MetricCard
-          title="Leads"
-          value={totals.totalLeads.toString()}
-          icon={UserPlus}
-          variant="info"
-        />
-        <MetricCard
-          title="Taxa de Conversão"
-          value={`${totals.conversionRate.toFixed(1)}%`}
-          icon={Percent}
-          variant={totals.conversionRate >= 10 ? "success" : "warning"}
-        />
-        <MetricCard
-          title="Custo por Lead"
-          value={formatCurrency(totals.costPerLead)}
-          icon={Target}
-          variant="default"
-        />
-        <MetricCard
-          title="ROI Marketing"
-          value={`${totals.roi.toFixed(1)}%`}
-          icon={TrendingUp}
-          variant={totals.roi >= 0 ? "success" : "danger"}
-        />
+        <MetricCard title="Faturamento" value={formatCurrency(revenue)} icon={Banknote} variant="success" />
+        <MetricCard title="Investimento" value={formatCurrency(totals.totalInvestment)} icon={DollarSign} variant="warning" />
+        <MetricCard title="Leads" value={totals.totalLeads.toString()} icon={UserPlus} variant="info" />
+        <MetricCard title="Taxa de Conversão" value={`${totals.conversionRate.toFixed(1)}%`} icon={Percent} variant={totals.conversionRate >= 10 ? "success" : "warning"} />
+        <MetricCard title="Custo por Lead" value={formatCurrency(totals.costPerLead)} icon={Target} variant="default" />
+        <MetricCard title="ROI Marketing" value={`${totals.roi.toFixed(1)}%`} icon={TrendingUp} variant={totals.roi >= 0 ? "success" : "danger"} />
       </div>
 
       {/* Charts Section */}
@@ -380,16 +354,8 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} className="text-muted-foreground" />
                 <YAxis tickFormatter={formatCurrencyShort} tick={{ fontSize: 12 }} className="text-muted-foreground" />
-                <ChartTooltip 
-                  content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))} />} 
-                />
-                <Area
-                  type="monotone"
-                  dataKey="investment"
-                  stroke="hsl(var(--warning))"
-                  fill="url(#investmentGradient)"
-                  strokeWidth={2}
-                />
+                <ChartTooltip content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))} />} />
+                <Area type="monotone" dataKey="investment" stroke="hsl(var(--warning))" fill="url(#investmentGradient)" strokeWidth={2} />
               </AreaChart>
             </ChartContainer>
           </div>
@@ -409,13 +375,7 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} className="text-muted-foreground" />
                 <YAxis tick={{ fontSize: 12 }} className="text-muted-foreground" />
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <Area
-                  type="monotone"
-                  dataKey="leads"
-                  stroke="hsl(var(--info))"
-                  fill="url(#leadsGradient)"
-                  strokeWidth={2}
-                />
+                <Area type="monotone" dataKey="leads" stroke="hsl(var(--info))" fill="url(#leadsGradient)" strokeWidth={2} />
               </AreaChart>
             </ChartContainer>
           </div>
@@ -428,9 +388,7 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} className="text-muted-foreground" />
                 <YAxis tickFormatter={formatCurrencyShort} tick={{ fontSize: 12 }} className="text-muted-foreground" />
-                <ChartTooltip 
-                  content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))} />} 
-                />
+                <ChartTooltip content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))} />} />
                 <Bar dataKey="google_ads" stackId="a" fill="hsl(217, 91%, 60%)" radius={[0, 0, 0, 0]} />
                 <Bar dataKey="meta_ads" stackId="a" fill="hsl(270, 70%, 60%)" radius={[0, 0, 0, 0]} />
                 <Bar dataKey="other" stackId="a" fill="hsl(25, 95%, 53%)" radius={[4, 4, 0, 0]} />
@@ -460,17 +418,8 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} className="text-muted-foreground" />
                 <YAxis tickFormatter={formatCurrencyShort} tick={{ fontSize: 12 }} className="text-muted-foreground" />
-                <ChartTooltip 
-                  content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))} />} 
-                />
-                <Line
-                  type="monotone"
-                  dataKey="cpl"
-                  stroke="hsl(var(--destructive))"
-                  strokeWidth={2}
-                  dot={{ fill: "hsl(var(--destructive))", strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
+                <ChartTooltip content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))} />} />
+                <Line type="monotone" dataKey="cpl" stroke="hsl(var(--destructive))" strokeWidth={2} dot={{ fill: "hsl(var(--destructive))", strokeWidth: 2, r: 4 }} activeDot={{ r: 6 }} />
               </LineChart>
             </ChartContainer>
           </div>
@@ -526,10 +475,7 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
               .map(([salesperson, count], index) => (
                 <div key={salesperson} className="glass rounded-xl p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <div 
-                      className="w-3 h-3 rounded-full" 
-                      style={{ background: `hsl(${(index * 60) % 360}, 70%, 50%)` }}
-                    />
+                    <div className="w-3 h-3 rounded-full" style={{ background: `hsl(${(index * 60) % 360}, 70%, 50%)` }} />
                     <span className="text-sm font-medium truncate">{salesperson}</span>
                   </div>
                   <p className="text-2xl font-bold">{count}</p>
@@ -545,12 +491,12 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
       {/* Monthly Breakdown Table */}
       <div className="glass rounded-xl p-6">
         <h3 className="text-lg font-semibold mb-4">Detalhamento Mensal - {selectedYear}</h3>
-        
-        {filteredCosts.length === 0 ? (
+
+        {filteredData.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <Megaphone className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Nenhum custo de marketing registrado para {selectedYear}.</p>
-            <p className="text-sm mt-2">Clique em "Custos de Marketing" para adicionar.</p>
+            <p>Nenhum dado de marketing registrado para {selectedYear}.</p>
+            <p className="text-sm mt-2">Os dados de Meta e Google Ads são importados automaticamente da aba Tráfego Pago.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -568,59 +514,30 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredCosts.map((cost) => {
-                  const monthTotal = cost.google_ads + cost.meta_ads + cost.other_marketing;
-                  const cpl = cost.leads > 0 ? monthTotal / cost.leads : 0;
+                {filteredData.map((d) => {
+                  const monthTotal = d.google_ads + d.meta_ads + d.other_marketing;
+                  const cpl = d.leads > 0 ? monthTotal / d.leads : 0;
                   return (
-                    <TableRow key={cost.id}>
-                      <TableCell className="font-medium">
-                        {getMonthName(cost.period_month)}
-                      </TableCell>
-                      <TableCell className="text-right font-mono">
-                        {formatCurrency(cost.google_ads)}
-                      </TableCell>
-                      <TableCell className="text-right font-mono">
-                        {formatCurrency(cost.meta_ads)}
-                      </TableCell>
-                      <TableCell className="text-right font-mono">
-                        {formatCurrency(cost.other_marketing)}
-                      </TableCell>
-                      <TableCell className="text-right font-mono font-semibold">
-                        {formatCurrency(monthTotal)}
-                      </TableCell>
-                      <TableCell className="text-right font-mono text-info">
-                        {cost.leads}
-                      </TableCell>
-                      <TableCell className="text-right font-mono text-warning">
-                        {formatCurrency(cpl)}
-                      </TableCell>
-                      <TableCell className="max-w-[200px] truncate text-muted-foreground">
-                        {cost.description || '-'}
-                      </TableCell>
+                    <TableRow key={d.id}>
+                      <TableCell className="font-medium">{getMonthName(d.period_month)}</TableCell>
+                      <TableCell className="text-right font-mono">{formatCurrency(d.google_ads)}</TableCell>
+                      <TableCell className="text-right font-mono">{formatCurrency(d.meta_ads)}</TableCell>
+                      <TableCell className="text-right font-mono">{formatCurrency(d.other_marketing)}</TableCell>
+                      <TableCell className="text-right font-mono font-semibold">{formatCurrency(monthTotal)}</TableCell>
+                      <TableCell className="text-right font-mono text-info">{d.leads}</TableCell>
+                      <TableCell className="text-right font-mono text-warning">{formatCurrency(cpl)}</TableCell>
+                      <TableCell className="max-w-[200px] truncate text-muted-foreground">{d.description || '-'}</TableCell>
                     </TableRow>
                   );
                 })}
-                {/* Totals Row */}
                 <TableRow className="bg-muted/50 font-semibold">
                   <TableCell>TOTAL</TableCell>
-                  <TableCell className="text-right font-mono">
-                    {formatCurrency(totals.totalGoogleAds)}
-                  </TableCell>
-                  <TableCell className="text-right font-mono">
-                    {formatCurrency(totals.totalMetaAds)}
-                  </TableCell>
-                  <TableCell className="text-right font-mono">
-                    {formatCurrency(totals.totalOther)}
-                  </TableCell>
-                  <TableCell className="text-right font-mono">
-                    {formatCurrency(totals.totalInvestment)}
-                  </TableCell>
-                  <TableCell className="text-right font-mono text-info">
-                    {totals.totalLeads}
-                  </TableCell>
-                  <TableCell className="text-right font-mono text-warning">
-                    {formatCurrency(totals.costPerLead)}
-                  </TableCell>
+                  <TableCell className="text-right font-mono">{formatCurrency(totals.totalGoogleAds)}</TableCell>
+                  <TableCell className="text-right font-mono">{formatCurrency(totals.totalMetaAds)}</TableCell>
+                  <TableCell className="text-right font-mono">{formatCurrency(totals.totalOther)}</TableCell>
+                  <TableCell className="text-right font-mono">{formatCurrency(totals.totalInvestment)}</TableCell>
+                  <TableCell className="text-right font-mono text-info">{totals.totalLeads}</TableCell>
+                  <TableCell className="text-right font-mono text-warning">{formatCurrency(totals.costPerLead)}</TableCell>
                   <TableCell></TableCell>
                 </TableRow>
               </TableBody>
