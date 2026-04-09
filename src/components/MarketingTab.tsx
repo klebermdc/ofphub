@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
+import { MarketingHealthIndicators } from "@/components/MarketingHealthIndicators";
 import { DollarSign, TrendingUp, Calendar, UserPlus, Target, Banknote, Percent, RefreshCw, BarChart2 } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
 import { MarketingCostsDialog } from "@/components/MarketingCostsDialog";
@@ -442,6 +443,9 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
           <p className="text-xs text-muted-foreground mt-1">{totals.totalInvestment > 0 ? ((totals.totalOther / totals.totalInvestment) * 100).toFixed(1) : 0}% do total</p>
         </div>
       </div>
+
+      {/* Health Indicators */}
+      {selectedMonth !== 'all' && <MarketingHealthIndicators stats={dailyStats} />}
 
       {/* Hoje vs Ontem (only when specific month selected and has daily data) */}
       {selectedMonth !== 'all' && today && yesterday && (
