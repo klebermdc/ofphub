@@ -432,7 +432,26 @@ const Index = () => {
                       taxaMedia={metrics.taxaMedia}
                     />
 
-                    <EBITDACard
+                    {dashboardMonth !== 'all' && (() => {
+                      const [m, y] = dashboardMonth.split('/').map(Number);
+                      const now = new Date();
+                      const isCurrentMonth = now.getMonth() + 1 === m && now.getFullYear() === y;
+                      const daysInMonth = new Date(y, m, 0).getDate();
+                      const daysElapsed = isCurrentMonth ? now.getDate() : daysInMonth;
+                      const totalCostSoFar = costCalc.totalCost;
+                      const dailyAvg = daysElapsed > 0 ? totalCostSoFar / daysElapsed : 0;
+                      const projected = dailyAvg * daysInMonth;
+                      return (
+                        <CostProjectionCard
+                          totalCostSoFar={totalCostSoFar}
+                          projectedTotalCost={projected}
+                          dailyAvgCost={dailyAvg}
+                          daysElapsed={daysElapsed}
+                          daysInMonth={daysInMonth}
+                        />
+                      );
+                    })()}
+
                       receita={metrics.totalComissaoTotal}
                       custoOperacional={metrics.totalComissao + costCalc.totalSalaries + marketingCost + operationalCost}
                     />
