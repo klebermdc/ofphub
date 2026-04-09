@@ -45,6 +45,14 @@ function getTotalBusinessDays(month: number, year: number): number {
   return count || 1;
 }
 
+const EXCLUDED_NAMES = [
+  "kleber augusto", "renata santos", "site",
+  "contato@orlandofastpass.com.br", "joy", "victor", "simone",
+];
+
+const isRealSalesperson = (name: string) =>
+  !EXCLUDED_NAMES.includes(name.toLowerCase().trim());
+
 interface Props {
   salesReps: SalesRep[];
   currentMonth: string;
