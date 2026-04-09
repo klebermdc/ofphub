@@ -6,7 +6,7 @@ import { MarketingAttributionCard } from "@/components/MarketingAttributionCard"
 import { DollarSign, TrendingUp, TrendingDown, Calendar, UserPlus, Target, Banknote, Percent, RefreshCw, BarChart2, Clock, Eye, MousePointerClick, Gauge, Users, Calculator, AlertTriangle } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
 import { MarketingCostsDialog } from "@/components/MarketingCostsDialog";
-import { useCRMLeadsCount } from "@/hooks/useCRMLeadsCount";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
@@ -99,7 +99,7 @@ const formatDate = (d: string) => {
 };
 
 export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }: MarketingTabProps) {
-  const { isLoading: leadsLoading, fetchLeadsData } = useCRMLeadsCount();
+  
 
   // State
   const now = new Date();
@@ -260,7 +260,7 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
         google_ads: hasDaily ? ds.google_spend : (mc?.google_ads || 0),
         meta_ads: hasDaily ? ds.meta_spend : (mc?.meta_ads || 0),
         other_marketing: mc?.other_marketing || 0,
-        leads: hasDaily ? ds.leads_total : (mc?.leads || 0),
+        leads: ds?.leads_total || 0,
         description: mc?.description || null,
       };
     });

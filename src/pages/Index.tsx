@@ -17,7 +17,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSalespersonSalaries } from "@/hooks/useSalespersonSalaries";
 import { useMarketingCosts } from "@/hooks/useMarketingCosts";
 import { useUserRole } from "@/hooks/useUserRole";
-import { useCRMLeadsCount } from "@/hooks/useCRMLeadsCount";
+
 import { useFilteredSalesReps, useDashboardMetrics } from "@/hooks/useSalesData";
 import { useSalesGoals } from "@/hooks/useSheetData";
 
@@ -138,23 +138,25 @@ const Index = () => {
     totalDiscounts: getTotalDiscounts(),
   });
 
-  // CRM Leads - Use manual value from marketing_costs if available, otherwise count from CRM
-  const { getLeadsCountForMonth } = useCRMLeadsCount();
-  const { getLeadsForMonth } = useMarketingCosts(user?.id, role === 'marketing' || role === 'manager');
-  const [crmLeadsCount, setCrmLeadsCount] = useState<number>(0);
-  
-  const fetchCRMLeadsCount = useCallback(async () => {
-    const count = await getLeadsCountForMonth(currentGoalMonth, currentGoalYear);
-    setCrmLeadsCount(count);
-  }, [currentGoalMonth, currentGoalYear, getLeadsCountForMonth]);
-  
-  useEffect(() => {
-    fetchCRMLeadsCount();
-  }, [fetchCRMLeadsCount]);
+  // Leads from marketing_daily_stats (single source of truth)
+  const [totalLeads, setTotalLeads] = useState<number>(0);
 
-  // Priority: manual leads from marketing_costs > CRM count
-  const manualLeads = getLeadsForMonth(currentGoalMonth, currentGoalYear);
-  const totalLeads = manualLeads > 0 ? manualLeads : crmLeadsCount;
+  useEffect(() => {
+    const fetchLeads = async () => {
+      const startDate = `${currentGoalYear}-${String(currentGoalMonth).padStart(2, '0')}-01`;
+      const endDay = new Date(currentGoalYear, currentGoalMonth, 0).getDate();
+      const endDate = `${currentGoalYear}-${String(currentGoalMonth).padStart(2, '0')}-${String(endDay).padStart(2, '0')}`;
+      const { data } = await supabase
+        .from('marketing_daily_stats')
+        .select('leads_total')
+        .gte('date', startDate)
+        .lte('date', endDate);
+      if (data) {
+        setTotalLeads(data.reduce((sum, d) => sum + (Number(d.leads_total) || 0), 0));
+      }
+    };
+    fetchLeads();
+  }, [currentGoalMonth, currentGoalYear]);
 
   const conversionRate = totalLeads > 0 ? (metrics.totalNegocios / totalLeads) * 100 : 0;
 
