@@ -339,7 +339,16 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
   const todayCpl = todayLeads > 0 ? todayInvestment / todayLeads : 0;
   const todayCtr = today?.meta_ctr || 0;
   const todayClicks = (today?.meta_clicks || 0) + (today?.google_clicks || 0);
-  const todayConversions = (today?.meta_conversions || 0) + (today?.google_conversions || 0);
+  const todayOrders = useMemo(() => {
+    if (!today) return 0;
+    return salesReps.flatMap(r => r.orders || []).filter(o => {
+      if (!o.data) return false;
+      const parsed = parseOrderDate(o.data);
+      if (!parsed) return false;
+      const [y, m, d] = today.date.split('-').map(Number);
+      return parsed.day === d && parsed.month === m && parsed.year === y;
+    }).length;
+  }, [today, salesReps]);
 
   if (aggLoading) {
     return (
