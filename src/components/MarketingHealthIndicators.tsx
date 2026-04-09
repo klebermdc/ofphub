@@ -155,7 +155,7 @@ export function MarketingHealthIndicators({ stats }: Props) {
         <Activity className="h-5 w-5 text-primary" />
         <h3 className="text-sm font-semibold">Farol de Marketing</h3>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         {indicators.map((ind) => {
           const colors = colorMap[ind.color];
           return (
