@@ -363,12 +363,25 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
             </SelectContent>
           </Select>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => fetchDailyStats()} disabled={dailyLoading} className="gap-2">
+            <RefreshCw className={`h-4 w-4 ${dailyLoading ? 'animate-spin' : ''}`} />
+            Atualizar
+          </Button>
           <Button variant="outline" size="sm" onClick={() => fetchLeadsData()} disabled={leadsLoading} className="gap-2">
             <RefreshCw className={`h-4 w-4 ${leadsLoading ? 'animate-spin' : ''}`} />
             Sync Notion
           </Button>
           <MarketingCostsDialog onSave={onSave} getCostForMonth={getCostForMonth} />
+          {lastUpdate && (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-pulse absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
+              </span>
+              {getLastUpdateText()}
+            </div>
+          )}
         </div>
       </div>
 
