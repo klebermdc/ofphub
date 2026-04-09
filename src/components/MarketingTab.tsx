@@ -1,8 +1,8 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { MarketingHealthIndicators } from "@/components/MarketingHealthIndicators";
 import { TopCreativesTable } from "@/components/TopCreativesTable";
 import { LeadsBySourceBreakdown } from "@/components/LeadsBySourceBreakdown";
-import { DollarSign, TrendingUp, Calendar, UserPlus, Target, Banknote, Percent, RefreshCw, BarChart2 } from "lucide-react";
+import { DollarSign, TrendingUp, Calendar, UserPlus, Target, Banknote, Percent, RefreshCw, BarChart2, Clock } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
 import { MarketingCostsDialog } from "@/components/MarketingCostsDialog";
 import { useCRMLeadsCount } from "@/hooks/useCRMLeadsCount";
@@ -109,6 +109,10 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
   const [dailyStatsAgg, setDailyStatsAgg] = useState<DailyStatsAggregated[]>([]);
   const [aggLoading, setAggLoading] = useState(true);
 
+  // Auto-refresh state
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [, setTick] = useState(0);
+
   // Fetch aggregated monthly data
   useEffect(() => {
     const fetchAll = async () => {
@@ -136,9 +140,13 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
   }, []);
 
   // Fetch daily stats for selected month
-  const fetchDailyStats = async () => {
-    if (selectedMonth === 'all') { setDailyStats([]); return; }
-    const [mStr, yStr] = selectedMonth.split('/');
+  const selectedMonthRef = useRef(selectedMonth);
+  selectedMonthRef.current = selectedMonth;
+
+  const fetchDailyStats = useCallback(async () => {
+    const sm = selectedMonthRef.current;
+    if (sm === 'all') { setDailyStats([]); return; }
+    const [mStr, yStr] = sm.split('/');
     const month = parseInt(mStr);
     const year = parseInt(yStr);
     setDailyLoading(true);
@@ -152,10 +160,30 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
       .lte("date", endDate)
       .order("date", { ascending: true });
     if (!error && data) setDailyStats(data as unknown as DailyStat[]);
+    setLastUpdate(new Date());
     setDailyLoading(false);
-  };
+  }, []);
 
   useEffect(() => { fetchDailyStats(); }, [selectedMonth]);
+
+  // Auto-refresh every 5 minutes
+  useEffect(() => {
+    const interval = setInterval(() => { fetchDailyStats(); }, 300000);
+    return () => clearInterval(interval);
+  }, [fetchDailyStats]);
+
+  // Tick for "ago" text every 60s
+  useEffect(() => {
+    const interval = setInterval(() => setTick(t => t + 1), 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const getLastUpdateText = () => {
+    if (!lastUpdate) return "";
+    const diffMin = Math.floor((Date.now() - lastUpdate.getTime()) / 60000);
+    if (diffMin < 1) return "Atualizado agora";
+    return `Atualizado há ${diffMin} min`;
+  };
 
   // Available months
   const availableMonths = useMemo(() => {
@@ -303,6 +331,16 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
   const today = dailyStats[dailyStats.length - 1];
   const yesterday = dailyStats[dailyStats.length - 2];
 
+  // Daily KPI values (last available day)
+  const todayMeta = today?.meta_spend || 0;
+  const todayGoogle = today?.google_spend || 0;
+  const todayLeads = today?.leads_total || 0;
+  const todayInvestment = todayMeta + todayGoogle;
+  const todayCpl = todayLeads > 0 ? todayInvestment / todayLeads : 0;
+  const todayCtr = today?.meta_ctr || 0;
+  const todayClicks = (today?.meta_clicks || 0) + (today?.google_clicks || 0);
+  const todayConversions = (today?.meta_conversions || 0) + (today?.google_conversions || 0);
+
   if (aggLoading) {
     return (
       <div className="flex items-center justify-center py-20 text-muted-foreground">
@@ -335,14 +373,55 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
             </SelectContent>
           </Select>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => fetchDailyStats()} disabled={dailyLoading} className="gap-2">
+            <RefreshCw className={`h-4 w-4 ${dailyLoading ? 'animate-spin' : ''}`} />
+            Atualizar
+          </Button>
           <Button variant="outline" size="sm" onClick={() => fetchLeadsData()} disabled={leadsLoading} className="gap-2">
             <RefreshCw className={`h-4 w-4 ${leadsLoading ? 'animate-spin' : ''}`} />
             Sync Notion
           </Button>
           <MarketingCostsDialog onSave={onSave} getCostForMonth={getCostForMonth} />
+          {lastUpdate && (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-pulse absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
+              </span>
+              {getLastUpdateText()}
+            </div>
+          )}
         </div>
       </div>
+
+      {/* KPIs Diários (último dia disponível) */}
+      {selectedMonth !== 'all' && today && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-sm font-semibold text-muted-foreground">
+              Último dia — {new Date(today.date + "T12:00:00").toLocaleDateString("pt-BR")}
+            </h3>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            <MetricCard title="Investimento Hoje" value={formatBRL(todayInvestment)} icon={DollarSign} variant="warning" formula="Meta Ads + Google Ads do último dia com dados." />
+            <MetricCard title="Leads Hoje" value={todayLeads.toString()} icon={UserPlus} variant="success" formula="Total de leads captados no último dia com dados." />
+            <MetricCard title="CPL Hoje" value={formatBRL(todayCpl)} icon={Target} variant="default" formula="Investimento do dia ÷ Leads do dia" />
+            <MetricCard title="CTR Meta Hoje" value={`${todayCtr.toFixed(2)}%`} icon={TrendingUp} variant="info" formula="Taxa de cliques do Meta Ads no último dia." />
+            <MetricCard title="Conversões Hoje" value={todayConversions.toString()} icon={Target} variant="success" formula="Total de conversões (Meta + Google) no último dia." />
+          </div>
+        </div>
+      )}
+
+      {/* KPI Cards Mensais - Row 1 */}
+      <div className="space-y-2">
+        {selectedMonth !== 'all' && (
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-sm font-semibold text-muted-foreground">Acumulado do Mês</h3>
+          </div>
+        )}
 
       {/* KPI Cards - Row 1 */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
@@ -420,6 +499,7 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
           variant={totals.roiCommission >= 0 ? "success" : "danger"}
           formula="(Comissão Total − Investimento) ÷ Investimento × 100"
         />
+      </div>
       </div>
 
       {/* Channel Breakdown Cards */}
