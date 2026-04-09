@@ -61,7 +61,7 @@ export function MetricCard({
   const cardContent = (
     <div 
       className={cn(
-        "rounded-xl p-4 sm:p-6 animate-slide-up h-full relative group",
+        "rounded-xl p-4 sm:p-6 animate-slide-up h-full relative group min-w-0 overflow-hidden",
         "bg-gradient-to-br border",
         styles.gradient,
         styles.border,
@@ -76,17 +76,19 @@ export function MetricCard({
           <Info className="h-3 w-3 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors" />
         )}
       </div>
-      <p className={cn("text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight", styles.valueColor)}>{value}</p>
-      {change && (
-        <p className={cn(
-          "text-xs sm:text-sm font-medium mt-2",
-          changeType === "positive" && "text-emerald-500",
-          changeType === "negative" && "text-red-500",
-          changeType === "neutral" && "text-muted-foreground"
-        )}>
-          {change}
-        </p>
-      )}
+      <div className="rounded-lg border border-border/50 bg-background/60 px-3 py-3 sm:px-4 sm:py-4">
+        <p className={cn("min-w-0 break-words text-[clamp(1.25rem,2.2vw,2.25rem)] font-bold leading-tight tracking-tight", styles.valueColor)}>{value}</p>
+        {change && (
+          <p className={cn(
+            "text-xs sm:text-sm font-medium mt-2",
+            changeType === "positive" && "text-emerald-500",
+            changeType === "negative" && "text-red-500",
+            changeType === "neutral" && "text-muted-foreground"
+          )}>
+            {change}
+          </p>
+        )}
+      </div>
     </div>
   );
 

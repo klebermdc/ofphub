@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { parseOrderDate } from "@/utils/dateUtils";
 
 interface MarketingCost {
   id: string;
@@ -55,9 +56,10 @@ export function useMarketingCosts(userId: string | undefined, isMarketingRole: b
     if (dailyRes.data && !dailyRes.error) {
       const grouped: Record<string, DailyStatsAgg> = {};
       (dailyRes.data as any[]).forEach((row: any) => {
-        const d = new Date(row.date);
-        const month = d.getMonth() + 1;
-        const year = d.getFullYear();
+        const parsedDate = parseOrderDate(row.date);
+        if (!parsedDate) return;
+
+        const { month, year } = parsedDate;
         const key = `${year}-${month}`;
         if (!grouped[key]) grouped[key] = { month, year, meta_spend: 0, google_spend: 0, leads_total: 0 };
         grouped[key].meta_spend += Number(row.meta_spend) || 0;

@@ -92,7 +92,7 @@ export function DashboardMonthlyMetrics({
           icon={Megaphone}
           delay={85}
           variant="warning"
-          formula="Meta Ads + Google Ads + Software + Telefonia + Outros custos de marketing do período"
+          formula="Meta Ads + Google Ads (dados automáticos) + custos extras de marketing do período"
         />
         <MetricCard
           title="Custos Operacionais"
@@ -100,7 +100,7 @@ export function DashboardMonthlyMetrics({
           icon={Briefcase}
           delay={95}
           variant="warning"
-          formula="Soma de todos os custos operacionais cadastrados para o período (aluguel, ferramentas, etc.)"
+          formula="Software + Telefonia cadastrados para o período"
         />
         <MetricCard
           title="Imposto Estimado (12%)"
