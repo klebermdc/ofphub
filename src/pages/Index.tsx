@@ -469,6 +469,10 @@ const Index = () => {
                       monthlyGoal={monthlyGoal}
                     />
 
+                    <Suspense fallback={<div className="h-32 animate-pulse bg-muted rounded-xl" />}>
+                      <SalespersonROITable salesReps={dashboardFilteredSalesReps} getSalary={getSalary} />
+                    </Suspense>
+
                     <DashboardFortnightMetrics
                       primeiraQuinzena={metrics.primeiraQuinzena}
                       segundaQuinzena={metrics.segundaQuinzena}
