@@ -8,7 +8,8 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, LineChart, Line, BarChart, Bar } from "recharts";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MarketingHealthIndicators } from "@/components/MarketingHealthIndicators";
-
+import { TopCreativesTable } from "@/components/TopCreativesTable";
+import { LeadsBySourceBreakdown } from "@/components/LeadsBySourceBreakdown";
 interface DailyStat {
   date: string;
   meta_spend: number;
