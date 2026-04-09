@@ -23,7 +23,7 @@ export function ROASCard({ salesReps, currentMonth }: ROASCardProps) {
   const faturamento = salesReps.reduce((acc, rep) => {
     const filtered = (rep.orders || []).filter(o => {
       const d = parseOrderDate(o.data);
-      return d && d.getMonth() + 1 === month && d.getFullYear() === year;
+      return d && d.month === month && d.year === year;
     });
     return acc + filtered.reduce((s, o) => s + (o.venda || 0), 0);
   }, 0);
