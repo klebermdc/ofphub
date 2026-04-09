@@ -732,6 +732,9 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
       {/* Origem dos Leads */}
       {selectedMonth !== 'all' && <LeadsBySourceBreakdown stats={dailyStats} />}
 
+      {/* Atribuição Marketing → Vendas */}
+      {selectedMonth !== 'all' && <MarketingAttributionCard stats={dailyStats} selectedMonth={selectedMonth} />}
+
       {/* Hoje vs Ontem (only when specific month selected and has daily data) */}
       {selectedMonth !== 'all' && today && yesterday && (
         <div className="glass rounded-xl p-5">
