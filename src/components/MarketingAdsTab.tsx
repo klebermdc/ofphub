@@ -149,7 +149,24 @@ export function MarketingAdsTab() {
   const totalMeta = stats.reduce((s, d) => s + (d.meta_spend || 0), 0);
   const totalGoogle = stats.reduce((s, d) => s + (d.google_spend || 0), 0);
   const totalLeads = stats.reduce((s, d) => s + (d.leads_total || 0), 0);
+  const totalLeadsMeta = stats.reduce((s, d) => s + (d.leads_meta || 0), 0);
+  const totalLeadsGoogle = stats.reduce((s, d) => s + (d.leads_google || 0), 0);
+  const totalLeadsOrganic = stats.reduce((s, d) => s + (d.leads_organic || 0), 0);
+  const totalClicks = stats.reduce((s, d) => s + (d.meta_clicks || 0) + (d.google_clicks || 0), 0);
+  const totalImpressions = stats.reduce((s, d) => s + (d.meta_impressions || 0), 0);
   const avgCpl = totalLeads > 0 ? (totalMeta + totalGoogle) / totalLeads : 0;
+  const avgCtr = totalImpressions > 0 ? (stats.reduce((s, d) => s + (d.meta_clicks || 0), 0) / totalImpressions * 100) : 0;
+  const totalInvestment = totalMeta + totalGoogle;
+
+  // Daily KPIs (last available day)
+  const todayMeta = today?.meta_spend || 0;
+  const todayGoogle = today?.google_spend || 0;
+  const todayLeads = today?.leads_total || 0;
+  const todayInvestment = todayMeta + todayGoogle;
+  const todayCpl = todayLeads > 0 ? todayInvestment / todayLeads : 0;
+  const todayCtr = today?.meta_ctr || 0;
+  const todayClicks = (today?.meta_clicks || 0) + (today?.google_clicks || 0);
+  const todayConversions = (today?.meta_conversions || 0) + (today?.google_conversions || 0);
 
   const chartData = stats.map((d) => ({
     day: formatDate(d.date),
