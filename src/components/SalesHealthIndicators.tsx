@@ -110,9 +110,10 @@ export function SalesHealthIndicators({ salesReps, currentMonth, monthlyGoal }: 
       color: vendasDia > 3 ? "green" : vendasDia >= 2 ? "yellow" : "red",
     });
 
-    // 4. Vendedores Ativos
-    const totalVendedores = salesReps.length;
-    const activeVendedores = salesReps.filter(r =>
+    // 4. Vendedores Ativos (only real salespeople)
+    const realReps = salesReps.filter(r => isRealSalesperson(r.name));
+    const totalVendedores = realReps.length;
+    const activeVendedores = realReps.filter(r =>
       (r.orders || []).some(o => {
         const d = parseOrderDate(o.data);
         return d && d.month === month && d.year === year;
