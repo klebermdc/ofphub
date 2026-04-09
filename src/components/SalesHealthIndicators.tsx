@@ -46,8 +46,7 @@ function getTotalBusinessDays(month: number, year: number): number {
 }
 
 const EXCLUDED_NAMES = [
-  "kleber augusto", "renata santos", "site",
-  "contato@orlandofastpass.com.br", "joy", "victor", "simone",
+  "site", "contato@orlandofastpass.com.br", "joy", "victor", "simone",
 ];
 
 const isRealSalesperson = (name: string) =>
