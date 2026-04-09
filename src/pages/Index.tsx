@@ -435,6 +435,11 @@ const Index = () => {
                       custoOperacional={metrics.totalComissao + costCalc.totalSalaries + marketingCost + operationalCost}
                     />
 
+                    <ROASCard
+                      salesReps={salesReps}
+                      currentMonth={dashboardMonth !== 'all' ? dashboardMonth : getCurrentMonthKey()}
+                    />
+
                     <DashboardFortnightMetrics
                       primeiraQuinzena={metrics.primeiraQuinzena}
                       segundaQuinzena={metrics.segundaQuinzena}
