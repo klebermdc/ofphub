@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { MetricCard } from "@/components/MetricCard";
-import { DollarSign, TrendingUp, UserPlus, Target, RefreshCw, BarChart2 } from "lucide-react";
+import { DollarSign, TrendingUp, UserPlus, Target, RefreshCw, BarChart2, Calendar, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
@@ -149,7 +149,24 @@ export function MarketingAdsTab() {
   const totalMeta = stats.reduce((s, d) => s + (d.meta_spend || 0), 0);
   const totalGoogle = stats.reduce((s, d) => s + (d.google_spend || 0), 0);
   const totalLeads = stats.reduce((s, d) => s + (d.leads_total || 0), 0);
+  const totalLeadsMeta = stats.reduce((s, d) => s + (d.leads_meta || 0), 0);
+  const totalLeadsGoogle = stats.reduce((s, d) => s + (d.leads_google || 0), 0);
+  const totalLeadsOrganic = stats.reduce((s, d) => s + (d.leads_organic || 0), 0);
+  const totalClicks = stats.reduce((s, d) => s + (d.meta_clicks || 0) + (d.google_clicks || 0), 0);
+  const totalImpressions = stats.reduce((s, d) => s + (d.meta_impressions || 0), 0);
   const avgCpl = totalLeads > 0 ? (totalMeta + totalGoogle) / totalLeads : 0;
+  const avgCtr = totalImpressions > 0 ? (stats.reduce((s, d) => s + (d.meta_clicks || 0), 0) / totalImpressions * 100) : 0;
+  const totalInvestment = totalMeta + totalGoogle;
+
+  // Daily KPIs (last available day)
+  const todayMeta = today?.meta_spend || 0;
+  const todayGoogle = today?.google_spend || 0;
+  const todayLeads = today?.leads_total || 0;
+  const todayInvestment = todayMeta + todayGoogle;
+  const todayCpl = todayLeads > 0 ? todayInvestment / todayLeads : 0;
+  const todayCtr = today?.meta_ctr || 0;
+  const todayClicks = (today?.meta_clicks || 0) + (today?.google_clicks || 0);
+  const todayConversions = (today?.meta_conversions || 0) + (today?.google_conversions || 0);
 
   const chartData = stats.map((d) => ({
     day: formatDate(d.date),
@@ -247,12 +264,48 @@ export function MarketingAdsTab() {
         </div>
       </div>
 
-      {/* Métricas do período */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <MetricCard title="Investimento Meta" value={formatBRL(totalMeta)} icon={DollarSign} variant="warning" />
-        <MetricCard title="Investimento Google" value={formatBRL(totalGoogle)} icon={DollarSign} variant="info" />
-        <MetricCard title="Leads no Site" value={totalLeads.toString()} icon={UserPlus} variant="success" />
-        <MetricCard title="CPL Médio" value={formatBRL(avgCpl)} icon={Target} variant="default" />
+      {/* KPIs Diários (último dia disponível) */}
+      {today && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-sm font-semibold text-muted-foreground">
+              Hoje — {new Date(today.date + "T12:00:00").toLocaleDateString("pt-BR")}
+            </h3>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <MetricCard title="Investimento Hoje" value={formatBRL(todayInvestment)} icon={DollarSign} variant="warning" />
+            <MetricCard title="Leads Hoje" value={todayLeads.toString()} icon={UserPlus} variant="success" />
+            <MetricCard title="CPL Hoje" value={formatBRL(todayCpl)} icon={Target} variant="default" />
+            <MetricCard title="CTR Meta Hoje" value={`${todayCtr.toFixed(2)}%`} icon={TrendingUp} variant="info" />
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <MetricCard title="Meta Ads Hoje" value={formatBRL(todayMeta)} icon={DollarSign} variant="warning" />
+            <MetricCard title="Google Ads Hoje" value={formatBRL(todayGoogle)} icon={DollarSign} variant="info" />
+            <MetricCard title="Cliques Hoje" value={todayClicks.toString()} icon={TrendingUp} variant="default" />
+            <MetricCard title="Conversões Hoje" value={todayConversions.toString()} icon={Target} variant="success" />
+          </div>
+        </div>
+      )}
+
+      {/* KPIs Mensais */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <h3 className="text-sm font-semibold text-muted-foreground">Acumulado — {selected.label}</h3>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <MetricCard title="Investimento Total" value={formatBRL(totalInvestment)} icon={DollarSign} variant="warning" />
+          <MetricCard title="Leads no Mês" value={totalLeads.toString()} icon={UserPlus} variant="success" />
+          <MetricCard title="CPL Médio" value={formatBRL(avgCpl)} icon={Target} variant="default" />
+          <MetricCard title="CTR Médio Meta" value={`${avgCtr.toFixed(2)}%`} icon={TrendingUp} variant="info" />
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <MetricCard title="Meta Ads Total" value={formatBRL(totalMeta)} icon={DollarSign} variant="warning" />
+          <MetricCard title="Google Ads Total" value={formatBRL(totalGoogle)} icon={DollarSign} variant="info" />
+          <MetricCard title="Cliques Total" value={totalClicks.toString()} icon={TrendingUp} variant="default" />
+          <MetricCard title="Leads Orgânicos" value={totalLeadsOrganic.toString()} icon={UserPlus} variant="success" />
+        </div>
       </div>
 
       {/* Últimos 2 dias disponíveis */}
