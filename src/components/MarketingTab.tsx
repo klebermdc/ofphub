@@ -1,8 +1,8 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { MarketingHealthIndicators } from "@/components/MarketingHealthIndicators";
 import { TopCreativesTable } from "@/components/TopCreativesTable";
 import { LeadsBySourceBreakdown } from "@/components/LeadsBySourceBreakdown";
-import { DollarSign, TrendingUp, Calendar, UserPlus, Target, Banknote, Percent, RefreshCw, BarChart2 } from "lucide-react";
+import { DollarSign, TrendingUp, Calendar, UserPlus, Target, Banknote, Percent, RefreshCw, BarChart2, Clock } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
 import { MarketingCostsDialog } from "@/components/MarketingCostsDialog";
 import { useCRMLeadsCount } from "@/hooks/useCRMLeadsCount";
