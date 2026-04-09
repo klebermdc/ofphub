@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { MetricCard } from "@/components/MetricCard";
 import { DollarSign, TrendingUp, UserPlus, Target, RefreshCw, BarChart2 } from "lucide-react";
@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, LineChart, Line, BarChart, Bar } from "recharts";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface DailyStat {
   date: string;
@@ -44,6 +45,28 @@ const formatDate = (d: string) => {
   return `${day}/${m}`;
 };
 
+const MONTH_NAMES = [
+  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
+];
+
+function getLast6Months(): { key: string; label: string; month: number; year: number }[] {
+  const now = new Date();
+  const options: { key: string; label: string; month: number; year: number }[] = [];
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const month = d.getMonth() + 1;
+    const year = d.getFullYear();
+    options.push({
+      key: `${month}-${year}`,
+      label: `${MONTH_NAMES[month - 1]} ${year}`,
+      month,
+      year,
+    });
+  }
+  return options;
+}
+
 const chartConfig = {
   meta_spend: { label: "Meta Ads", color: "hsl(270, 70%, 60%)" },
   google_spend: { label: "Google Ads", color: "hsl(217, 91%, 60%)" },
@@ -54,17 +77,25 @@ const chartConfig = {
 export function MarketingAdsTab() {
   const [stats, setStats] = useState<DailyStat[]>([]);
   const [loading, setLoading] = useState(true);
+  const monthOptions = useMemo(() => getLast6Months(), []);
+  const [selectedPeriod, setSelectedPeriod] = useState(monthOptions[0].key);
+
+  const selected = useMemo(
+    () => monthOptions.find((o) => o.key === selectedPeriod) || monthOptions[0],
+    [selectedPeriod, monthOptions]
+  );
 
   const fetchStats = async () => {
     setLoading(true);
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const since = thirtyDaysAgo.toISOString().split("T")[0];
+    const startDate = `${selected.year}-${String(selected.month).padStart(2, "0")}-01`;
+    const endDay = new Date(selected.year, selected.month, 0).getDate();
+    const endDate = `${selected.year}-${String(selected.month).padStart(2, "0")}-${String(endDay).padStart(2, "0")}`;
 
     const { data, error } = await supabase
       .from("marketing_daily_stats" as any)
       .select("*")
-      .gte("date", since)
+      .gte("date", startDate)
+      .lte("date", endDate)
       .order("date", { ascending: true });
 
     if (!error && data) {
@@ -75,7 +106,7 @@ export function MarketingAdsTab() {
 
   useEffect(() => {
     fetchStats();
-  }, []);
+  }, [selectedPeriod]);
 
   const today = stats[stats.length - 1];
   const yesterday = stats[stats.length - 2];
@@ -104,10 +135,31 @@ export function MarketingAdsTab() {
 
   if (stats.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
-        <BarChart2 className="h-12 w-12 opacity-30" />
-        <p className="text-sm">Nenhum dado ainda.</p>
-        <p className="text-xs">O agente Jorge publica o relatório diário às 9h.</p>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Tráfego Pago</h2>
+          <div className="flex items-center gap-2">
+            <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {monthOptions.map((o) => (
+                  <SelectItem key={o.key} value={o.key}>{o.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button variant="outline" size="sm" onClick={fetchStats} className="gap-2">
+              <RefreshCw className="h-4 w-4" />
+              Atualizar
+            </Button>
+          </div>
+        </div>
+        <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
+          <BarChart2 className="h-12 w-12 opacity-30" />
+          <p className="text-sm">Nenhum dado para {selected.label}.</p>
+          <p className="text-xs">O agente Jorge publica o relatório diário às 9h.</p>
+        </div>
       </div>
     );
   }
@@ -117,52 +169,44 @@ export function MarketingAdsTab() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold">Tráfego Pago — Últimos 30 dias</h2>
+          <h2 className="text-lg font-semibold">Tráfego Pago — {selected.label}</h2>
           {today && (
             <p className="text-xs text-muted-foreground mt-1">
               Último relatório: {new Date(today.date + "T12:00:00").toLocaleDateString("pt-BR")}
             </p>
           )}
         </div>
-        <Button variant="outline" size="sm" onClick={fetchStats} className="gap-2">
-          <RefreshCw className="h-4 w-4" />
-          Atualizar
-        </Button>
+        <div className="flex items-center gap-2">
+          <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {monthOptions.map((o) => (
+                <SelectItem key={o.key} value={o.key}>{o.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button variant="outline" size="sm" onClick={fetchStats} className="gap-2">
+            <RefreshCw className="h-4 w-4" />
+            Atualizar
+          </Button>
+        </div>
       </div>
 
       {/* Métricas do período */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <MetricCard
-          title="Investimento Meta"
-          value={formatBRL(totalMeta)}
-          icon={DollarSign}
-          variant="warning"
-        />
-        <MetricCard
-          title="Investimento Google"
-          value={formatBRL(totalGoogle)}
-          icon={DollarSign}
-          variant="info"
-        />
-        <MetricCard
-          title="Leads no Site"
-          value={totalLeads.toString()}
-          icon={UserPlus}
-          variant="success"
-        />
-        <MetricCard
-          title="CPL Médio"
-          value={formatBRL(avgCpl)}
-          icon={Target}
-          variant="default"
-        />
+        <MetricCard title="Investimento Meta" value={formatBRL(totalMeta)} icon={DollarSign} variant="warning" />
+        <MetricCard title="Investimento Google" value={formatBRL(totalGoogle)} icon={DollarSign} variant="info" />
+        <MetricCard title="Leads no Site" value={totalLeads.toString()} icon={UserPlus} variant="success" />
+        <MetricCard title="CPL Médio" value={formatBRL(avgCpl)} icon={Target} variant="default" />
       </div>
 
-      {/* Hoje vs Ontem */}
+      {/* Últimos 2 dias disponíveis */}
       {today && yesterday && (
         <div className="glass rounded-xl p-5">
           <h3 className="text-sm font-semibold mb-4">
-            Hoje ({new Date(today.date + "T12:00:00").toLocaleDateString("pt-BR")}) vs Ontem
+            {new Date(today.date + "T12:00:00").toLocaleDateString("pt-BR")} vs {new Date(yesterday.date + "T12:00:00").toLocaleDateString("pt-BR")}
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             {[
@@ -243,7 +287,6 @@ export function MarketingAdsTab() {
           </ChartContainer>
         </div>
 
-        {/* Tabela por dia */}
         <div className="glass rounded-xl p-5">
           <h3 className="text-sm font-semibold mb-4">Detalhamento Diário</h3>
           <div className="overflow-auto max-h-[240px]">
