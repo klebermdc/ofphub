@@ -45,6 +45,14 @@ function getTotalBusinessDays(month: number, year: number): number {
   return count || 1;
 }
 
+const EXCLUDED_NAMES = [
+  "kleber augusto", "renata santos", "site",
+  "contato@orlandofastpass.com.br", "joy", "victor", "simone",
+];
+
+const isRealSalesperson = (name: string) =>
+  !EXCLUDED_NAMES.includes(name.toLowerCase().trim());
+
 interface Props {
   salesReps: SalesRep[];
   currentMonth: string;
@@ -102,9 +110,10 @@ export function SalesHealthIndicators({ salesReps, currentMonth, monthlyGoal }: 
       color: vendasDia > 3 ? "green" : vendasDia >= 2 ? "yellow" : "red",
     });
 
-    // 4. Vendedores Ativos
-    const totalVendedores = salesReps.length;
-    const activeVendedores = salesReps.filter(r =>
+    // 4. Vendedores Ativos (only real salespeople)
+    const realReps = salesReps.filter(r => isRealSalesperson(r.name));
+    const totalVendedores = realReps.length;
+    const activeVendedores = realReps.filter(r =>
       (r.orders || []).some(o => {
         const d = parseOrderDate(o.data);
         return d && d.month === month && d.year === year;
@@ -128,7 +137,7 @@ export function SalesHealthIndicators({ salesReps, currentMonth, monthlyGoal }: 
     });
 
     // 6. Concentração
-    const salesByRep = salesReps.map(r => ({
+    const salesByRep = realReps.map(r => ({
       name: r.name,
       total: (r.orders || [])
         .filter(o => {
