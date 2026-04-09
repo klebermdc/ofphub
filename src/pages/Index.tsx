@@ -452,6 +452,7 @@ const Index = () => {
                       );
                     })()}
 
+                    <EBITDACard
                       receita={metrics.totalComissaoTotal}
                       custoOperacional={metrics.totalComissao + costCalc.totalSalaries + marketingCost + operationalCost}
                     />
