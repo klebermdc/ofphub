@@ -615,7 +615,11 @@ export function DailyOrdersList({
                     <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
                     <Tooltip formatter={(value: number) => formatCurrency(value)} contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} labelStyle={{ color: "hsl(var(--foreground))" }} />
                     <Bar dataKey="total" radius={[0, 6, 6, 0]} barSize={20}>
-                      {salesByRep.map((_, i) => (<Cell key={i} fill={chartColors[i % chartColors.length]} />))}
+                      {salesByRep.map((_, i) => {
+                        const ratio = salesByRep.length > 1 ? i / (salesByRep.length - 1) : 0;
+                        const color = ratio <= 0.33 ? 'hsl(142, 76%, 45%)' : ratio <= 0.66 ? 'hsl(38, 92%, 55%)' : 'hsl(var(--primary))';
+                        return <Cell key={i} fill={color} />;
+                      })}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
@@ -642,7 +646,11 @@ export function DailyOrdersList({
                     <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
                     <Tooltip formatter={(value: number) => formatCurrency(value)} contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} labelStyle={{ color: "hsl(var(--foreground))" }} />
                     <Bar dataKey="total" radius={[0, 6, 6, 0]} barSize={20}>
-                      {profitByRep.map((_, i) => (<Cell key={i} fill={["hsl(var(--success))", "hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--warning))", "hsl(var(--secondary))"][i % 5]} />))}
+                      {profitByRep.map((_, i) => {
+                        const ratio = profitByRep.length > 1 ? i / (profitByRep.length - 1) : 0;
+                        const color = ratio <= 0.33 ? 'hsl(142, 76%, 45%)' : ratio <= 0.66 ? 'hsl(38, 92%, 55%)' : 'hsl(var(--primary))';
+                        return <Cell key={i} fill={color} />;
+                      })}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
