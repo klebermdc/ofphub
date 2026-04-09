@@ -45,6 +45,7 @@ const SalesRanking = lazy(() => import("@/components/SalesRanking").then(m => ({
 const SalaryManagementDialog = lazy(() => import("@/components/SalaryManagementDialog").then(m => ({ default: m.SalaryManagementDialog })));
 const DiscountManagementDialog = lazy(() => import("@/components/DiscountManagementDialog").then(m => ({ default: m.DiscountManagementDialog })));
 const RevenueForecastChart = lazy(() => import("@/components/RevenueForecastChart").then(m => ({ default: m.RevenueForecastChart })));
+const RevenueWaterfallChart = lazy(() => import("@/components/RevenueWaterfallChart").then(m => ({ default: m.RevenueWaterfallChart })));
 const SalespersonROI = lazy(() => import("@/components/SalespersonROI").then(m => ({ default: m.SalespersonROI })));
 const SalespersonGoalChart = lazy(() => import("@/components/SalespersonGoalChart").then(m => ({ default: m.SalespersonGoalChart })));
 const SalespersonVelocityChart = lazy(() => import("@/components/SalespersonVelocityChart").then(m => ({ default: m.SalespersonVelocityChart })));
@@ -504,6 +505,12 @@ const Index = () => {
                           salesReps={dashboardFilteredSalesReps} 
                           currentMonth={dashboardMonth} 
                           monthlyGoal={monthlyGoal} 
+                        />
+                      </Suspense>
+                      <Suspense fallback={<ChartSkeleton />}>
+                        <RevenueWaterfallChart
+                          salesReps={dashboardFilteredSalesReps}
+                          currentMonth={dashboardMonth}
                         />
                       </Suspense>
                     </div>
