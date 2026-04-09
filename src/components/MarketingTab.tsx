@@ -415,6 +415,34 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
         />
       </div>
 
+      {/* Channel Breakdown Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="glass rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-3 h-3 rounded-full" style={{ background: "hsl(217, 91%, 60%)" }}></div>
+            <span className="text-sm font-medium">Google Ads</span>
+          </div>
+          <p className="text-2xl font-bold">{formatBRL(totals.totalGoogleAds)}</p>
+          <p className="text-xs text-muted-foreground mt-1">{totals.totalInvestment > 0 ? ((totals.totalGoogleAds / totals.totalInvestment) * 100).toFixed(1) : 0}% do total</p>
+        </div>
+        <div className="glass rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-3 h-3 rounded-full" style={{ background: "hsl(270, 70%, 60%)" }}></div>
+            <span className="text-sm font-medium">Meta Ads</span>
+          </div>
+          <p className="text-2xl font-bold">{formatBRL(totals.totalMetaAds)}</p>
+          <p className="text-xs text-muted-foreground mt-1">{totals.totalInvestment > 0 ? ((totals.totalMetaAds / totals.totalInvestment) * 100).toFixed(1) : 0}% do total</p>
+        </div>
+        <div className="glass rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-3 h-3 rounded-full" style={{ background: "hsl(25, 95%, 53%)" }}></div>
+            <span className="text-sm font-medium">Outros</span>
+          </div>
+          <p className="text-2xl font-bold">{formatBRL(totals.totalOther)}</p>
+          <p className="text-xs text-muted-foreground mt-1">{totals.totalInvestment > 0 ? ((totals.totalOther / totals.totalInvestment) * 100).toFixed(1) : 0}% do total</p>
+        </div>
+      </div>
+
       {/* Hoje vs Ontem (only when specific month selected and has daily data) */}
       {selectedMonth !== 'all' && today && yesterday && (
         <div className="glass rounded-xl p-5">
@@ -607,34 +635,6 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
           </div>
         </div>
       )}
-
-      {/* Channel Breakdown Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="glass rounded-xl p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-3 h-3 rounded-full" style={{ background: "hsl(217, 91%, 60%)" }}></div>
-            <span className="text-sm font-medium">Google Ads</span>
-          </div>
-          <p className="text-2xl font-bold">{formatBRL(totals.totalGoogleAds)}</p>
-          <p className="text-xs text-muted-foreground mt-1">{totals.totalInvestment > 0 ? ((totals.totalGoogleAds / totals.totalInvestment) * 100).toFixed(1) : 0}% do total</p>
-        </div>
-        <div className="glass rounded-xl p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-3 h-3 rounded-full" style={{ background: "hsl(270, 70%, 60%)" }}></div>
-            <span className="text-sm font-medium">Meta Ads</span>
-          </div>
-          <p className="text-2xl font-bold">{formatBRL(totals.totalMetaAds)}</p>
-          <p className="text-xs text-muted-foreground mt-1">{totals.totalInvestment > 0 ? ((totals.totalMetaAds / totals.totalInvestment) * 100).toFixed(1) : 0}% do total</p>
-        </div>
-        <div className="glass rounded-xl p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-3 h-3 rounded-full" style={{ background: "hsl(25, 95%, 53%)" }}></div>
-            <span className="text-sm font-medium">Outros</span>
-          </div>
-          <p className="text-2xl font-bold">{formatBRL(totals.totalOther)}</p>
-          <p className="text-xs text-muted-foreground mt-1">{totals.totalInvestment > 0 ? ((totals.totalOther / totals.totalInvestment) * 100).toFixed(1) : 0}% do total</p>
-        </div>
-      </div>
 
       {/* Monthly Breakdown Table */}
       <div className="glass rounded-xl p-6">
