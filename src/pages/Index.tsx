@@ -474,6 +474,25 @@ const Index = () => {
                       totalSales={metrics.totalVendas}
                     />
 
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <Suspense fallback={<ChartSkeleton />}>
+                        <SalespersonGoalChart
+                          userId={user.id}
+                          month={currentGoalMonth}
+                          year={currentGoalYear}
+                          salesReps={dashboardFilteredSalesReps}
+                        />
+                      </Suspense>
+                      <Suspense fallback={<ChartSkeleton />}>
+                        <SalespersonVelocityChart
+                          userId={user.id}
+                          month={currentGoalMonth}
+                          year={currentGoalYear}
+                          salesReps={dashboardFilteredSalesReps}
+                        />
+                      </Suspense>
+                    </div>
+
                     <SalesVelocityKPI
                       userId={user.id}
                       month={currentGoalMonth}
