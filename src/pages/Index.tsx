@@ -46,6 +46,8 @@ const SalaryManagementDialog = lazy(() => import("@/components/SalaryManagementD
 const DiscountManagementDialog = lazy(() => import("@/components/DiscountManagementDialog").then(m => ({ default: m.DiscountManagementDialog })));
 const RevenueForecastChart = lazy(() => import("@/components/RevenueForecastChart").then(m => ({ default: m.RevenueForecastChart })));
 const SalespersonROI = lazy(() => import("@/components/SalespersonROI").then(m => ({ default: m.SalespersonROI })));
+const SalespersonGoalChart = lazy(() => import("@/components/SalespersonGoalChart").then(m => ({ default: m.SalespersonGoalChart })));
+const SalespersonVelocityChart = lazy(() => import("@/components/SalespersonVelocityChart").then(m => ({ default: m.SalespersonVelocityChart })));
 const DailySalesTracker = lazy(() => import("@/components/DailySalesTracker").then(m => ({ default: m.DailySalesTracker })));
 const EBITDACard = lazy(() => import("@/components/EBITDACard").then(m => ({ default: m.EBITDACard })));
 const AccountingTab = lazy(() => import("@/components/AccountingTab").then(m => ({ default: m.AccountingTab })));
@@ -473,6 +475,25 @@ const Index = () => {
                       year={currentGoalYear}
                       totalSales={metrics.totalVendas}
                     />
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <Suspense fallback={<ChartSkeleton />}>
+                        <SalespersonGoalChart
+                          userId={user.id}
+                          month={currentGoalMonth}
+                          year={currentGoalYear}
+                          salesReps={dashboardFilteredSalesReps}
+                        />
+                      </Suspense>
+                      <Suspense fallback={<ChartSkeleton />}>
+                        <SalespersonVelocityChart
+                          userId={user.id}
+                          month={currentGoalMonth}
+                          year={currentGoalYear}
+                          salesReps={dashboardFilteredSalesReps}
+                        />
+                      </Suspense>
+                    </div>
 
                     <SalesVelocityKPI
                       userId={user.id}
