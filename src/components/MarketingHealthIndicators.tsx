@@ -99,6 +99,45 @@ function getIndicators(stats: DailyStat[]): Indicator[] {
       color: deviation < 20 ? "green" : deviation <= 40 ? "yellow" : "red",
     },
   ];
+
+  // Comparativo CPL (Meta vs Google)
+  if (cplMeta > 0 && cplGoogle > 0) {
+    const cplDiff = (Math.abs(cplMeta - cplGoogle) / Math.min(cplMeta, cplGoogle)) * 100;
+    indicators.push({
+      label: "Comparativo CPL",
+      value: `Meta ${formatBRL(cplMeta)} vs Google ${formatBRL(cplGoogle)}`,
+      reference: "Diferença < 30%",
+      color: cplDiff < 30 ? "green" : cplDiff <= 50 ? "yellow" : "red",
+    });
+  } else {
+    indicators.push({
+      label: "Comparativo CPL",
+      value: "Sem dados",
+      reference: "Diferença < 30%",
+      color: "red",
+    });
+  }
+
+  // Leads Orgânicos %
+  const organicPct = sumLeadsTotal > 0 ? (stats.reduce((s, d) => s + (d.leads_organic || 0), 0) / sumLeadsTotal) * 100 : 0;
+  indicators.push({
+    label: "Leads Orgânicos %",
+    value: `${organicPct.toFixed(1)}%`,
+    reference: "Meta: > 15%",
+    color: organicPct > 15 ? "green" : organicPct >= 10 ? "yellow" : "red",
+  });
+
+  // Eficiência de Gasto (Leads por R$100)
+  const totalSpend = sumMetaSpend + sumGoogleSpend;
+  const efficiency = totalSpend > 0 ? (sumLeadsTotal / totalSpend) * 100 : 0;
+  indicators.push({
+    label: "Eficiência de Gasto",
+    value: `${efficiency.toFixed(1)} leads/R$100`,
+    reference: "Meta: > 8 leads/R$100",
+    color: efficiency > 8 ? "green" : efficiency >= 5 ? "yellow" : "red",
+  });
+
+  return indicators;
 }
 
 interface Props {
