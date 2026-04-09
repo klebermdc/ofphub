@@ -395,6 +395,34 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
         </div>
       </div>
 
+      {/* KPIs Diários (último dia disponível) */}
+      {selectedMonth !== 'all' && today && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-sm font-semibold text-muted-foreground">
+              Último dia — {new Date(today.date + "T12:00:00").toLocaleDateString("pt-BR")}
+            </h3>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            <MetricCard title="Investimento Hoje" value={formatBRL(todayInvestment)} icon={DollarSign} variant="warning" formula="Meta Ads + Google Ads do último dia com dados." />
+            <MetricCard title="Leads Hoje" value={todayLeads.toString()} icon={UserPlus} variant="success" formula="Total de leads captados no último dia com dados." />
+            <MetricCard title="CPL Hoje" value={formatBRL(todayCpl)} icon={Target} variant="default" formula="Investimento do dia ÷ Leads do dia" />
+            <MetricCard title="CTR Meta Hoje" value={`${todayCtr.toFixed(2)}%`} icon={TrendingUp} variant="info" formula="Taxa de cliques do Meta Ads no último dia." />
+            <MetricCard title="Conversões Hoje" value={todayConversions.toString()} icon={Target} variant="success" formula="Total de conversões (Meta + Google) no último dia." />
+          </div>
+        </div>
+      )}
+
+      {/* KPI Cards Mensais - Row 1 */}
+      <div className="space-y-2">
+        {selectedMonth !== 'all' && (
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-sm font-semibold text-muted-foreground">Acumulado do Mês</h3>
+          </div>
+        )}
+
       {/* KPI Cards - Row 1 */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <MetricCard
