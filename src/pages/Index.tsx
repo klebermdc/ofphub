@@ -61,6 +61,7 @@ const DashboardFortnightMetrics = lazy(() => import("@/components/dashboard/Dash
 const DailyOrdersList = lazy(() => import("@/components/dashboard/DailyOrdersList").then(m => ({ default: m.DailyOrdersList })));
 const DashboardOperationalMetrics = lazy(() => import("@/components/dashboard/DashboardOperationalMetrics").then(m => ({ default: m.DashboardOperationalMetrics })));
 const DashboardHeaderControls = lazy(() => import("@/components/dashboard/DashboardHeaderControls").then(m => ({ default: m.DashboardHeaderControls })));
+const CostProjectionCard = lazy(() => import("@/components/dashboard/CostProjectionCard").then(m => ({ default: m.CostProjectionCard })));
 
 // Data source: database-only (no Google Sheets dependency)
 
@@ -430,6 +431,26 @@ const Index = () => {
                       resultado={costCalc.resultado}
                       taxaMedia={metrics.taxaMedia}
                     />
+
+                    {dashboardMonth !== 'all' && (() => {
+                      const [m, y] = dashboardMonth.split('/').map(Number);
+                      const now = new Date();
+                      const isCurrentMonth = now.getMonth() + 1 === m && now.getFullYear() === y;
+                      const daysInMonth = new Date(y, m, 0).getDate();
+                      const daysElapsed = isCurrentMonth ? now.getDate() : daysInMonth;
+                      const totalCostSoFar = costCalc.totalCost;
+                      const dailyAvg = daysElapsed > 0 ? totalCostSoFar / daysElapsed : 0;
+                      const projected = dailyAvg * daysInMonth;
+                      return (
+                        <CostProjectionCard
+                          totalCostSoFar={totalCostSoFar}
+                          projectedTotalCost={projected}
+                          dailyAvgCost={dailyAvg}
+                          daysElapsed={daysElapsed}
+                          daysInMonth={daysInMonth}
+                        />
+                      );
+                    })()}
 
                     <EBITDACard
                       receita={metrics.totalComissaoTotal}
