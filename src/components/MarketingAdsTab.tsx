@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, LineChart, Line, BarChart, Bar } from "recharts";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MarketingHealthIndicators } from "@/components/MarketingHealthIndicators";
 
 interface DailyStat {
   date: string;
@@ -234,6 +235,9 @@ export function MarketingAdsTab() {
           </div>
         </div>
       )}
+
+      {/* Health Indicators */}
+      <MarketingHealthIndicators stats={stats} />
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
