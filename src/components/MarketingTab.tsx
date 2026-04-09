@@ -500,8 +500,7 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
           formula="(Comissão Total − Investimento) ÷ Investimento × 100"
         />
       </div>
-
-      {/* Channel Breakdown Cards */}
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="glass rounded-xl p-4">
           <div className="flex items-center gap-2 mb-2">
