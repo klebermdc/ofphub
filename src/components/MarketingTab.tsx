@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { MarketingHealthIndicators } from "@/components/MarketingHealthIndicators";
 import { TopCreativesTable } from "@/components/TopCreativesTable";
 import { LeadsBySourceBreakdown } from "@/components/LeadsBySourceBreakdown";
+import { MarketingAttributionCard } from "@/components/MarketingAttributionCard";
 import { DollarSign, TrendingUp, TrendingDown, Calendar, UserPlus, Target, Banknote, Percent, RefreshCw, BarChart2, Clock, Eye, MousePointerClick, Gauge, Users, Calculator, AlertTriangle } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
 import { MarketingCostsDialog } from "@/components/MarketingCostsDialog";
@@ -730,6 +731,9 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
 
       {/* Origem dos Leads */}
       {selectedMonth !== 'all' && <LeadsBySourceBreakdown stats={dailyStats} />}
+
+      {/* Atribuição Marketing → Vendas */}
+      {selectedMonth !== 'all' && <MarketingAttributionCard stats={dailyStats} selectedMonth={selectedMonth} />}
 
       {/* Hoje vs Ontem (only when specific month selected and has daily data) */}
       {selectedMonth !== 'all' && today && yesterday && (
