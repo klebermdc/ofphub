@@ -331,6 +331,16 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
   const today = dailyStats[dailyStats.length - 1];
   const yesterday = dailyStats[dailyStats.length - 2];
 
+  // Daily KPI values (last available day)
+  const todayMeta = today?.meta_spend || 0;
+  const todayGoogle = today?.google_spend || 0;
+  const todayLeads = today?.leads_total || 0;
+  const todayInvestment = todayMeta + todayGoogle;
+  const todayCpl = todayLeads > 0 ? todayInvestment / todayLeads : 0;
+  const todayCtr = today?.meta_ctr || 0;
+  const todayClicks = (today?.meta_clicks || 0) + (today?.google_clicks || 0);
+  const todayConversions = (today?.meta_conversions || 0) + (today?.google_conversions || 0);
+
   if (aggLoading) {
     return (
       <div className="flex items-center justify-center py-20 text-muted-foreground">
