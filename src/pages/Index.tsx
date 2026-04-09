@@ -616,8 +616,8 @@ const Index = () => {
                     Abra a nova página de marketing para ver a aba de Tráfego Pago publicada.
                   </p>
                 </div>
-                <Button variant="outline" onClick={() => navigate("/marketing?tab=trafego")}>
-                  Abrir tráfego pago
+                <Button variant="outline" onClick={() => navigate("/marketing")}>
+                  Abrir marketing
                 </Button>
               </div>
 
