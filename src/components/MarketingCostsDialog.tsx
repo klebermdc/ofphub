@@ -72,7 +72,7 @@ export function MarketingCostsDialog({ onSave, getCostForMonth }: MarketingCosts
         <DialogHeader>
           <DialogTitle>Custos Extras de Marketing</DialogTitle>
           <DialogDescription>
-            Cadastre custos adicionais de marketing. Os valores de Meta Ads, Google Ads e Leads são importados automaticamente da aba Tráfego Pago.
+            Cadastre custos adicionais de marketing. Os valores de Meta Ads, Google Ads e Leads são importados automaticamente dos dados diários.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
