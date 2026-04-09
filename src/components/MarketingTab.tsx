@@ -418,7 +418,7 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
             <MetricCard title="Leads Hoje" value={todayLeads.toString()} icon={UserPlus} variant="success" formula="Total de leads captados no último dia com dados." />
             <MetricCard title="CPL Hoje" value={formatBRL(todayCpl)} icon={Target} variant="default" formula="Investimento do dia ÷ Leads do dia" />
             <MetricCard title="CTR Meta Hoje" value={`${todayCtr.toFixed(2)}%`} icon={TrendingUp} variant="info" formula="Taxa de cliques do Meta Ads no último dia." />
-            <MetricCard title="Cliques Hoje" value={todayClicks.toString()} icon={TrendingUp} variant="default" formula="Total de cliques (Meta + Google) no último dia." />
+            <MetricCard title="Pedidos no Dia" value={todayOrders.toString()} icon={Banknote} variant="success" formula="Número de pedidos fechados no dia (tabela orders)." />
           </div>
         </div>
       )}
