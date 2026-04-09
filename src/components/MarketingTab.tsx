@@ -391,10 +391,6 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
             <RefreshCw className={`h-4 w-4 ${dailyLoading ? 'animate-spin' : ''}`} />
             Atualizar
           </Button>
-          <Button variant="outline" size="sm" onClick={() => fetchLeadsData()} disabled={leadsLoading} className="gap-2">
-            <RefreshCw className={`h-4 w-4 ${leadsLoading ? 'animate-spin' : ''}`} />
-            Sync Notion
-          </Button>
           <MarketingCostsDialog onSave={onSave} getCostForMonth={getCostForMonth} />
           {lastUpdate && (
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
