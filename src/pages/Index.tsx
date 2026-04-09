@@ -51,6 +51,7 @@ const SalespersonVelocityChart = lazy(() => import("@/components/SalespersonVelo
 const DailySalesTracker = lazy(() => import("@/components/DailySalesTracker").then(m => ({ default: m.DailySalesTracker })));
 const EBITDACard = lazy(() => import("@/components/EBITDACard").then(m => ({ default: m.EBITDACard })));
 const ROASCard = lazy(() => import("@/components/ROASCard").then(m => ({ default: m.ROASCard })));
+const SalesHealthIndicators = lazy(() => import("@/components/SalesHealthIndicators").then(m => ({ default: m.SalesHealthIndicators })));
 const AccountingTab = lazy(() => import("@/components/AccountingTab").then(m => ({ default: m.AccountingTab })));
 const MarketingTab = lazy(() => import("@/components/MarketingTab").then(m => ({ default: m.MarketingTab })));
 const CRMTab = lazy(() => import("@/components/crm/CRMTab").then(m => ({ default: m.CRMTab })));
@@ -438,6 +439,12 @@ const Index = () => {
                     <ROASCard
                       salesReps={salesReps}
                       currentMonth={dashboardMonth !== 'all' ? dashboardMonth : getCurrentMonthKey()}
+                    />
+
+                    <SalesHealthIndicators
+                      salesReps={salesReps}
+                      currentMonth={dashboardMonth !== 'all' ? dashboardMonth : getCurrentMonthKey()}
+                      monthlyGoal={monthlyGoal}
                     />
 
                     <DashboardFortnightMetrics
