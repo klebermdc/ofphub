@@ -46,6 +46,8 @@ const SalaryManagementDialog = lazy(() => import("@/components/SalaryManagementD
 const DiscountManagementDialog = lazy(() => import("@/components/DiscountManagementDialog").then(m => ({ default: m.DiscountManagementDialog })));
 const RevenueForecastChart = lazy(() => import("@/components/RevenueForecastChart").then(m => ({ default: m.RevenueForecastChart })));
 const SalespersonROI = lazy(() => import("@/components/SalespersonROI").then(m => ({ default: m.SalespersonROI })));
+const SalespersonGoalChart = lazy(() => import("@/components/SalespersonGoalChart").then(m => ({ default: m.SalespersonGoalChart })));
+const SalespersonVelocityChart = lazy(() => import("@/components/SalespersonVelocityChart").then(m => ({ default: m.SalespersonVelocityChart })));
 const DailySalesTracker = lazy(() => import("@/components/DailySalesTracker").then(m => ({ default: m.DailySalesTracker })));
 const EBITDACard = lazy(() => import("@/components/EBITDACard").then(m => ({ default: m.EBITDACard })));
 const AccountingTab = lazy(() => import("@/components/AccountingTab").then(m => ({ default: m.AccountingTab })));
