@@ -29,6 +29,10 @@ interface DailyStat {
   leads_google: number;
   leads_organic: number;
   cpl_real_meta: number;
+  top_creatives?: any[];
+  leads_by_campaign?: Record<string, number>;
+  leads_by_medium?: Record<string, number>;
+  forms_data?: Record<string, number>;
 }
 
 interface Campaign {
