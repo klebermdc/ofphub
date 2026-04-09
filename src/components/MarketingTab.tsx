@@ -137,7 +137,7 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
     return Array.from(years).sort((a, b) => Number(b) - Number(a));
   }, [costs, availableMonths, dailyStatsAgg]);
 
-  // Build merged monthly data: daily stats for meta/google/leads, manual costs for other_marketing
+  // Build merged monthly data: daily stats for meta/google/leads (priority), fallback to marketing_costs for older months
   const mergedMonthlyData = useMemo(() => {
     const allMonthKeys = new Set<string>();
     costs.forEach(c => allMonthKeys.add(`${c.period_year}-${c.period_month}`));
@@ -150,14 +150,16 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
       const ds = getDailyStatsForMonth(month, year);
       const mc = costs.find(c => c.period_month === month && c.period_year === year);
 
+      // Priority: daily_stats when available, otherwise fallback to manual marketing_costs
+      const hasDaily = !!ds;
       return {
         id: mc?.id || key,
         period_month: month,
         period_year: year,
-        google_ads: ds?.google_spend || 0,
-        meta_ads: ds?.meta_spend || 0,
+        google_ads: hasDaily ? ds.google_spend : (mc?.google_ads || 0),
+        meta_ads: hasDaily ? ds.meta_spend : (mc?.meta_ads || 0),
         other_marketing: mc?.other_marketing || 0,
-        leads: ds?.leads_total || 0,
+        leads: hasDaily ? ds.leads_total : (mc?.leads || 0),
         description: mc?.description || null,
       };
     });
