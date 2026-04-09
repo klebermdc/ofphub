@@ -140,9 +140,13 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
   }, []);
 
   // Fetch daily stats for selected month
-  const fetchDailyStats = async () => {
-    if (selectedMonth === 'all') { setDailyStats([]); return; }
-    const [mStr, yStr] = selectedMonth.split('/');
+  const selectedMonthRef = useRef(selectedMonth);
+  selectedMonthRef.current = selectedMonth;
+
+  const fetchDailyStats = useCallback(async () => {
+    const sm = selectedMonthRef.current;
+    if (sm === 'all') { setDailyStats([]); return; }
+    const [mStr, yStr] = sm.split('/');
     const month = parseInt(mStr);
     const year = parseInt(yStr);
     setDailyLoading(true);
@@ -156,10 +160,30 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
       .lte("date", endDate)
       .order("date", { ascending: true });
     if (!error && data) setDailyStats(data as unknown as DailyStat[]);
+    setLastUpdate(new Date());
     setDailyLoading(false);
-  };
+  }, []);
 
   useEffect(() => { fetchDailyStats(); }, [selectedMonth]);
+
+  // Auto-refresh every 5 minutes
+  useEffect(() => {
+    const interval = setInterval(() => { fetchDailyStats(); }, 300000);
+    return () => clearInterval(interval);
+  }, [fetchDailyStats]);
+
+  // Tick for "ago" text every 60s
+  useEffect(() => {
+    const interval = setInterval(() => setTick(t => t + 1), 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const getLastUpdateText = () => {
+    if (!lastUpdate) return "";
+    const diffMin = Math.floor((Date.now() - lastUpdate.getTime()) / 60000);
+    if (diffMin < 1) return "Atualizado agora";
+    return `Atualizado há ${diffMin} min`;
+  };
 
   // Available months
   const availableMonths = useMemo(() => {
