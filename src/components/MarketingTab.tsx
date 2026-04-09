@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { MarketingHealthIndicators } from "@/components/MarketingHealthIndicators";
 import { TopCreativesTable } from "@/components/TopCreativesTable";
 import { LeadsBySourceBreakdown } from "@/components/LeadsBySourceBreakdown";
-import { DollarSign, TrendingUp, TrendingDown, Calendar, UserPlus, Target, Banknote, Percent, RefreshCw, BarChart2, Clock, Eye, MousePointerClick, Gauge, Users } from "lucide-react";
+import { DollarSign, TrendingUp, TrendingDown, Calendar, UserPlus, Target, Banknote, Percent, RefreshCw, BarChart2, Clock, Eye, MousePointerClick, Gauge, Users, Calculator, AlertTriangle } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
 import { MarketingCostsDialog } from "@/components/MarketingCostsDialog";
 import { useCRMLeadsCount } from "@/hooks/useCRMLeadsCount";
@@ -636,8 +636,63 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
             variant="success" 
             formula="% dos cliques que viram a LP no mês" 
           />
+          <MetricCard 
+            title="Projeção de Gasto" 
+            value={(() => {
+              const gastoAtual = dailyStats.reduce((s, d) => s + (d.meta_spend || 0) + (d.google_spend || 0), 0);
+              const diasPassados = dailyStats.length;
+              if (diasPassados === 0) return "—";
+              const mediaDiaria = gastoAtual / diasPassados;
+              const [mStr, yStr] = selectedMonth !== 'all' ? selectedMonth.split('/').map(Number) : [now.getMonth() + 1, now.getFullYear()];
+              const diasNoMes = new Date(yStr, mStr, 0).getDate();
+              return formatBRL(mediaDiaria * diasNoMes);
+            })()} 
+            icon={Calculator} 
+            variant="warning" 
+            formula="Média diária de gasto × dias no mês" 
+          />
         </div>
       )}
+
+      {/* Projeção de Gasto - Mini card */}
+      {selectedMonth !== 'all' && dailyStats.length > 0 && (() => {
+        const gastoAtual = dailyStats.reduce((s, d) => s + (d.meta_spend || 0) + (d.google_spend || 0), 0);
+        const diasPassados = dailyStats.length;
+        if (diasPassados === 0) return null;
+        const mediaDiaria = gastoAtual / diasPassados;
+        const [mStr, yStr] = selectedMonth.split('/').map(Number);
+        const diasNoMes = new Date(yStr, mStr, 0).getDate();
+        const projecaoMes = mediaDiaria * diasNoMes;
+        const progressPct = Math.min((gastoAtual / projecaoMes) * 100, 100);
+        const isOver = projecaoMes > 30000;
+
+        return (
+          <div className={`glass rounded-xl p-4 ${isOver ? 'border border-destructive/50' : ''}`}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Calculator className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-semibold">Projeção de Gasto Mensal</span>
+              </div>
+              {isOver && (
+                <div className="flex items-center gap-1 text-destructive text-xs font-medium">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  Acima de R$30k
+                </div>
+              )}
+            </div>
+            <div className="w-full bg-muted rounded-full h-3 mb-3">
+              <div
+                className={`h-3 rounded-full transition-all ${isOver ? 'bg-destructive' : 'bg-primary'}`}
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>Gasto até agora: <span className="font-semibold text-foreground">{formatBRL(gastoAtual)}</span> de ~<span className="font-semibold text-foreground">{formatBRL(projecaoMes)}</span> estimados</span>
+              <span>Média: <span className="font-semibold text-foreground">{formatBRL(mediaDiaria)}</span>/dia</span>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Channel Breakdown Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
