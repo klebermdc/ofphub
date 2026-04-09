@@ -1,5 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { MarketingHealthIndicators } from "@/components/MarketingHealthIndicators";
+import { TopCreativesTable } from "@/components/TopCreativesTable";
+import { LeadsBySourceBreakdown } from "@/components/LeadsBySourceBreakdown";
 import { DollarSign, TrendingUp, Calendar, UserPlus, Target, Banknote, Percent, RefreshCw, BarChart2 } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
 import { MarketingCostsDialog } from "@/components/MarketingCostsDialog";
@@ -44,6 +46,10 @@ interface DailyStat {
   leads_google: number;
   leads_organic: number;
   cpl_real_meta: number;
+  top_creatives?: any[];
+  leads_by_campaign?: Record<string, number>;
+  leads_by_medium?: Record<string, number>;
+  forms_data?: Record<string, number>;
 }
 
 interface DailyStatsAggregated {
@@ -446,6 +452,12 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
 
       {/* Health Indicators */}
       {selectedMonth !== 'all' && <MarketingHealthIndicators stats={dailyStats} />}
+
+      {/* Top Criativos */}
+      {selectedMonth !== 'all' && <TopCreativesTable stats={dailyStats} />}
+
+      {/* Origem dos Leads */}
+      {selectedMonth !== 'all' && <LeadsBySourceBreakdown stats={dailyStats} />}
 
       {/* Hoje vs Ontem (only when specific month selected and has daily data) */}
       {selectedMonth !== 'all' && today && yesterday && (
