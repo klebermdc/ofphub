@@ -236,6 +236,9 @@ export function MarketingAdsTab() {
         </div>
       )}
 
+      {/* Health Indicators */}
+      <MarketingHealthIndicators stats={stats} />
+
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="glass rounded-xl p-5">
