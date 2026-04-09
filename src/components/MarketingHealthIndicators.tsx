@@ -61,7 +61,7 @@ function getIndicators(stats: DailyStat[]): Indicator[] {
   const lastDaySpend = (lastDay?.meta_spend || 0) + (lastDay?.google_spend || 0);
   const deviation = avgDailySpend > 0 ? Math.abs((lastDaySpend - avgDailySpend) / avgDailySpend) * 100 : 0;
 
-  return [
+  const indicators: Indicator[] = [
     {
       label: "CPL Real Meta",
       value: formatBRL(cplMeta),
