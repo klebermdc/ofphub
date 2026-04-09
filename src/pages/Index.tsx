@@ -61,6 +61,7 @@ const DashboardFortnightMetrics = lazy(() => import("@/components/dashboard/Dash
 const DailyOrdersList = lazy(() => import("@/components/dashboard/DailyOrdersList").then(m => ({ default: m.DailyOrdersList })));
 const DashboardOperationalMetrics = lazy(() => import("@/components/dashboard/DashboardOperationalMetrics").then(m => ({ default: m.DashboardOperationalMetrics })));
 const DashboardHeaderControls = lazy(() => import("@/components/dashboard/DashboardHeaderControls").then(m => ({ default: m.DashboardHeaderControls })));
+const CostProjectionCard = lazy(() => import("@/components/dashboard/CostProjectionCard").then(m => ({ default: m.CostProjectionCard })));
 
 // Data source: database-only (no Google Sheets dependency)
 
