@@ -599,12 +599,15 @@ export type Database = {
           cpl_real_meta: number
           created_at: string
           date: string
+          forms_data: Json | null
           google_campaigns: Json | null
           google_clicks: number
           google_conversions: number
           google_cpl: number
           google_spend: number
           id: string
+          leads_by_campaign: Json | null
+          leads_by_medium: Json | null
           leads_google: number
           leads_meta: number
           leads_organic: number
@@ -616,18 +619,22 @@ export type Database = {
           meta_ctr: number
           meta_impressions: number
           meta_spend: number
+          top_creatives: Json | null
           updated_at: string
         }
         Insert: {
           cpl_real_meta?: number
           created_at?: string
           date: string
+          forms_data?: Json | null
           google_campaigns?: Json | null
           google_clicks?: number
           google_conversions?: number
           google_cpl?: number
           google_spend?: number
           id?: string
+          leads_by_campaign?: Json | null
+          leads_by_medium?: Json | null
           leads_google?: number
           leads_meta?: number
           leads_organic?: number
@@ -639,18 +646,22 @@ export type Database = {
           meta_ctr?: number
           meta_impressions?: number
           meta_spend?: number
+          top_creatives?: Json | null
           updated_at?: string
         }
         Update: {
           cpl_real_meta?: number
           created_at?: string
           date?: string
+          forms_data?: Json | null
           google_campaigns?: Json | null
           google_clicks?: number
           google_conversions?: number
           google_cpl?: number
           google_spend?: number
           id?: string
+          leads_by_campaign?: Json | null
+          leads_by_medium?: Json | null
           leads_google?: number
           leads_meta?: number
           leads_organic?: number
@@ -662,6 +673,7 @@ export type Database = {
           meta_ctr?: number
           meta_impressions?: number
           meta_spend?: number
+          top_creatives?: Json | null
           updated_at?: string
         }
         Relationships: []
