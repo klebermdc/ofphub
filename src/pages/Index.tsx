@@ -507,6 +507,12 @@ const Index = () => {
                           monthlyGoal={monthlyGoal} 
                         />
                       </Suspense>
+                      <Suspense fallback={<ChartSkeleton />}>
+                        <RevenueWaterfallChart
+                          salesReps={dashboardFilteredSalesReps}
+                          currentMonth={dashboardMonth}
+                        />
+                      </Suspense>
                     </div>
 
                     <GoalsKPICard
