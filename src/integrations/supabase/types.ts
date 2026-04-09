@@ -617,8 +617,12 @@ export type Database = {
           meta_conversions: number
           meta_cpl: number
           meta_ctr: number
+          meta_frequency: number | null
           meta_impressions: number
+          meta_landing_page_views: number | null
+          meta_reach: number | null
           meta_spend: number
+          monthly_budget: number | null
           top_creatives: Json | null
           updated_at: string
         }
@@ -644,8 +648,12 @@ export type Database = {
           meta_conversions?: number
           meta_cpl?: number
           meta_ctr?: number
+          meta_frequency?: number | null
           meta_impressions?: number
+          meta_landing_page_views?: number | null
+          meta_reach?: number | null
           meta_spend?: number
+          monthly_budget?: number | null
           top_creatives?: Json | null
           updated_at?: string
         }
@@ -671,8 +679,12 @@ export type Database = {
           meta_conversions?: number
           meta_cpl?: number
           meta_ctr?: number
+          meta_frequency?: number | null
           meta_impressions?: number
+          meta_landing_page_views?: number | null
+          meta_reach?: number | null
           meta_spend?: number
+          monthly_budget?: number | null
           top_creatives?: Json | null
           updated_at?: string
         }
