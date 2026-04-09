@@ -137,7 +137,7 @@ export function SalesHealthIndicators({ salesReps, currentMonth, monthlyGoal }: 
     });
 
     // 6. Concentração
-    const salesByRep = salesReps.map(r => ({
+    const salesByRep = realReps.map(r => ({
       name: r.name,
       total: (r.orders || [])
         .filter(o => {
