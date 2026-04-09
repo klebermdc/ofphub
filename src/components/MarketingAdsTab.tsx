@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { MetricCard } from "@/components/MetricCard";
 import { DollarSign, TrendingUp, UserPlus, Target, RefreshCw, BarChart2 } from "lucide-react";
@@ -83,6 +83,8 @@ const chartConfig = {
 export function MarketingAdsTab() {
   const [stats, setStats] = useState<DailyStat[]>([]);
   const [loading, setLoading] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [, setTick] = useState(0);
   const monthOptions = useMemo(() => getLast6Months(), []);
   const [selectedPeriod, setSelectedPeriod] = useState(monthOptions[0].key);
 
@@ -91,11 +93,15 @@ export function MarketingAdsTab() {
     [selectedPeriod, monthOptions]
   );
 
-  const fetchStats = async () => {
+  const selectedRef = useRef(selected);
+  selectedRef.current = selected;
+
+  const fetchStats = useCallback(async () => {
+    const sel = selectedRef.current;
     setLoading(true);
-    const startDate = `${selected.year}-${String(selected.month).padStart(2, "0")}-01`;
-    const endDay = new Date(selected.year, selected.month, 0).getDate();
-    const endDate = `${selected.year}-${String(selected.month).padStart(2, "0")}-${String(endDay).padStart(2, "0")}`;
+    const startDate = `${sel.year}-${String(sel.month).padStart(2, "0")}-01`;
+    const endDay = new Date(sel.year, sel.month, 0).getDate();
+    const endDate = `${sel.year}-${String(sel.month).padStart(2, "0")}-${String(endDay).padStart(2, "0")}`;
 
     const { data, error } = await supabase
       .from("marketing_daily_stats" as any)
@@ -107,12 +113,35 @@ export function MarketingAdsTab() {
     if (!error && data) {
       setStats(data as unknown as DailyStat[]);
     }
+    setLastUpdate(new Date());
     setLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
     fetchStats();
   }, [selectedPeriod]);
+
+  // Auto-refresh every 5 minutes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchStats();
+    }, 300000);
+    return () => clearInterval(interval);
+  }, [fetchStats]);
+
+  // Update "ago" text every 60s
+  useEffect(() => {
+    const interval = setInterval(() => setTick((t) => t + 1), 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const getLastUpdateText = () => {
+    if (!lastUpdate) return "";
+    const diffMs = Date.now() - lastUpdate.getTime();
+    const diffMin = Math.floor(diffMs / 60000);
+    if (diffMin < 1) return "Atualizado agora";
+    return `Atualizado há ${diffMin} min`;
+  };
 
   const today = stats[stats.length - 1];
   const yesterday = stats[stats.length - 2];
@@ -159,6 +188,15 @@ export function MarketingAdsTab() {
               <RefreshCw className="h-4 w-4" />
               Atualizar
             </Button>
+            {lastUpdate && (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-pulse absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                {getLastUpdateText()}
+              </div>
+            )}
           </div>
         </div>
         <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
@@ -197,6 +235,15 @@ export function MarketingAdsTab() {
             <RefreshCw className="h-4 w-4" />
             Atualizar
           </Button>
+          {lastUpdate && (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-pulse absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              {getLastUpdateText()}
+            </div>
+          )}
         </div>
       </div>
 
