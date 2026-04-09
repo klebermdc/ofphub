@@ -61,7 +61,7 @@ export function MetricCard({
   const cardContent = (
     <div 
       className={cn(
-        "rounded-xl p-4 sm:p-6 animate-slide-up h-full relative group min-w-0 overflow-hidden",
+        "rounded-xl p-4 sm:p-6 animate-slide-up h-full relative group",
         "bg-gradient-to-br border",
         styles.gradient,
         styles.border,
@@ -70,25 +70,23 @@ export function MetricCard({
       style={{ animationDelay: `${delay}ms` }}
     >
       <div className="flex items-center gap-2 mb-3">
-        <Icon className={cn("h-4 w-4 sm:h-5 sm:w-5", styles.iconColor)} />
-        <p className="text-xs sm:text-sm text-muted-foreground flex-1">{title}</p>
+        <Icon className={cn("h-4 w-4 sm:h-5 sm:w-5 shrink-0", styles.iconColor)} />
+        <p className="text-xs sm:text-sm text-muted-foreground flex-1 truncate">{title}</p>
         {formula && (
-          <Info className="h-3 w-3 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors" />
+          <Info className="h-3 w-3 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors shrink-0" />
         )}
       </div>
-      <div className="rounded-lg border border-border/50 bg-background/60 px-3 py-3 sm:px-4 sm:py-4">
-        <p className={cn("min-w-0 break-words text-[clamp(1.25rem,2.2vw,2.25rem)] font-bold leading-tight tracking-tight", styles.valueColor)}>{value}</p>
-        {change && (
-          <p className={cn(
-            "text-xs sm:text-sm font-medium mt-2",
-            changeType === "positive" && "text-emerald-500",
-            changeType === "negative" && "text-red-500",
-            changeType === "neutral" && "text-muted-foreground"
-          )}>
-            {change}
-          </p>
-        )}
-      </div>
+      <p className={cn("text-xl sm:text-2xl lg:text-3xl font-bold leading-tight tracking-tight", styles.valueColor)}>{value}</p>
+      {change && (
+        <p className={cn(
+          "text-xs sm:text-sm font-medium mt-2",
+          changeType === "positive" && "text-emerald-500",
+          changeType === "negative" && "text-red-500",
+          changeType === "neutral" && "text-muted-foreground"
+        )}>
+          {change}
+        </p>
+      )}
     </div>
   );
 
