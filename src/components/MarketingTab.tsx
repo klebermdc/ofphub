@@ -318,6 +318,15 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
   const today = dailyStats[dailyStats.length - 1];
   const yesterday = dailyStats[dailyStats.length - 2];
 
+  if (aggLoading) {
+    return (
+      <div className="flex items-center justify-center py-20 text-muted-foreground">
+        <RefreshCw className="h-5 w-5 animate-spin mr-2" />
+        Carregando dados de marketing...
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header with filters */}
