@@ -337,8 +337,8 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
+      {/* KPI Cards - Row 1 */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <MetricCard
           title="Faturamento"
           value={formatBRL(revenue)}
@@ -347,19 +347,37 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
           formula="Soma do faturamento de todos os pedidos no período selecionado."
         />
         <MetricCard
+          title="Comissão Total"
+          value={formatBRL(totalCommissionRevenue)}
+          icon={DollarSign}
+          variant="success"
+          formula="Soma da comissão total de todos os pedidos no período."
+        />
+        <MetricCard
           title="Investimento"
           value={formatBRL(totals.totalInvestment)}
           icon={DollarSign}
           variant="warning"
-          formula="Meta Ads + Google Ads (dados automáticos) + custos extras de marketing do período."
+          formula="Meta Ads + Google Ads (dados automáticos) + custos extras de marketing."
         />
         <MetricCard
           title="Leads"
           value={totals.totalLeads.toString()}
           icon={UserPlus}
           variant="info"
-          formula="Total de leads captados no período, priorizando os dados automáticos."
+          formula="Total de leads captados no período, priorizando dados automáticos."
         />
+        <MetricCard
+          title="Custo por Lead"
+          value={formatBRL(totals.costPerLead)}
+          icon={Target}
+          variant="default"
+          formula="Investimento ÷ Leads"
+        />
+      </div>
+
+      {/* KPI Cards - Row 2 */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <MetricCard
           title="Taxa de Conversão"
           value={`${totals.conversionRate.toFixed(1)}%`}
@@ -368,11 +386,18 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
           formula="(Pedidos ÷ Leads) × 100"
         />
         <MetricCard
-          title="Custo por Lead"
-          value={formatBRL(totals.costPerLead)}
-          icon={Target}
-          variant="default"
-          formula="Investimento ÷ Leads"
+          title="% Invest. / Faturamento"
+          value={`${revenue > 0 ? ((totals.totalInvestment / revenue) * 100).toFixed(1) : '0.0'}%`}
+          icon={Percent}
+          variant={revenue > 0 && (totals.totalInvestment / revenue) * 100 <= 15 ? "success" : "warning"}
+          formula="(Investimento ÷ Faturamento) × 100\nMostra quanto do faturamento é gasto em marketing."
+        />
+        <MetricCard
+          title="% Invest. / Comissão"
+          value={`${totalCommissionRevenue > 0 ? ((totals.totalInvestment / totalCommissionRevenue) * 100).toFixed(1) : '0.0'}%`}
+          icon={Percent}
+          variant={totalCommissionRevenue > 0 && (totals.totalInvestment / totalCommissionRevenue) * 100 <= 30 ? "success" : "warning"}
+          formula="(Investimento ÷ Comissão Total) × 100\nMostra quanto da comissão total é consumido pelo marketing."
         />
         <MetricCard
           title="ROI Faturamento"
