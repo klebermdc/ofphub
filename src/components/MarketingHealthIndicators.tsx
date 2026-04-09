@@ -10,6 +10,10 @@ interface DailyStat {
   meta_conversions: number;
   meta_cpl: number;
   meta_campaigns: any[];
+  meta_reach?: number;
+  meta_landing_page_views?: number;
+  meta_frequency?: number;
+  monthly_budget?: number;
   google_spend: number;
   google_clicks: number;
   google_conversions: number;
@@ -135,6 +139,15 @@ function getIndicators(stats: DailyStat[]): Indicator[] {
     value: `${efficiency.toFixed(1)} leads/R$100`,
     reference: "Meta: > 8 leads/R$100",
     color: efficiency > 8 ? "green" : efficiency >= 5 ? "yellow" : "red",
+  });
+
+  // Frequência Meta
+  const avgFrequency = stats.reduce((s, d) => s + ((d as any).meta_frequency || 0), 0) / stats.length;
+  indicators.push({
+    label: "Frequência Meta",
+    value: avgFrequency.toFixed(2) + "x",
+    reference: "Saudável: < 3x",
+    color: avgFrequency < 3 ? "green" : avgFrequency <= 5 ? "yellow" : "red",
   });
 
   return indicators;
