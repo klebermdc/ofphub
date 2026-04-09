@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { DollarSign, TrendingUp, Calendar, UserPlus, Target, Banknote, Percent, RefreshCw, BarChart2 } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
 import { MarketingCostsDialog } from "@/components/MarketingCostsDialog";
@@ -11,6 +11,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, BarChart, Bar, LineChart,
 import { SalesRep } from "@/types/sales";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { parseOrderDate } from "@/utils/dateUtils";
 
 interface MarketingCost {
   id: string;
@@ -59,11 +60,6 @@ interface MarketingTabProps {
   salesReps?: SalesRep[];
 }
 
-const MONTH_NAMES = [
-  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
-];
-
 const chartConfig = {
   investment: { label: "Investimento", color: "hsl(var(--warning))" },
   leads: { label: "Leads", color: "hsl(var(--info))" },
@@ -91,7 +87,7 @@ const formatDate = (d: string) => {
 };
 
 export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }: MarketingTabProps) {
-  const { leadsData, isLoading: leadsLoading, fetchLeadsData } = useCRMLeadsCount();
+  const { isLoading: leadsLoading, fetchLeadsData } = useCRMLeadsCount();
 
   // State
   const now = new Date();
@@ -116,9 +112,10 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
       if (error || !data) { setAggLoading(false); return; }
       const grouped: Record<string, DailyStatsAggregated> = {};
       (data as any[]).forEach((row: any) => {
-        const d = new Date(row.date);
-        const month = d.getMonth() + 1;
-        const year = d.getFullYear();
+        const parsedDate = parseOrderDate(row.date);
+        if (!parsedDate) return;
+
+        const { month, year } = parsedDate;
         const key = `${year}-${month}`;
         if (!grouped[key]) grouped[key] = { month, year, meta_spend: 0, google_spend: 0, leads_total: 0 };
         grouped[key].meta_spend += Number(row.meta_spend) || 0;
@@ -189,6 +186,20 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
 
   const monthsForYear = availableMonths.filter(m => m.endsWith(`/${selectedYear}`));
 
+  const matchesSelectedPeriod = useCallback((dateValue?: string) => {
+    if (!dateValue) return false;
+
+    const parsedDate = parseOrderDate(dateValue);
+    if (!parsedDate) return false;
+
+    if (selectedMonth === "all") {
+      return parsedDate.year.toString() === selectedYear;
+    }
+
+    const [month, year] = selectedMonth.split("/").map(Number);
+    return parsedDate.month === month && parsedDate.year === year;
+  }, [selectedMonth, selectedYear]);
+
   // Helper to get aggregated daily stats for a month
   const getDailyStatsForMonth = (month: number, year: number) =>
     dailyStatsAgg.find(d => d.month === month && d.year === year);
@@ -225,54 +236,20 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
     return filtered.sort((a, b) => b.period_month - a.period_month);
   }, [mergedMonthlyData, selectedYear, selectedMonth]);
 
+  const periodOrders = useMemo(() => {
+    return salesReps.flatMap((rep) => (rep.orders || []).filter((order) => matchesSelectedPeriod(order.data)));
+  }, [salesReps, matchesSelectedPeriod]);
+
   // Revenue from sales
   const revenue = useMemo(() => {
-    if (selectedMonth === 'all') {
-      return salesReps.reduce((total, rep) => {
-        return total + (rep.orders?.filter(order => {
-          if (!order.data) return false;
-          const parts = order.data.split('/');
-          let year = parts[2] || '';
-          if (year.length === 2) year = `20${year}`;
-          return year === selectedYear;
-        }).reduce((sum, o) => sum + o.venda, 0) || 0);
-      }, 0);
-    }
-    return salesReps.reduce((total, rep) => {
-      return total + (rep.orders?.filter(order => {
-        if (!order.data) return false;
-        const parts = order.data.split('/');
-        const month = parts[1]?.padStart(2, '0');
-        let year = parts[2] || '';
-        if (year.length === 2) year = `20${year}`;
-        return `${month}/${year}` === selectedMonth;
-      }).reduce((sum, o) => sum + o.venda, 0) || 0);
-    }, 0);
-  }, [salesReps, selectedYear, selectedMonth]);
+    return periodOrders.reduce((sum, order) => sum + order.venda, 0);
+  }, [periodOrders]);
 
-  const ordersCount = useMemo(() => {
-    if (selectedMonth === 'all') {
-      return salesReps.reduce((total, rep) => {
-        return total + (rep.orders?.filter(order => {
-          if (!order.data) return false;
-          const parts = order.data.split('/');
-          let year = parts[2] || '';
-          if (year.length === 2) year = `20${year}`;
-          return year === selectedYear;
-        }).length || 0);
-      }, 0);
-    }
-    return salesReps.reduce((total, rep) => {
-      return total + (rep.orders?.filter(order => {
-        if (!order.data) return false;
-        const parts = order.data.split('/');
-        const month = parts[1]?.padStart(2, '0');
-        let year = parts[2] || '';
-        if (year.length === 2) year = `20${year}`;
-        return `${month}/${year}` === selectedMonth;
-      }).length || 0);
-    }, 0);
-  }, [salesReps, selectedYear, selectedMonth]);
+  const totalCommissionRevenue = useMemo(() => {
+    return periodOrders.reduce((sum, order) => sum + (order.comissaoTotal || order.comissao || 0), 0);
+  }, [periodOrders]);
+
+  const ordersCount = periodOrders.length;
 
   // Totals
   const totals = useMemo(() => {
@@ -283,9 +260,10 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
     const totalLeads = filteredData.reduce((sum, d) => sum + d.leads, 0);
     const costPerLead = totalLeads > 0 ? totalInvestment / totalLeads : 0;
     const conversionRate = totalLeads > 0 ? (ordersCount / totalLeads) * 100 : 0;
-    const roi = totalInvestment > 0 ? ((revenue - totalInvestment) / totalInvestment) * 100 : 0;
-    return { totalGoogleAds, totalMetaAds, totalOther, totalLeads, totalInvestment, costPerLead, conversionRate, roi };
-  }, [filteredData, ordersCount, revenue]);
+    const roiSales = totalInvestment > 0 ? ((revenue - totalInvestment) / totalInvestment) * 100 : 0;
+    const roiCommission = totalInvestment > 0 ? ((totalCommissionRevenue - totalInvestment) / totalInvestment) * 100 : 0;
+    return { totalGoogleAds, totalMetaAds, totalOther, totalLeads, totalInvestment, costPerLead, conversionRate, roiSales, roiCommission };
+  }, [filteredData, ordersCount, revenue, totalCommissionRevenue]);
 
   // Monthly chart data (yearly evolution)
   const monthlyChartData = useMemo(() => {
@@ -360,13 +338,56 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <MetricCard title="Faturamento" value={formatBRL(revenue)} icon={Banknote} variant="success" />
-        <MetricCard title="Investimento" value={formatBRL(totals.totalInvestment)} icon={DollarSign} variant="warning" />
-        <MetricCard title="Leads" value={totals.totalLeads.toString()} icon={UserPlus} variant="info" />
-        <MetricCard title="Taxa de Conversão" value={`${totals.conversionRate.toFixed(1)}%`} icon={Percent} variant={totals.conversionRate >= 10 ? "success" : "warning"} />
-        <MetricCard title="Custo por Lead" value={formatBRL(totals.costPerLead)} icon={Target} variant="default" />
-        <MetricCard title="ROI Marketing" value={`${totals.roi.toFixed(1)}%`} icon={TrendingUp} variant={totals.roi >= 0 ? "success" : "danger"} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
+        <MetricCard
+          title="Faturamento"
+          value={formatBRL(revenue)}
+          icon={Banknote}
+          variant="success"
+          formula="Soma do faturamento de todos os pedidos no período selecionado."
+        />
+        <MetricCard
+          title="Investimento"
+          value={formatBRL(totals.totalInvestment)}
+          icon={DollarSign}
+          variant="warning"
+          formula="Meta Ads + Google Ads (dados automáticos) + custos extras de marketing do período."
+        />
+        <MetricCard
+          title="Leads"
+          value={totals.totalLeads.toString()}
+          icon={UserPlus}
+          variant="info"
+          formula="Total de leads captados no período, priorizando os dados automáticos."
+        />
+        <MetricCard
+          title="Taxa de Conversão"
+          value={`${totals.conversionRate.toFixed(1)}%`}
+          icon={Percent}
+          variant={totals.conversionRate >= 10 ? "success" : "warning"}
+          formula="(Pedidos ÷ Leads) × 100"
+        />
+        <MetricCard
+          title="Custo por Lead"
+          value={formatBRL(totals.costPerLead)}
+          icon={Target}
+          variant="default"
+          formula="Investimento ÷ Leads"
+        />
+        <MetricCard
+          title="ROI Faturamento"
+          value={`${totals.roiSales.toFixed(1)}%`}
+          icon={TrendingUp}
+          variant={totals.roiSales >= 0 ? "success" : "danger"}
+          formula="(Faturamento − Investimento) ÷ Investimento × 100"
+        />
+        <MetricCard
+          title="ROI Comissão"
+          value={`${totals.roiCommission.toFixed(1)}%`}
+          icon={BarChart2}
+          variant={totals.roiCommission >= 0 ? "success" : "danger"}
+          formula="(Comissão Total − Investimento) ÷ Investimento × 100"
+        />
       </div>
 
       {/* Hoje vs Ontem (only when specific month selected and has daily data) */}
