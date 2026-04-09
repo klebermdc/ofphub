@@ -339,7 +339,16 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
   const todayCpl = todayLeads > 0 ? todayInvestment / todayLeads : 0;
   const todayCtr = today?.meta_ctr || 0;
   const todayClicks = (today?.meta_clicks || 0) + (today?.google_clicks || 0);
-  const todayConversions = (today?.meta_conversions || 0) + (today?.google_conversions || 0);
+  const todayOrders = useMemo(() => {
+    if (!today) return 0;
+    return salesReps.flatMap(r => r.orders || []).filter(o => {
+      if (!o.data) return false;
+      const parsed = parseOrderDate(o.data);
+      if (!parsed) return false;
+      const [y, m, d] = today.date.split('-').map(Number);
+      return parsed.day === d && parsed.month === m && parsed.year === y;
+    }).length;
+  }, [today, salesReps]);
 
   if (aggLoading) {
     return (
@@ -409,7 +418,7 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
             <MetricCard title="Leads Hoje" value={todayLeads.toString()} icon={UserPlus} variant="success" formula="Total de leads captados no último dia com dados." />
             <MetricCard title="CPL Hoje" value={formatBRL(todayCpl)} icon={Target} variant="default" formula="Investimento do dia ÷ Leads do dia" />
             <MetricCard title="CTR Meta Hoje" value={`${todayCtr.toFixed(2)}%`} icon={TrendingUp} variant="info" formula="Taxa de cliques do Meta Ads no último dia." />
-            <MetricCard title="Cliques Hoje" value={todayClicks.toString()} icon={TrendingUp} variant="default" formula="Total de cliques (Meta + Google) no último dia." />
+            <MetricCard title="Pedidos no Dia" value={todayOrders.toString()} icon={Banknote} variant="success" formula="Número de pedidos fechados no dia (tabela orders)." />
           </div>
         </div>
       )}
