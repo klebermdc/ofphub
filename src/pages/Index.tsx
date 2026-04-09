@@ -62,6 +62,7 @@ const DailyOrdersList = lazy(() => import("@/components/dashboard/DailyOrdersLis
 const DashboardOperationalMetrics = lazy(() => import("@/components/dashboard/DashboardOperationalMetrics").then(m => ({ default: m.DashboardOperationalMetrics })));
 const DashboardHeaderControls = lazy(() => import("@/components/dashboard/DashboardHeaderControls").then(m => ({ default: m.DashboardHeaderControls })));
 const CostProjectionCard = lazy(() => import("@/components/dashboard/CostProjectionCard").then(m => ({ default: m.CostProjectionCard })));
+const SalespersonROITable = lazy(() => import("@/components/SalespersonROITable").then(m => ({ default: m.SalespersonROITable })));
 
 // Data source: database-only (no Google Sheets dependency)
 
@@ -467,6 +468,10 @@ const Index = () => {
                       currentMonth={dashboardMonth !== 'all' ? dashboardMonth : getCurrentMonthKey()}
                       monthlyGoal={monthlyGoal}
                     />
+
+                    <Suspense fallback={<div className="h-32 animate-pulse bg-muted rounded-xl" />}>
+                      <SalespersonROITable salesReps={dashboardFilteredSalesReps} getSalary={getSalary} />
+                    </Suspense>
 
                     <DashboardFortnightMetrics
                       primeiraQuinzena={metrics.primeiraQuinzena}
