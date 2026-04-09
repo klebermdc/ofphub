@@ -475,6 +475,10 @@ const Index = () => {
                       <SalespersonROITable salesReps={dashboardFilteredSalesReps} getSalary={getSalary} />
                     </Suspense>
 
+                    <Suspense fallback={<div className="h-32 animate-pulse bg-muted rounded-xl" />}>
+                      <WhatsAppStatusCard />
+                    </Suspense>
+
                     <DashboardFortnightMetrics
                       primeiraQuinzena={metrics.primeiraQuinzena}
                       segundaQuinzena={metrics.segundaQuinzena}
