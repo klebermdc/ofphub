@@ -109,10 +109,11 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
   // Fetch aggregated monthly data
   useEffect(() => {
     const fetchAll = async () => {
+      setAggLoading(true);
       const { data, error } = await supabase
         .from("marketing_daily_stats" as any)
         .select("date, meta_spend, google_spend, leads_total");
-      if (error || !data) return;
+      if (error || !data) { setAggLoading(false); return; }
       const grouped: Record<string, DailyStatsAggregated> = {};
       (data as any[]).forEach((row: any) => {
         const d = new Date(row.date);
@@ -125,6 +126,7 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
         grouped[key].leads_total += Number(row.leads_total) || 0;
       });
       setDailyStatsAgg(Object.values(grouped));
+      setAggLoading(false);
     };
     fetchAll();
   }, []);
