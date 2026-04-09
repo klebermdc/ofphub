@@ -8,7 +8,8 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, LineChart, Line, BarChart, Bar } from "recharts";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MarketingHealthIndicators } from "@/components/MarketingHealthIndicators";
-
+import { TopCreativesTable } from "@/components/TopCreativesTable";
+import { LeadsBySourceBreakdown } from "@/components/LeadsBySourceBreakdown";
 interface DailyStat {
   date: string;
   meta_spend: number;
@@ -28,6 +29,10 @@ interface DailyStat {
   leads_google: number;
   leads_organic: number;
   cpl_real_meta: number;
+  top_creatives?: any[];
+  leads_by_campaign?: Record<string, number>;
+  leads_by_medium?: Record<string, number>;
+  forms_data?: Record<string, number>;
 }
 
 interface Campaign {
@@ -238,6 +243,12 @@ export function MarketingAdsTab() {
 
       {/* Health Indicators */}
       <MarketingHealthIndicators stats={stats} />
+
+      {/* Top Criativos */}
+      <TopCreativesTable stats={stats} />
+
+      {/* Origem dos Leads */}
+      <LeadsBySourceBreakdown stats={stats} />
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
