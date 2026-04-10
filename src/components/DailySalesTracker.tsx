@@ -64,6 +64,24 @@ export function DailySalesTracker({
   const today = now.getDate();
   const todayFormatted = `${today.toString().padStart(2, '0')}/${m.toString().padStart(2, '0')}/${y}`;
   
+  // Fetch real daily ad spend from marketing_daily_stats
+  const [todayAdSpend, setTodayAdSpend] = useState(0);
+  useEffect(() => {
+    const todayDate = `${y}-${String(m).padStart(2, '0')}-${String(today).padStart(2, '0')}`;
+    supabase
+      .from('marketing_daily_stats')
+      .select('meta_spend, google_spend')
+      .eq('date', todayDate)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setTodayAdSpend(Number(data.meta_spend || 0) + Number(data.google_spend || 0));
+        } else {
+          setTodayAdSpend(0);
+        }
+      });
+  }, [m, y, today]);
+
   const totalBusinessDays = getBusinessDaysInMonth(m, y);
   const businessDaysElapsed = getBusinessDaysElapsed(m, y);
   
