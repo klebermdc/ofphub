@@ -46,7 +46,6 @@ export default function Auth() {
             title: "Bem-vindo!",
             description: "Login realizado com sucesso.",
           });
-          navigate("/");
         }
       } else {
         if (!fullName.trim()) {
@@ -77,9 +76,10 @@ export default function Auth() {
         } else {
           toast({
             title: "Conta criada!",
-            description: "Você já pode acessar o sistema.",
+            description: "Se necessário, confirme seu email antes de entrar.",
           });
-          navigate("/");
+          setIsLogin(true);
+          setPassword("");
         }
       }
     } catch (err) {
