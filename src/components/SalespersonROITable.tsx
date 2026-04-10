@@ -10,19 +10,25 @@ interface SalespersonROITableProps {
 }
 
 export function SalespersonROITable({ salesReps, getSalary }: SalespersonROITableProps) {
-  const rows = salesReps.map((rep) => {
-    const vendas = rep.sales;
-    const comissaoGerada = rep.orders?.reduce((s, o) => s + (o.comissaoTotal || 0), 0) ?? 0;
-    const salarioBase = getSalary(rep.name);
-    const roi = salarioBase > 0 ? vendas / salarioBase : 0;
-    const isInactive = vendas === 0;
+  const rows = salesReps
+    .map((rep) => {
+      const vendas = rep.sales;
+      const comissaoGerada = rep.orders?.reduce((s, o) => s + (o.comissaoTotal || 0), 0) ?? 0;
+      const comissaoRecebida = rep.orders?.reduce((s, o) => s + (o.comissaoVendedor || 0), 0) ?? 0;
+      const salarioBase = getSalary(rep.name);
+      const custoTotal = salarioBase + comissaoRecebida;
+      const lucro = comissaoGerada - custoTotal;
+      const roi = custoTotal > 0 ? lucro / custoTotal : 0;
+      const isInactive = vendas === 0;
 
-    return { name: rep.name, vendas, comissaoGerada, salarioBase, roi, isInactive };
-  }).sort((a, b) => {
-    if (a.isInactive && !b.isInactive) return 1;
-    if (!a.isInactive && b.isInactive) return -1;
-    return b.roi - a.roi;
-  });
+      return { name: rep.name, vendas, comissaoGerada, comissaoRecebida, salarioBase, custoTotal, lucro, roi, isInactive };
+    })
+    .filter((row) => row.salarioBase > 0)
+    .sort((a, b) => {
+      if (a.isInactive && !b.isInactive) return 1;
+      if (!a.isInactive && b.isInactive) return -1;
+      return b.roi - a.roi;
+    });
 
   const getStatus = (roi: number, inactive: boolean) => {
     if (inactive) return { label: "Inativo", variant: "outline" as const, className: "text-muted-foreground" };
