@@ -274,6 +274,60 @@ export function DailySalesTracker({
           <p className="text-lg sm:text-2xl font-bold text-foreground">{todayLeads}</p>
         </div>
       </div>
+
+      {/* Meta Diária */}
+      <div className="bg-card border rounded-xl p-4 sm:p-5 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Target className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+            <span className="text-sm sm:text-base font-semibold text-foreground">Meta Diária de Resultado</span>
+          </div>
+          <span className="text-sm font-bold text-primary">{formatCurrency(META_DIARIA)}</span>
+        </div>
+
+        {/* Atingimento Real */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between text-xs sm:text-sm">
+            <span className="text-muted-foreground">Atingimento Atual</span>
+            <span className={cn("font-semibold", atingimentoPctReal >= 100 ? "text-emerald-500" : atingimentoPctReal >= 50 ? "text-amber-500" : "text-red-500")}>
+              {formatCurrency(resultadoDia)} ({atingimentoPctReal.toFixed(1)}%)
+            </span>
+          </div>
+          <div className="relative h-3 w-full overflow-hidden rounded-full bg-secondary">
+            <div
+              className={cn(
+                "h-full rounded-full transition-all duration-500",
+                atingimentoPctReal >= 100 ? "bg-emerald-500" : atingimentoPctReal >= 50 ? "bg-amber-500" : "bg-red-500"
+              )}
+              style={{ width: `${Math.max(0, Math.min(atingimentoPct, 100))}%` }}
+            />
+            {/* Marker at 100% */}
+            <div className="absolute top-0 bottom-0 w-0.5 bg-foreground/30" style={{ left: `${Math.min(100 / 1.5, 100)}%` }} />
+          </div>
+        </div>
+
+        {/* Projeção Histórica */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between text-xs sm:text-sm">
+            <span className="text-muted-foreground">
+              Projeção (média {dailyResultsHistory.length} dia{dailyResultsHistory.length !== 1 ? 's' : ''} útei{dailyResultsHistory.length !== 1 ? 's' : 'l'})
+            </span>
+            <span className={cn("font-semibold", projecaoPctReal >= 100 ? "text-emerald-500" : projecaoPctReal >= 50 ? "text-amber-500" : "text-red-500")}>
+              {formatCurrency(projectedResult)} ({projecaoPctReal.toFixed(1)}%)
+            </span>
+          </div>
+          <div className="relative h-3 w-full overflow-hidden rounded-full bg-secondary">
+            <div
+              className={cn(
+                "h-full rounded-full transition-all duration-500 opacity-70",
+                projecaoPctReal >= 100 ? "bg-emerald-500" : projecaoPctReal >= 50 ? "bg-amber-500" : "bg-red-500"
+              )}
+              style={{ width: `${Math.max(0, Math.min(projecaoPct, 100))}%` }}
+            />
+            <div className="absolute top-0 bottom-0 w-0.5 bg-foreground/30" style={{ left: `${Math.min(100 / 1.5, 100)}%` }} />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
