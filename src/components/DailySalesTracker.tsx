@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
-import { DollarSign, TrendingUp, Zap, Wallet, UserPlus } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { DollarSign, TrendingUp, Zap, Wallet, UserPlus, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { Progress } from "@/components/ui/progress";
 
 interface DailySalesTrackerProps {
   salesReps: { orders?: { data?: string; venda: number; comissao?: number; comissaoVendedor?: number }[] }[];
