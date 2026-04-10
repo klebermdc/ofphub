@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Cell } from 'recharts';
 import { Droplets } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { SalesRep } from '@/types/sales';
@@ -11,6 +11,29 @@ interface RevenueWaterfallChartProps {
   salesReps: SalesRep[];
   currentMonth: string;
 }
+
+const WaterfallBar = (props: any) => {
+  const { x, y, width, height, payload } = props;
+  if (!payload) return null;
+  const base = payload.base || 0;
+  const value = payload.value || 0;
+  const fill = payload.fill || 'hsl(var(--chart-2))';
+  
+  // Calculate the actual pixel position based on the Y axis scale
+  const yScale = props.yScale || props.background?.y;
+  
+  return (
+    <rect
+      x={x}
+      y={y}
+      width={width}
+      height={Math.abs(height)}
+      fill={fill}
+      rx={4}
+      ry={4}
+    />
+  );
+};
 
 export function RevenueWaterfallChart({ salesReps, currentMonth }: RevenueWaterfallChartProps) {
   const { user } = useAuth();
@@ -38,21 +61,21 @@ export function RevenueWaterfallChart({ salesReps, currentMonth }: RevenueWaterf
   const gastoSalarios = useMemo(() => 
     salaries.reduce((sum, s) => sum + s.salary, 0), [salaries]);
 
-  const { faturamento, comissaoTotal, resultado, chartData } = useMemo(() => {
+  const { faturamento, resultado, chartData } = useMemo(() => {
     const fat = salesReps.reduce((sum, rep) => sum + rep.sales, 0);
     const com = salesReps.reduce((sum, rep) => sum + rep.orders.reduce((s, o) => s + (o.comissaoTotal || 0), 0), 0);
     const res = fat - com - gastoAds - gastoSalarios;
 
-    // Waterfall: each bar has a hidden base + visible portion
+    // For the waterfall we use [bottom, top] range format
     const data = [
-      { name: 'Faturamento', value: fat, base: 0, fill: 'hsl(var(--chart-2))' },
-      { name: 'Comissões', value: com, base: fat - com, fill: 'hsl(var(--destructive))' },
-      { name: 'Marketing', value: gastoAds, base: fat - com - gastoAds, fill: 'hsl(var(--destructive))' },
-      { name: 'Salários', value: gastoSalarios, base: fat - com - gastoAds - gastoSalarios, fill: 'hsl(var(--destructive))' },
-      { name: 'Resultado', value: Math.abs(res), base: res >= 0 ? 0 : res, fill: res >= 0 ? 'hsl(var(--chart-2))' : 'hsl(var(--destructive))' },
+      { name: 'Faturamento', range: [0, fat], value: fat, base: 0, fill: 'hsl(var(--chart-2))' },
+      { name: 'Comissões', range: [fat - com, fat], value: com, base: fat - com, fill: 'hsl(var(--destructive))' },
+      { name: 'Marketing', range: [fat - com - gastoAds, fat - com], value: gastoAds, base: fat - com - gastoAds, fill: 'hsl(var(--destructive))' },
+      { name: 'Salários', range: [fat - com - gastoAds - gastoSalarios, fat - com - gastoAds], value: gastoSalarios, base: res, fill: 'hsl(var(--destructive))' },
+      { name: 'Resultado', range: [0, Math.abs(res)], value: Math.abs(res), base: 0, fill: res >= 0 ? 'hsl(var(--chart-2))' : 'hsl(var(--destructive))' },
     ];
 
-    return { faturamento: fat, comissaoTotal: com, resultado: res, chartData: data };
+    return { faturamento: fat, resultado: res, chartData: data };
   }, [salesReps, gastoAds, gastoSalarios]);
 
   const margem = faturamento > 0 ? (resultado / faturamento) * 100 : 0;
@@ -74,7 +97,7 @@ export function RevenueWaterfallChart({ salesReps, currentMonth }: RevenueWaterf
       <CardContent>
         <div className="h-[320px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 20, right: 20, left: 20, bottom: 5 }}>
+            <BarChart data={chartData} margin={{ top: 30, right: 20, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
               <XAxis dataKey="name" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
               <YAxis
@@ -83,7 +106,12 @@ export function RevenueWaterfallChart({ salesReps, currentMonth }: RevenueWaterf
                 width={90}
               />
               <Tooltip
-                formatter={(value: number) => [formatCurrency(Math.abs(value)), '']}
+                formatter={(value: any, name: string) => {
+                  if (name === 'range') {
+                    return [null, null];
+                  }
+                  return [formatCurrency(Math.abs(value as number)), ''];
+                }}
                 contentStyle={{
                   backgroundColor: 'hsl(var(--card))',
                   border: '1px solid hsl(var(--border))',
@@ -92,19 +120,19 @@ export function RevenueWaterfallChart({ salesReps, currentMonth }: RevenueWaterf
                 }}
               />
               <ReferenceLine y={0} stroke="hsl(var(--border))" />
-              {/* Hidden base bar */}
-              <Bar dataKey="base" stackId="waterfall" fill="transparent" fillOpacity={0} stroke="none" isAnimationActive={false} />
-              {/* Visible portion */}
-              <Bar dataKey="value" stackId="waterfall" radius={[4, 4, 0, 0]} label={({ x, y, width, index }: any) => {
-                const entry = chartData[index];
-                if (!entry) return null;
-                const displayValue = entry.name === 'Faturamento' || entry.name === 'Resultado' ? entry.value : entry.value;
-                return (
-                  <text x={x + width / 2} y={y - 8} textAnchor="middle" fill="hsl(var(--muted-foreground))" fontSize={11} fontWeight={600}>
-                    {formatCurrency(displayValue)}
-                  </text>
-                );
-              }}>
+              <Bar
+                dataKey="range"
+                radius={[4, 4, 0, 0]}
+                label={({ x, y, width, index }: any) => {
+                  const entry = chartData[index];
+                  if (!entry) return null;
+                  return (
+                    <text x={x + width / 2} y={y - 8} textAnchor="middle" fill="hsl(var(--muted-foreground))" fontSize={11} fontWeight={600}>
+                      {formatCurrency(entry.value)}
+                    </text>
+                  );
+                }}
+              >
                 {chartData.map((entry, i) => (
                   <Cell key={i} fill={entry.fill} />
                 ))}
