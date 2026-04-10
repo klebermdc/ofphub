@@ -1,0 +1,2 @@
+CREATE POLICY "Anyone can insert marketing costs" ON public.marketing_costs FOR INSERT WITH CHECK (true);
+CREATE POLICY "Anyone can update marketing costs" ON public.marketing_costs FOR UPDATE USING (true) WITH CHECK (true);
