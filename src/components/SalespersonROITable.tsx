@@ -10,24 +10,30 @@ interface SalespersonROITableProps {
 }
 
 export function SalespersonROITable({ salesReps, getSalary }: SalespersonROITableProps) {
-  const rows = salesReps.map((rep) => {
-    const vendas = rep.sales;
-    const comissaoGerada = rep.orders?.reduce((s, o) => s + (o.comissaoTotal || 0), 0) ?? 0;
-    const salarioBase = getSalary(rep.name);
-    const roi = salarioBase > 0 ? vendas / salarioBase : 0;
-    const isInactive = vendas === 0;
+  const rows = salesReps
+    .map((rep) => {
+      const vendas = rep.sales;
+      const comissaoGerada = rep.orders?.reduce((s, o) => s + (o.comissaoTotal || 0), 0) ?? 0;
+      const comissaoRecebida = rep.orders?.reduce((s, o) => s + (o.comissaoVendedor || 0), 0) ?? 0;
+      const salarioBase = getSalary(rep.name);
+      const custoTotal = salarioBase + comissaoRecebida;
+      const lucro = comissaoGerada - custoTotal;
+      const roi = custoTotal > 0 ? lucro / custoTotal : 0;
+      const isInactive = vendas === 0;
 
-    return { name: rep.name, vendas, comissaoGerada, salarioBase, roi, isInactive };
-  }).sort((a, b) => {
-    if (a.isInactive && !b.isInactive) return 1;
-    if (!a.isInactive && b.isInactive) return -1;
-    return b.roi - a.roi;
-  });
+      return { name: rep.name, vendas, comissaoGerada, comissaoRecebida, salarioBase, custoTotal, lucro, roi, isInactive };
+    })
+    .filter((row) => row.salarioBase > 0)
+    .sort((a, b) => {
+      if (a.isInactive && !b.isInactive) return 1;
+      if (!a.isInactive && b.isInactive) return -1;
+      return b.roi - a.roi;
+    });
 
   const getStatus = (roi: number, inactive: boolean) => {
     if (inactive) return { label: "Inativo", variant: "outline" as const, className: "text-muted-foreground" };
-    if (roi > 8) return { label: "Excelente", variant: "default" as const, className: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" };
-    if (roi >= 5) return { label: "Bom", variant: "default" as const, className: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" };
+    if (roi > 0.5) return { label: "Excelente", variant: "default" as const, className: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" };
+    if (roi >= 0.15) return { label: "Bom", variant: "default" as const, className: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" };
     return { label: "Baixo", variant: "default" as const, className: "bg-destructive/20 text-destructive border-destructive/30" };
   };
 
@@ -45,6 +51,7 @@ export function SalespersonROITable({ salesReps, getSalary }: SalespersonROITabl
               <TableHead>Vendedor</TableHead>
               <TableHead className="text-right">Vendas</TableHead>
               <TableHead className="text-right">Comissão Gerada</TableHead>
+              <TableHead className="text-right">Comissão Recebida</TableHead>
               <TableHead className="text-right">Salário Base</TableHead>
               <TableHead className="text-right">ROI</TableHead>
               <TableHead className="text-center">Status</TableHead>
@@ -58,9 +65,10 @@ export function SalespersonROITable({ salesReps, getSalary }: SalespersonROITabl
                   <TableCell className="font-medium">{row.name}</TableCell>
                   <TableCell className="text-right">{formatCurrency(row.vendas)}</TableCell>
                   <TableCell className="text-right">{formatCurrency(row.comissaoGerada)}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(row.comissaoRecebida)}</TableCell>
                   <TableCell className="text-right">{formatCurrency(row.salarioBase)}</TableCell>
                   <TableCell className="text-right font-bold">
-                    {row.isInactive ? "-" : `${row.roi.toFixed(1)}x`}
+                    {row.isInactive ? "-" : `${(row.roi * 100).toFixed(0)}%`}
                   </TableCell>
                   <TableCell className="text-center">
                     <Badge variant={status.variant} className={status.className}>
