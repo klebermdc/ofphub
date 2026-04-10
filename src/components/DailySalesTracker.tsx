@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { DollarSign, TrendingUp, Zap, Wallet } from "lucide-react";
+import { DollarSign, TrendingUp, Zap, Wallet, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -66,18 +66,21 @@ export function DailySalesTracker({
   
   // Fetch real daily ad spend from marketing_daily_stats
   const [todayAdSpend, setTodayAdSpend] = useState(0);
+  const [todayLeads, setTodayLeads] = useState(0);
   useEffect(() => {
     const todayDate = `${y}-${String(m).padStart(2, '0')}-${String(today).padStart(2, '0')}`;
     supabase
       .from('marketing_daily_stats')
-      .select('meta_spend, google_spend')
+      .select('meta_spend, google_spend, leads_total')
       .eq('date', todayDate)
       .maybeSingle()
       .then(({ data }) => {
         if (data) {
           setTodayAdSpend(Number(data.meta_spend || 0) + Number(data.google_spend || 0));
+          setTodayLeads(Number(data.leads_total || 0));
         } else {
           setTodayAdSpend(0);
+          setTodayLeads(0);
         }
       });
   }, [m, y, today]);
@@ -145,7 +148,7 @@ export function DailySalesTracker({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-4">
         {/* Venda Total do Dia */}
         <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-xl p-3 sm:p-5 flex flex-col gap-1 sm:gap-2">
           <div className="flex items-center gap-1.5 sm:gap-2">
@@ -155,7 +158,14 @@ export function DailySalesTracker({
           <p className="text-lg sm:text-2xl font-bold text-foreground">{formatCurrency(todaySales)}</p>
         </div>
 
-        {/* Comissão Total do Dia */}
+        {/* Leads do Dia */}
+        <div className="bg-gradient-to-br from-violet-500/10 to-violet-500/5 border border-violet-500/20 rounded-xl p-3 sm:p-5 flex flex-col gap-1 sm:gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <UserPlus className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-violet-500" />
+            <span className="text-[10px] sm:text-xs font-medium text-muted-foreground">Leads do Dia</span>
+          </div>
+          <p className="text-lg sm:text-2xl font-bold text-foreground">{todayLeads}</p>
+        </div>
         <div className="bg-gradient-to-br from-info/10 to-info/5 border border-info/20 rounded-xl p-3 sm:p-5 flex flex-col gap-1 sm:gap-2">
           <div className="flex items-center gap-1.5 sm:gap-2">
             <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-info" />
