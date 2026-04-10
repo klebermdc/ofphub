@@ -51,6 +51,7 @@ export function SalespersonROITable({ salesReps, getSalary }: SalespersonROITabl
               <TableHead>Vendedor</TableHead>
               <TableHead className="text-right">Vendas</TableHead>
               <TableHead className="text-right">Comissão Gerada</TableHead>
+              <TableHead className="text-right">Comissão Recebida</TableHead>
               <TableHead className="text-right">Salário Base</TableHead>
               <TableHead className="text-right">ROI</TableHead>
               <TableHead className="text-center">Status</TableHead>
@@ -64,9 +65,10 @@ export function SalespersonROITable({ salesReps, getSalary }: SalespersonROITabl
                   <TableCell className="font-medium">{row.name}</TableCell>
                   <TableCell className="text-right">{formatCurrency(row.vendas)}</TableCell>
                   <TableCell className="text-right">{formatCurrency(row.comissaoGerada)}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(row.comissaoRecebida)}</TableCell>
                   <TableCell className="text-right">{formatCurrency(row.salarioBase)}</TableCell>
                   <TableCell className="text-right font-bold">
-                    {row.isInactive ? "-" : `${row.roi.toFixed(1)}x`}
+                    {row.isInactive ? "-" : `${(row.roi * 100).toFixed(0)}%`}
                   </TableCell>
                   <TableCell className="text-center">
                     <Badge variant={status.variant} className={status.className}>
