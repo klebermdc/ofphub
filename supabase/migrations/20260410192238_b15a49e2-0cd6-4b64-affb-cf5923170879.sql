@@ -1,0 +1,1 @@
+CREATE POLICY "Anyone can read orders" ON public.orders FOR SELECT USING (true); CREATE POLICY "Anyone can read salaries" ON public.salesperson_salaries FOR SELECT USING (true);
