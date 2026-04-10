@@ -20,6 +20,7 @@ interface DashboardHeaderControlsProps {
   getCostForMonth: (month: number, year: number) => any;
   userId?: string;
   hasApiIntegration?: boolean;
+  onOpenWeeklyReport?: () => void;
 }
 
 export function DashboardHeaderControls({
@@ -33,6 +34,7 @@ export function DashboardHeaderControls({
   getCostForMonth,
   userId,
   hasApiIntegration,
+  onOpenWeeklyReport,
 }: DashboardHeaderControlsProps) {
   const navigate = useNavigate();
   const [importing, setImporting] = useState(false);
