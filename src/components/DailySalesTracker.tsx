@@ -275,11 +275,11 @@ export function DailySalesTracker({
           </div>
         </div>
 
-        {/* Projeção Histórica */}
+        {/* Projeção por Velocidade */}
         <div className="space-y-1.5">
           <div className="flex items-center justify-between text-xs sm:text-sm">
             <span className="text-muted-foreground">
-              Projeção (média {dailyResultsHistory.length} dia{dailyResultsHistory.length !== 1 ? 's' : ''} útei{dailyResultsHistory.length !== 1 ? 's' : 'l'})
+              Projeção ({Math.round(pctDiaDecorrido * 100)}% do expediente • {formatCurrency(velocidadePorHora)}/h)
             </span>
             <span className={cn("font-semibold", projecaoPctReal >= 100 ? "text-emerald-500" : projecaoPctReal >= 50 ? "text-amber-500" : "text-red-500")}>
               {formatCurrency(projectedResult)} ({projecaoPctReal.toFixed(1)}%)
