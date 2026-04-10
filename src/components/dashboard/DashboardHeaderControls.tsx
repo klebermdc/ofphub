@@ -160,6 +160,16 @@ export function DashboardHeaderControls({
         <Button
           variant="outline"
           size="sm"
+          onClick={onOpenWeeklyReport}
+          className="gap-1 sm:gap-2 text-xs sm:text-sm"
+        >
+          <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          <span className="hidden sm:inline">📄 Relatório Semanal</span>
+          <span className="sm:hidden">📄 Relatório</span>
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
           onClick={onRefresh}
           disabled={isLoading}
           className="gap-1 sm:gap-2 text-xs sm:text-sm"
