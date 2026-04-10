@@ -47,7 +47,7 @@ export function useMarketingCosts(userId: string | undefined, isMarketingRole: b
     const [costsRes, dailyRes] = await Promise.all([
       fetchCostsQuery(),
       supabase
-        .from("marketing_daily_stats" as any)
+        .from("marketing_daily_stats")
         .select("date, meta_spend, google_spend, leads_total"),
     ]);
 

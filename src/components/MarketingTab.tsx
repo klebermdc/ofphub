@@ -121,24 +121,29 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
   useEffect(() => {
     const fetchAll = async () => {
       setAggLoading(true);
-      const { data, error } = await supabase
-        .from("marketing_daily_stats" as any)
-        .select("date, meta_spend, google_spend, leads_total");
-      if (error || !data) { setAggLoading(false); return; }
-      const grouped: Record<string, DailyStatsAggregated> = {};
-      (data as any[]).forEach((row: any) => {
-        const parsedDate = parseOrderDate(row.date);
-        if (!parsedDate) return;
+      try {
+        const { data, error } = await supabase
+          .from("marketing_daily_stats")
+          .select("date, meta_spend, google_spend, leads_total");
+        if (error || !data) { setAggLoading(false); return; }
+        const grouped: Record<string, DailyStatsAggregated> = {};
+        (data as any[]).forEach((row: any) => {
+          const parsedDate = parseOrderDate(row.date);
+          if (!parsedDate) return;
 
-        const { month, year } = parsedDate;
-        const key = `${year}-${month}`;
-        if (!grouped[key]) grouped[key] = { month, year, meta_spend: 0, google_spend: 0, leads_total: 0 };
-        grouped[key].meta_spend += Number(row.meta_spend) || 0;
-        grouped[key].google_spend += Number(row.google_spend) || 0;
-        grouped[key].leads_total += Number(row.leads_total) || 0;
-      });
-      setDailyStatsAgg(Object.values(grouped));
-      setAggLoading(false);
+          const { month, year } = parsedDate;
+          const key = `${year}-${month}`;
+          if (!grouped[key]) grouped[key] = { month, year, meta_spend: 0, google_spend: 0, leads_total: 0 };
+          grouped[key].meta_spend += Number(row.meta_spend) || 0;
+          grouped[key].google_spend += Number(row.google_spend) || 0;
+          grouped[key].leads_total += Number(row.leads_total) || 0;
+        });
+        setDailyStatsAgg(Object.values(grouped));
+      } catch (err) {
+        console.error("Error fetching marketing agg data:", err);
+      } finally {
+        setAggLoading(false);
+      }
     };
     fetchAll();
   }, []);
@@ -158,7 +163,7 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
     const endDay = new Date(year, month, 0).getDate();
     const endDate = `${year}-${String(month).padStart(2, "0")}-${String(endDay).padStart(2, "0")}`;
     const { data, error } = await supabase
-      .from("marketing_daily_stats" as any)
+      .from("marketing_daily_stats")
       .select("*")
       .gte("date", startDate)
       .lte("date", endDate)
