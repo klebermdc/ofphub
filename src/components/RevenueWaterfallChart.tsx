@@ -95,7 +95,16 @@ export function RevenueWaterfallChart({ salesReps, currentMonth }: RevenueWaterf
               {/* Hidden base bar */}
               <Bar dataKey="base" stackId="waterfall" fill="transparent" isAnimationActive={false} />
               {/* Visible portion */}
-              <Bar dataKey="value" stackId="waterfall" radius={[4, 4, 0, 0]}>
+              <Bar dataKey="value" stackId="waterfall" radius={[4, 4, 0, 0]} label={({ x, y, width, index }: any) => {
+                const entry = chartData[index];
+                if (!entry) return null;
+                const displayValue = entry.name === 'Faturamento' || entry.name === 'Resultado' ? entry.value : entry.value;
+                return (
+                  <text x={x + width / 2} y={y - 8} textAnchor="middle" fill="hsl(var(--muted-foreground))" fontSize={11} fontWeight={600}>
+                    {formatCurrency(displayValue)}
+                  </text>
+                );
+              }}>
                 {chartData.map((entry, i) => (
                   <Cell key={i} fill={entry.fill} />
                 ))}
