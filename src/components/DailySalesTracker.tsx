@@ -158,14 +158,6 @@ export function DailySalesTracker({
           <p className="text-lg sm:text-2xl font-bold text-foreground">{formatCurrency(todaySales)}</p>
         </div>
 
-        {/* Leads do Dia */}
-        <div className="bg-gradient-to-br from-violet-500/10 to-violet-500/5 border border-violet-500/20 rounded-xl p-3 sm:p-5 flex flex-col gap-1 sm:gap-2">
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <UserPlus className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-violet-500" />
-            <span className="text-[10px] sm:text-xs font-medium text-muted-foreground">Leads do Dia</span>
-          </div>
-          <p className="text-lg sm:text-2xl font-bold text-foreground">{todayLeads}</p>
-        </div>
         <div className="bg-gradient-to-br from-info/10 to-info/5 border border-info/20 rounded-xl p-3 sm:p-5 flex flex-col gap-1 sm:gap-2">
           <div className="flex items-center gap-1.5 sm:gap-2">
             <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-info" />
@@ -213,6 +205,15 @@ export function DailySalesTracker({
           <p className={cn("text-lg sm:text-2xl font-bold", resultadoDia >= 0 ? "text-emerald-500" : "text-red-500")}>
             {formatCurrency(resultadoDia)}
           </p>
+        </div>
+
+        {/* Leads do Dia */}
+        <div className="bg-gradient-to-br from-violet-500/10 to-violet-500/5 border border-violet-500/20 rounded-xl p-3 sm:p-5 flex flex-col gap-1 sm:gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <UserPlus className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-violet-500" />
+            <span className="text-[10px] sm:text-xs font-medium text-muted-foreground">Leads do Dia</span>
+          </div>
+          <p className="text-lg sm:text-2xl font-bold text-foreground">{todayLeads}</p>
         </div>
       </div>
     </div>
