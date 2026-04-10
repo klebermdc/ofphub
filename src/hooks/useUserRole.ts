@@ -18,6 +18,8 @@ export function useUserRole(userId: string | undefined) {
 
   const loadRole = useCallback(async () => {
     if (!userId) {
+      setRole(null);
+      setSalespersonName(null);
       setIsLoading(false);
       return;
     }
@@ -27,18 +29,23 @@ export function useUserRole(userId: string | undefined) {
         .from('user_roles')
         .select('*')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
-        // No role found - default to manager for first user
-        console.log('No role found for user, checking if first user');
+        console.error('Error loading user role:', error);
         setRole(null);
+        setSalespersonName(null);
       } else if (data) {
         setRole(data.role as AppRole);
         setSalespersonName(data.salesperson_name);
+      } else {
+        setRole(null);
+        setSalespersonName(null);
       }
     } catch (error) {
       console.error('Error loading user role:', error);
+      setRole(null);
+      setSalespersonName(null);
     } finally {
       setIsLoading(false);
     }
