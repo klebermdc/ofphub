@@ -707,6 +707,15 @@ const Index = () => {
 
           </Tabs>
         </main>
+
+        <Suspense fallback={null}>
+          <WeeklyReportModal
+            salesReps={salesReps}
+            currentMonth={dashboardMonth}
+            open={weeklyReportOpen}
+            onClose={() => setWeeklyReportOpen(false)}
+          />
+        </Suspense>
       </div>
     </ErrorBoundary>
   );
