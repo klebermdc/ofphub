@@ -131,6 +131,61 @@ export function DailySalesTracker({
   
   // Resultado do Dia = Ganho do Dia - Custo diário proporcional
   const resultadoDia = ganhoDia - dailyCostWithTax;
+
+  // Meta diária e projeção
+  const META_DIARIA = 5500;
+  const atingimentoPct = META_DIARIA > 0 ? Math.min((resultadoDia / META_DIARIA) * 100, 150) : 0;
+  const atingimentoPctReal = META_DIARIA > 0 ? (resultadoDia / META_DIARIA) * 100 : 0;
+
+  // Calcular projeção baseada no histórico de resultados diários do mês
+  const dailyResultsHistory = useMemo(() => {
+    const results: { day: number; result: number }[] = [];
+    for (let d = 1; d < today; d++) {
+      const dateStr = `${d.toString().padStart(2, '0')}/${m.toString().padStart(2, '0')}/${y}`;
+      const date = new Date(y, m - 1, d);
+      const dow = date.getDay();
+      if (dow === 0 || dow === 6) continue; // skip weekends
+      
+      let daySales = 0;
+      let dayComissaoTotal = 0;
+      let dayComissaoVendedor = 0;
+      
+      salesReps.forEach(rep => {
+        rep.orders?.forEach((order: any) => {
+          if (!order.data) return;
+          const parts = order.data.split('/');
+          if (parts.length >= 3) {
+            const orderDay = parts[0].padStart(2, '0');
+            const orderMonth = parts[1].padStart(2, '0');
+            let orderYear = parts[2];
+            if (orderYear.length === 2) orderYear = `20${orderYear}`;
+            const orderDate = `${orderDay}/${orderMonth}/${orderYear}`;
+            if (orderDate === dateStr) {
+              daySales += order.venda || 0;
+              dayComissaoTotal += order.comissaoTotal || order.comissao || 0;
+              dayComissaoVendedor += order.comissaoVendedor || 0;
+            }
+          }
+        });
+      });
+      
+      const dayGanho = dayComissaoTotal - dayComissaoVendedor;
+      // Use same daily fixed cost approximation
+      const dayResult = dayGanho - dailyFixedCost;
+      results.push({ day: d, result: dayResult });
+    }
+    return results;
+  }, [salesReps, m, y, today, dailyFixedCost]);
+
+  // Média histórica dos dias úteis anteriores
+  const avgHistoricalResult = dailyResultsHistory.length > 0
+    ? dailyResultsHistory.reduce((sum, d) => sum + d.result, 0) / dailyResultsHistory.length
+    : resultadoDia;
+  
+  // Projeção para hoje baseada na média histórica
+  const projectedResult = dailyResultsHistory.length > 0 ? avgHistoricalResult : resultadoDia;
+  const projecaoPct = META_DIARIA > 0 ? Math.min((projectedResult / META_DIARIA) * 100, 150) : 0;
+  const projecaoPctReal = META_DIARIA > 0 ? (projectedResult / META_DIARIA) * 100 : 0;
   
   const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
