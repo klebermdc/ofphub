@@ -68,6 +68,8 @@ export function DailySalesTracker({
   // Fetch real daily ad spend from marketing_daily_stats
   const [todayAdSpend, setTodayAdSpend] = useState(0);
   const [todayLeads, setTodayLeads] = useState(0);
+  const [historicalDailyResults, setHistoricalDailyResults] = useState<number[]>([]);
+  
   useEffect(() => {
     const todayDate = `${y}-${String(m).padStart(2, '0')}-${String(today).padStart(2, '0')}`;
     supabase
