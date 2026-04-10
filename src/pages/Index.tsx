@@ -65,6 +65,7 @@ const DashboardHeaderControls = lazy(() => import("@/components/dashboard/Dashbo
 const CostProjectionCard = lazy(() => import("@/components/dashboard/CostProjectionCard").then(m => ({ default: m.CostProjectionCard })));
 const SalespersonROITable = lazy(() => import("@/components/SalespersonROITable").then(m => ({ default: m.SalespersonROITable })));
 const WhatsAppStatusCard = lazy(() => import("@/components/WhatsAppStatusCard").then(m => ({ default: m.WhatsAppStatusCard })));
+const WeeklyReportModal = lazy(() => import("@/components/WeeklyReportModal").then(m => ({ default: m.WeeklyReportModal })));
 
 // Data source: database-only (no Google Sheets dependency)
 
