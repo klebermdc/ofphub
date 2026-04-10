@@ -32,8 +32,8 @@ export function SalespersonROITable({ salesReps, getSalary }: SalespersonROITabl
 
   const getStatus = (roi: number, inactive: boolean) => {
     if (inactive) return { label: "Inativo", variant: "outline" as const, className: "text-muted-foreground" };
-    if (roi > 8) return { label: "Excelente", variant: "default" as const, className: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" };
-    if (roi >= 5) return { label: "Bom", variant: "default" as const, className: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" };
+    if (roi > 0.5) return { label: "Excelente", variant: "default" as const, className: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" };
+    if (roi >= 0.15) return { label: "Bom", variant: "default" as const, className: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" };
     return { label: "Baixo", variant: "default" as const, className: "bg-destructive/20 text-destructive border-destructive/30" };
   };
 
