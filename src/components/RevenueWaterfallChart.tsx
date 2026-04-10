@@ -46,10 +46,10 @@ export function RevenueWaterfallChart({ salesReps, currentMonth }: RevenueWaterf
     // Waterfall: each bar has a hidden base + visible portion
     const data = [
       { name: 'Faturamento', value: fat, base: 0, fill: 'hsl(var(--chart-2))' },
-      { name: 'Comissões', value: -com, base: fat - com, fill: 'hsl(var(--destructive))' },
-      { name: 'Marketing', value: -gastoAds, base: fat - com - gastoAds, fill: 'hsl(var(--destructive))' },
-      { name: 'Salários', value: -gastoSalarios, base: fat - com - gastoAds - gastoSalarios, fill: 'hsl(var(--destructive))' },
-      { name: 'Resultado', value: res, base: 0, fill: res >= 0 ? 'hsl(var(--chart-2))' : 'hsl(var(--destructive))' },
+      { name: 'Comissões', value: com, base: fat - com, fill: 'hsl(var(--destructive))' },
+      { name: 'Marketing', value: gastoAds, base: fat - com - gastoAds, fill: 'hsl(var(--destructive))' },
+      { name: 'Salários', value: gastoSalarios, base: fat - com - gastoAds - gastoSalarios, fill: 'hsl(var(--destructive))' },
+      { name: 'Resultado', value: Math.abs(res), base: res >= 0 ? 0 : res, fill: res >= 0 ? 'hsl(var(--chart-2))' : 'hsl(var(--destructive))' },
     ];
 
     return { faturamento: fat, comissaoTotal: com, resultado: res, chartData: data };
