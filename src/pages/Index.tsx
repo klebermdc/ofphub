@@ -83,6 +83,7 @@ const Index = () => {
   const [totals, setTotals] = useState<SalesTotals | null>(null);
   const [dataSource] = useState<'sheet' | 'history'>('sheet');
   const [comercialView, setComercialView] = useState<'equipe' | 'crm'>('equipe');
+  const [weeklyReportOpen, setWeeklyReportOpen] = useState(false);
   
   // Month filters
   const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonthKey());
@@ -402,6 +403,7 @@ const Index = () => {
                       getCostForMonth={getCostForMonth}
                       userId={user?.id}
                       hasApiIntegration={!!getAccountingIntegration()}
+                      onOpenWeeklyReport={() => setWeeklyReportOpen(true)}
                     />
 
                     <DailySalesTracker
