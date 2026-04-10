@@ -1,5 +1,7 @@
+import { useState, useEffect } from "react";
 import { DollarSign, TrendingUp, Zap, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 interface DailySalesTrackerProps {
   salesReps: { orders?: { data?: string; venda: number; comissao?: number; comissaoVendedor?: number }[] }[];
@@ -62,6 +64,24 @@ export function DailySalesTracker({
   const today = now.getDate();
   const todayFormatted = `${today.toString().padStart(2, '0')}/${m.toString().padStart(2, '0')}/${y}`;
   
+  // Fetch real daily ad spend from marketing_daily_stats
+  const [todayAdSpend, setTodayAdSpend] = useState(0);
+  useEffect(() => {
+    const todayDate = `${y}-${String(m).padStart(2, '0')}-${String(today).padStart(2, '0')}`;
+    supabase
+      .from('marketing_daily_stats')
+      .select('meta_spend, google_spend')
+      .eq('date', todayDate)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setTodayAdSpend(Number(data.meta_spend || 0) + Number(data.google_spend || 0));
+        } else {
+          setTodayAdSpend(0);
+        }
+      });
+  }, [m, y, today]);
+
   const totalBusinessDays = getBusinessDaysInMonth(m, y);
   const businessDaysElapsed = getBusinessDaysElapsed(m, y);
   
@@ -96,12 +116,12 @@ export function DailySalesTracker({
   // Ganho do Dia = Comissão Total - Comissão Vendedores
   const ganhoDia = todayComissaoTotal - todayComissaoVendedor;
   
-   // Custo diário proporcional (custos mensais / dias corridos, incluindo FDS e imposto 12%)
+   // Custo diário: salários e operacional proporcionais + gasto real de ads do dia + imposto 12%
    const daysInMonth = new Date(y, m, 0).getDate();
    const impostoEstimadoDia = todayComissaoTotal * 0.12;
-   const totalMonthlyCosts = totalSalaries + marketingCosts + operationalCosts;
-   const dailyCost = daysInMonth > 0 ? totalMonthlyCosts / daysInMonth : 0;
-   const dailyCostWithTax = dailyCost + impostoEstimadoDia;
+   const fixedMonthlyCosts = totalSalaries + operationalCosts;
+   const dailyFixedCost = daysInMonth > 0 ? fixedMonthlyCosts / daysInMonth : 0;
+   const dailyCostWithTax = dailyFixedCost + todayAdSpend + impostoEstimadoDia;
   
   // Resultado do Dia = Ganho do Dia - Custo diário proporcional
   const resultadoDia = ganhoDia - dailyCostWithTax;
