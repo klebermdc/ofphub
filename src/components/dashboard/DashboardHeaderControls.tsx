@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Database, Calendar, ClipboardList, Download, Loader2, RefreshCw } from "lucide-react";
+import { Database, Calendar, ClipboardList, Download, Loader2, RefreshCw, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ interface DashboardHeaderControlsProps {
   getCostForMonth: (month: number, year: number) => any;
   userId?: string;
   hasApiIntegration?: boolean;
+  onOpenWeeklyReport?: () => void;
 }
 
 export function DashboardHeaderControls({
@@ -33,6 +34,7 @@ export function DashboardHeaderControls({
   getCostForMonth,
   userId,
   hasApiIntegration,
+  onOpenWeeklyReport,
 }: DashboardHeaderControlsProps) {
   const navigate = useNavigate();
   const [importing, setImporting] = useState(false);
@@ -155,6 +157,16 @@ export function DashboardHeaderControls({
           </Button>
         )}
         <OperationalCostsDialog onSave={onSaveOperationalCosts} getCostForMonth={getCostForMonth} />
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onOpenWeeklyReport}
+          className="gap-1 sm:gap-2 text-xs sm:text-sm"
+        >
+          <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          <span className="hidden sm:inline">📄 Relatório Semanal</span>
+          <span className="sm:hidden">📄 Relatório</span>
+        </Button>
         <Button
           variant="outline"
           size="sm"

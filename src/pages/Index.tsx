@@ -65,6 +65,7 @@ const DashboardHeaderControls = lazy(() => import("@/components/dashboard/Dashbo
 const CostProjectionCard = lazy(() => import("@/components/dashboard/CostProjectionCard").then(m => ({ default: m.CostProjectionCard })));
 const SalespersonROITable = lazy(() => import("@/components/SalespersonROITable").then(m => ({ default: m.SalespersonROITable })));
 const WhatsAppStatusCard = lazy(() => import("@/components/WhatsAppStatusCard").then(m => ({ default: m.WhatsAppStatusCard })));
+const WeeklyReportModal = lazy(() => import("@/components/WeeklyReportModal").then(m => ({ default: m.WeeklyReportModal })));
 
 // Data source: database-only (no Google Sheets dependency)
 
@@ -83,6 +84,7 @@ const Index = () => {
   const [totals, setTotals] = useState<SalesTotals | null>(null);
   const [dataSource] = useState<'sheet' | 'history'>('sheet');
   const [comercialView, setComercialView] = useState<'equipe' | 'crm'>('equipe');
+  const [weeklyReportOpen, setWeeklyReportOpen] = useState(false);
   
   // Month filters
   const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonthKey());
@@ -402,6 +404,7 @@ const Index = () => {
                       getCostForMonth={getCostForMonth}
                       userId={user?.id}
                       hasApiIntegration={!!getAccountingIntegration()}
+                      onOpenWeeklyReport={() => setWeeklyReportOpen(true)}
                     />
 
                     <DailySalesTracker
@@ -705,6 +708,15 @@ const Index = () => {
 
           </Tabs>
         </main>
+
+        <Suspense fallback={null}>
+          <WeeklyReportModal
+            salesReps={salesReps}
+            currentMonth={dashboardMonth}
+            open={weeklyReportOpen}
+            onClose={() => setWeeklyReportOpen(false)}
+          />
+        </Suspense>
       </div>
     </ErrorBoundary>
   );
