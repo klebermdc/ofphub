@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
-import { DollarSign, TrendingUp, Zap, Wallet, UserPlus } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { DollarSign, TrendingUp, Zap, Wallet, UserPlus, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { Progress } from "@/components/ui/progress";
 
 interface DailySalesTrackerProps {
   salesReps: { orders?: { data?: string; venda: number; comissao?: number; comissaoVendedor?: number }[] }[];
@@ -67,6 +68,8 @@ export function DailySalesTracker({
   // Fetch real daily ad spend from marketing_daily_stats
   const [todayAdSpend, setTodayAdSpend] = useState(0);
   const [todayLeads, setTodayLeads] = useState(0);
+  const [historicalDailyResults, setHistoricalDailyResults] = useState<number[]>([]);
+  
   useEffect(() => {
     const todayDate = `${y}-${String(m).padStart(2, '0')}-${String(today).padStart(2, '0')}`;
     supabase
@@ -128,6 +131,61 @@ export function DailySalesTracker({
   
   // Resultado do Dia = Ganho do Dia - Custo diário proporcional
   const resultadoDia = ganhoDia - dailyCostWithTax;
+
+  // Meta diária e projeção
+  const META_DIARIA = 5500;
+  const atingimentoPct = META_DIARIA > 0 ? Math.min((resultadoDia / META_DIARIA) * 100, 150) : 0;
+  const atingimentoPctReal = META_DIARIA > 0 ? (resultadoDia / META_DIARIA) * 100 : 0;
+
+  // Calcular projeção baseada no histórico de resultados diários do mês
+  const dailyResultsHistory = useMemo(() => {
+    const results: { day: number; result: number }[] = [];
+    for (let d = 1; d < today; d++) {
+      const dateStr = `${d.toString().padStart(2, '0')}/${m.toString().padStart(2, '0')}/${y}`;
+      const date = new Date(y, m - 1, d);
+      const dow = date.getDay();
+      if (dow === 0 || dow === 6) continue; // skip weekends
+      
+      let daySales = 0;
+      let dayComissaoTotal = 0;
+      let dayComissaoVendedor = 0;
+      
+      salesReps.forEach(rep => {
+        rep.orders?.forEach((order: any) => {
+          if (!order.data) return;
+          const parts = order.data.split('/');
+          if (parts.length >= 3) {
+            const orderDay = parts[0].padStart(2, '0');
+            const orderMonth = parts[1].padStart(2, '0');
+            let orderYear = parts[2];
+            if (orderYear.length === 2) orderYear = `20${orderYear}`;
+            const orderDate = `${orderDay}/${orderMonth}/${orderYear}`;
+            if (orderDate === dateStr) {
+              daySales += order.venda || 0;
+              dayComissaoTotal += order.comissaoTotal || order.comissao || 0;
+              dayComissaoVendedor += order.comissaoVendedor || 0;
+            }
+          }
+        });
+      });
+      
+      const dayGanho = dayComissaoTotal - dayComissaoVendedor;
+      // Use same daily fixed cost approximation
+      const dayResult = dayGanho - dailyFixedCost;
+      results.push({ day: d, result: dayResult });
+    }
+    return results;
+  }, [salesReps, m, y, today, dailyFixedCost]);
+
+  // Média histórica dos dias úteis anteriores
+  const avgHistoricalResult = dailyResultsHistory.length > 0
+    ? dailyResultsHistory.reduce((sum, d) => sum + d.result, 0) / dailyResultsHistory.length
+    : resultadoDia;
+  
+  // Projeção para hoje baseada na média histórica
+  const projectedResult = dailyResultsHistory.length > 0 ? avgHistoricalResult : resultadoDia;
+  const projecaoPct = META_DIARIA > 0 ? Math.min((projectedResult / META_DIARIA) * 100, 150) : 0;
+  const projecaoPctReal = META_DIARIA > 0 ? (projectedResult / META_DIARIA) * 100 : 0;
   
   const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
@@ -214,6 +272,60 @@ export function DailySalesTracker({
             <span className="text-[10px] sm:text-xs font-medium text-muted-foreground">Leads do Dia</span>
           </div>
           <p className="text-lg sm:text-2xl font-bold text-foreground">{todayLeads}</p>
+        </div>
+      </div>
+
+      {/* Meta Diária */}
+      <div className="bg-card border rounded-xl p-4 sm:p-5 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Target className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+            <span className="text-sm sm:text-base font-semibold text-foreground">Meta Diária de Resultado</span>
+          </div>
+          <span className="text-sm font-bold text-primary">{formatCurrency(META_DIARIA)}</span>
+        </div>
+
+        {/* Atingimento Real */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between text-xs sm:text-sm">
+            <span className="text-muted-foreground">Atingimento Atual</span>
+            <span className={cn("font-semibold", atingimentoPctReal >= 100 ? "text-emerald-500" : atingimentoPctReal >= 50 ? "text-amber-500" : "text-red-500")}>
+              {formatCurrency(resultadoDia)} ({atingimentoPctReal.toFixed(1)}%)
+            </span>
+          </div>
+          <div className="relative h-3 w-full overflow-hidden rounded-full bg-secondary">
+            <div
+              className={cn(
+                "h-full rounded-full transition-all duration-500",
+                atingimentoPctReal >= 100 ? "bg-emerald-500" : atingimentoPctReal >= 50 ? "bg-amber-500" : "bg-red-500"
+              )}
+              style={{ width: `${Math.max(0, Math.min(atingimentoPct, 100))}%` }}
+            />
+            {/* Marker at 100% */}
+            <div className="absolute top-0 bottom-0 w-0.5 bg-foreground/30" style={{ left: `${Math.min(100 / 1.5, 100)}%` }} />
+          </div>
+        </div>
+
+        {/* Projeção Histórica */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between text-xs sm:text-sm">
+            <span className="text-muted-foreground">
+              Projeção (média {dailyResultsHistory.length} dia{dailyResultsHistory.length !== 1 ? 's' : ''} útei{dailyResultsHistory.length !== 1 ? 's' : 'l'})
+            </span>
+            <span className={cn("font-semibold", projecaoPctReal >= 100 ? "text-emerald-500" : projecaoPctReal >= 50 ? "text-amber-500" : "text-red-500")}>
+              {formatCurrency(projectedResult)} ({projecaoPctReal.toFixed(1)}%)
+            </span>
+          </div>
+          <div className="relative h-3 w-full overflow-hidden rounded-full bg-secondary">
+            <div
+              className={cn(
+                "h-full rounded-full transition-all duration-500 opacity-70",
+                projecaoPctReal >= 100 ? "bg-emerald-500" : projecaoPctReal >= 50 ? "bg-amber-500" : "bg-red-500"
+              )}
+              style={{ width: `${Math.max(0, Math.min(projecaoPct, 100))}%` }}
+            />
+            <div className="absolute top-0 bottom-0 w-0.5 bg-foreground/30" style={{ left: `${Math.min(100 / 1.5, 100)}%` }} />
+          </div>
         </div>
       </div>
     </div>
