@@ -116,12 +116,12 @@ export function DailySalesTracker({
   // Ganho do Dia = Comissão Total - Comissão Vendedores
   const ganhoDia = todayComissaoTotal - todayComissaoVendedor;
   
-   // Custo diário proporcional (custos mensais / dias corridos, incluindo FDS e imposto 12%)
+   // Custo diário: salários e operacional proporcionais + gasto real de ads do dia + imposto 12%
    const daysInMonth = new Date(y, m, 0).getDate();
    const impostoEstimadoDia = todayComissaoTotal * 0.12;
-   const totalMonthlyCosts = totalSalaries + marketingCosts + operationalCosts;
-   const dailyCost = daysInMonth > 0 ? totalMonthlyCosts / daysInMonth : 0;
-   const dailyCostWithTax = dailyCost + impostoEstimadoDia;
+   const fixedMonthlyCosts = totalSalaries + operationalCosts;
+   const dailyFixedCost = daysInMonth > 0 ? fixedMonthlyCosts / daysInMonth : 0;
+   const dailyCostWithTax = dailyFixedCost + todayAdSpend + impostoEstimadoDia;
   
   // Resultado do Dia = Ganho do Dia - Custo diário proporcional
   const resultadoDia = ganhoDia - dailyCostWithTax;
