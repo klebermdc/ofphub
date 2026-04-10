@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { DollarSign, TrendingUp, Zap, Wallet, UserPlus, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -137,55 +137,24 @@ export function DailySalesTracker({
   const atingimentoPct = META_DIARIA > 0 ? Math.min((resultadoDia / META_DIARIA) * 100, 150) : 0;
   const atingimentoPctReal = META_DIARIA > 0 ? (resultadoDia / META_DIARIA) * 100 : 0;
 
-  // Calcular projeção baseada no histórico de resultados diários do mês
-  const dailyResultsHistory = useMemo(() => {
-    const results: { day: number; result: number }[] = [];
-    for (let d = 1; d < today; d++) {
-      const dateStr = `${d.toString().padStart(2, '0')}/${m.toString().padStart(2, '0')}/${y}`;
-      const date = new Date(y, m - 1, d);
-      const dow = date.getDay();
-      if (dow === 0 || dow === 6) continue; // skip weekends
-      
-      let daySales = 0;
-      let dayComissaoTotal = 0;
-      let dayComissaoVendedor = 0;
-      
-      salesReps.forEach(rep => {
-        rep.orders?.forEach((order: any) => {
-          if (!order.data) return;
-          const parts = order.data.split('/');
-          if (parts.length >= 3) {
-            const orderDay = parts[0].padStart(2, '0');
-            const orderMonth = parts[1].padStart(2, '0');
-            let orderYear = parts[2];
-            if (orderYear.length === 2) orderYear = `20${orderYear}`;
-            const orderDate = `${orderDay}/${orderMonth}/${orderYear}`;
-            if (orderDate === dateStr) {
-              daySales += order.venda || 0;
-              dayComissaoTotal += order.comissaoTotal || order.comissao || 0;
-              dayComissaoVendedor += order.comissaoVendedor || 0;
-            }
-          }
-        });
-      });
-      
-      const dayGanho = dayComissaoTotal - dayComissaoVendedor;
-      // Use same daily fixed cost approximation
-      const dayResult = dayGanho - dailyFixedCost;
-      results.push({ day: d, result: dayResult });
-    }
-    return results;
-  }, [salesReps, m, y, today, dailyFixedCost]);
-
-  // Média histórica dos dias úteis anteriores
-  const avgHistoricalResult = dailyResultsHistory.length > 0
-    ? dailyResultsHistory.reduce((sum, d) => sum + d.result, 0) / dailyResultsHistory.length
-    : resultadoDia;
+  // Velocidade de venda: projeção baseada no ritmo atual do dia
+  // Horário comercial: 8h às 18h (10h úteis)
+  const horaAtual = now.getHours() + now.getMinutes() / 60;
+  const inicioExpediente = 8;
+  const fimExpediente = 18;
+  const horasUteisDia = fimExpediente - inicioExpediente;
+  const horasDecorridas = Math.max(0, Math.min(horaAtual - inicioExpediente, horasUteisDia));
+  const pctDiaDecorrido = horasUteisDia > 0 ? horasDecorridas / horasUteisDia : 1;
   
-  // Projeção para hoje baseada na média histórica
-  const projectedResult = dailyResultsHistory.length > 0 ? avgHistoricalResult : resultadoDia;
+  // Projeção: se vendeu X até agora com Y% do dia, projeta X / Y% para o dia inteiro
+  const projectedResult = pctDiaDecorrido > 0.05 
+    ? resultadoDia / pctDiaDecorrido 
+    : resultadoDia;
   const projecaoPct = META_DIARIA > 0 ? Math.min((projectedResult / META_DIARIA) * 100, 150) : 0;
   const projecaoPctReal = META_DIARIA > 0 ? (projectedResult / META_DIARIA) * 100 : 0;
+  
+  // Velocidade por hora
+  const velocidadePorHora = horasDecorridas > 0 ? todaySales / horasDecorridas : 0;
   
   const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
@@ -306,11 +275,11 @@ export function DailySalesTracker({
           </div>
         </div>
 
-        {/* Projeção Histórica */}
+        {/* Projeção por Velocidade */}
         <div className="space-y-1.5">
           <div className="flex items-center justify-between text-xs sm:text-sm">
             <span className="text-muted-foreground">
-              Projeção (média {dailyResultsHistory.length} dia{dailyResultsHistory.length !== 1 ? 's' : ''} útei{dailyResultsHistory.length !== 1 ? 's' : 'l'})
+              Projeção ({Math.round(pctDiaDecorrido * 100)}% do expediente • {formatCurrency(velocidadePorHora)}/h)
             </span>
             <span className={cn("font-semibold", projecaoPctReal >= 100 ? "text-emerald-500" : projecaoPctReal >= 50 ? "text-amber-500" : "text-red-500")}>
               {formatCurrency(projectedResult)} ({projecaoPctReal.toFixed(1)}%)
