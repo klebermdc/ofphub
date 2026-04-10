@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { DollarSign, TrendingUp, Zap, Wallet } from "lucide-react";
+import { DollarSign, TrendingUp, Zap, Wallet, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 
