@@ -163,7 +163,7 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
     const endDay = new Date(year, month, 0).getDate();
     const endDate = `${year}-${String(month).padStart(2, "0")}-${String(endDay).padStart(2, "0")}`;
     const { data, error } = await supabase
-      .from("marketing_daily_stats" as any)
+      .from("marketing_daily_stats")
       .select("*")
       .gte("date", startDate)
       .lte("date", endDate)
