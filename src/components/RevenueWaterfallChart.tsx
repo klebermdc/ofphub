@@ -93,7 +93,7 @@ export function RevenueWaterfallChart({ salesReps, currentMonth }: RevenueWaterf
               />
               <ReferenceLine y={0} stroke="hsl(var(--border))" />
               {/* Hidden base bar */}
-              <Bar dataKey="base" stackId="waterfall" fill="transparent" isAnimationActive={false} />
+              <Bar dataKey="base" stackId="waterfall" fill="transparent" fillOpacity={0} stroke="none" isAnimationActive={false} />
               {/* Visible portion */}
               <Bar dataKey="value" stackId="waterfall" radius={[4, 4, 0, 0]} label={({ x, y, width, index }: any) => {
                 const entry = chartData[index];
