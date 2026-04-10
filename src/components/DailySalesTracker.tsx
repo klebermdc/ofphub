@@ -148,7 +148,7 @@ export function DailySalesTracker({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-4">
         {/* Venda Total do Dia */}
         <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-xl p-3 sm:p-5 flex flex-col gap-1 sm:gap-2">
           <div className="flex items-center gap-1.5 sm:gap-2">
