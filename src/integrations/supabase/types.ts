@@ -1074,6 +1074,39 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_status: {
+        Row: {
+          chats_by_agent: Json | null
+          chats_by_stage: Json | null
+          chats_by_tag: Json | null
+          chats_sem_vendedor: number | null
+          date: string
+          id: string
+          total_chats: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          chats_by_agent?: Json | null
+          chats_by_stage?: Json | null
+          chats_by_tag?: Json | null
+          chats_sem_vendedor?: number | null
+          date: string
+          id?: string
+          total_chats?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          chats_by_agent?: Json | null
+          chats_by_stage?: Json | null
+          chats_by_tag?: Json | null
+          chats_sem_vendedor?: number | null
+          date?: string
+          id?: string
+          total_chats?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
