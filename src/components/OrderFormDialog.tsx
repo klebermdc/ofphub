@@ -478,7 +478,7 @@ export function OrderFormDialog({
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label className="text-base font-semibold">Produtos</Label>
-              {mode === 'add' && (
+              {(mode === 'add' || mode === 'edit') && (
                 <Button type="button" variant="outline" size="sm" className="gap-1" onClick={addItem}>
                   <Plus className="h-3 w-3" /> Adicionar Produto
                 </Button>
