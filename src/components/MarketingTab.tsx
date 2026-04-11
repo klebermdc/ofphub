@@ -3,6 +3,7 @@ import { MarketingHealthIndicators } from "@/components/MarketingHealthIndicator
 import { TopCreativesTable } from "@/components/TopCreativesTable";
 import { LeadsBySourceBreakdown } from "@/components/LeadsBySourceBreakdown";
 import { MarketingAttributionCard } from "@/components/MarketingAttributionCard";
+import { FunnelDashboard } from "@/components/FunnelDashboard";
 import { DollarSign, TrendingUp, TrendingDown, Calendar, UserPlus, Target, Banknote, Percent, RefreshCw, BarChart2, Clock, Eye, MousePointerClick, Gauge, Users, Calculator, AlertTriangle } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
 import { MarketingCostsDialog } from "@/components/MarketingCostsDialog";
@@ -731,6 +732,9 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
 
       {/* Origem dos Leads */}
       {selectedMonth !== 'all' && <LeadsBySourceBreakdown stats={dailyStats} />}
+
+      {/* Funil Lead → Atendimento */}
+      {selectedMonth !== 'all' && <FunnelDashboard stats={dailyStats} />}
 
       {/* Atribuição Marketing → Vendas */}
       {selectedMonth !== 'all' && <MarketingAttributionCard stats={dailyStats} selectedMonth={selectedMonth} />}
