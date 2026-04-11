@@ -479,7 +479,7 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
                       return s + (l > 0 ? spend / l : 0);
                     }, 0) / last7.length 
                   : 0;
-                return todayCpl <= avgCpl7 ? "success" : "destructive";
+                return todayCpl <= avgCpl7 ? "success" : "danger";
               })() as any} 
               formula="CPL hoje vs média dos últimos 7 dias" 
             />
@@ -506,7 +506,7 @@ export function MarketingTab({ costs, onSave, getCostForMonth, salesReps = [] }:
                   ? now.getDate() 
                   : daysInMonth;
                 const timePct = (daysPassed / daysInMonth) * 100;
-                return spentPct > timePct + 10 ? "destructive" : "success";
+                return spentPct > timePct + 10 ? "danger" : "success";
               })() as any} 
               formula="Ritmo de gasto vs dias do mês" 
             />
