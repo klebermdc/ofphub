@@ -536,7 +536,7 @@ export function MarketingAdsTab() {
       <LeadsBySourceBreakdown stats={stats} />
 
       {/* Funil Lead → Atendimento */}
-      <FunnelDashboard selectedMonth={`${String(selected.month).padStart(2, '0')}/${selected.year}`} />
+      <FunnelDashboard stats={stats} />
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
