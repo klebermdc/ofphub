@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Edit2, Loader2, CalendarIcon, Trash2 } from "lucide-react";
+import { Plus, Edit2, Loader2, CalendarIcon, Trash2, RotateCcw } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
