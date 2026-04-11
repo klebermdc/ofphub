@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { MarketingHealthIndicators } from "@/components/MarketingHealthIndicators";
 import { TopCreativesTable } from "@/components/TopCreativesTable";
 import { LeadsBySourceBreakdown } from "@/components/LeadsBySourceBreakdown";
+import { FunnelDashboard } from "@/components/FunnelDashboard";
 interface DailyStat {
   date: string;
   meta_spend: number;
@@ -533,6 +534,9 @@ export function MarketingAdsTab() {
 
       {/* Origem dos Leads */}
       <LeadsBySourceBreakdown stats={stats} />
+
+      {/* Funil Lead → Atendimento */}
+      <FunnelDashboard selectedMonth={selectedMonth} />
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
