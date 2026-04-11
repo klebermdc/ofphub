@@ -364,7 +364,7 @@ export function OrderFormDialog({
 
       toast({
         title: mode === 'add' ? "Pedido adicionado!" : "Pedido salvo!",
-        description: mode === 'add' && formData.items.length > 1
+        description: formData.items.length > 1
           ? `${formData.items.length} produtos foram salvos no sistema.`
           : "Os dados foram salvos no sistema.",
       });
