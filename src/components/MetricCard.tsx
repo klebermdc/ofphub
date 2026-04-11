@@ -56,7 +56,7 @@ export function MetricCard({
   variant = "default",
   formula
 }: MetricCardProps) {
-  const styles = variantStyles[variant];
+  const styles = variantStyles[variant] ?? variantStyles.default;
 
   const cardContent = (
     <div 
