@@ -607,7 +607,9 @@ export type Database = {
           google_spend: number
           id: string
           leads_by_campaign: Json | null
+          leads_by_content: Json | null
           leads_by_medium: Json | null
+          leads_by_term: Json | null
           leads_google: number
           leads_meta: number
           leads_organic: number
@@ -638,7 +640,9 @@ export type Database = {
           google_spend?: number
           id?: string
           leads_by_campaign?: Json | null
+          leads_by_content?: Json | null
           leads_by_medium?: Json | null
+          leads_by_term?: Json | null
           leads_google?: number
           leads_meta?: number
           leads_organic?: number
@@ -669,7 +673,9 @@ export type Database = {
           google_spend?: number
           id?: string
           leads_by_campaign?: Json | null
+          leads_by_content?: Json | null
           leads_by_medium?: Json | null
+          leads_by_term?: Json | null
           leads_google?: number
           leads_meta?: number
           leads_organic?: number
