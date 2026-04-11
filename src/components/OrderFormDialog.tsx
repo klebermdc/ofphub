@@ -309,9 +309,11 @@ export function OrderFormDialog({
         const { error } = await supabase.from('orders').insert(rows);
         if (error) throw error;
       } else {
-        // Edit mode: single product update
-        const item = formData.items[0];
-        const orderData = {
+        // Edit mode: update original item + insert any new items
+        const firstItem = formData.items[0];
+        const additionalItems = formData.items.slice(1);
+
+        const buildRow = (item: ProductLineItem) => ({
           user_id: user.id,
           cliente: formData.cliente,
           email_cliente: formData.emailCliente,
@@ -328,20 +330,19 @@ export function OrderFormDialog({
           comissao_vendedor: item.comissaoVendedor,
           guia: item.guia || null,
           comissao_guia: item.comissaoGuia,
-        };
+        });
 
+        const orderData = buildRow(firstItem);
         if (order?.id) {
-          // Update by ID directly
           const { error } = await supabase.from('orders').update(orderData).eq('id', order.id);
           if (error) throw error;
         } else {
-          // Fallback: lookup by pedido + vendedor + produto
           const { data: existing } = await supabase
             .from('orders')
             .select('id')
             .eq('pedido', formData.pedido)
             .eq('vendedor', formData.vendedor)
-            .eq('produto', item.produto)
+            .eq('produto', firstItem.produto)
             .maybeSingle();
 
           if (existing) {
@@ -352,11 +353,18 @@ export function OrderFormDialog({
             if (error) throw error;
           }
         }
+
+        // Insert additional new products in the same order
+        if (additionalItems.length > 0) {
+          const newRows = additionalItems.map(item => buildRow(item));
+          const { error } = await supabase.from('orders').insert(newRows);
+          if (error) throw error;
+        }
       }
 
       toast({
         title: mode === 'add' ? "Pedido adicionado!" : "Pedido salvo!",
-        description: mode === 'add' && formData.items.length > 1
+        description: formData.items.length > 1
           ? `${formData.items.length} produtos foram salvos no sistema.`
           : "Os dados foram salvos no sistema.",
       });
