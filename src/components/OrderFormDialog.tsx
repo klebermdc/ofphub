@@ -614,12 +614,64 @@ export function OrderFormDialog({
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button type="submit" disabled={loading}>
-              {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              {mode === 'add' ? 'Adicionar Pedido' : 'Salvar Alterações'}
-            </Button>
+          <div className="flex justify-between pt-4">
+            {mode === 'edit' && order?.id && (
+              <Button
+                type="button"
+                variant="destructive"
+                className="gap-2"
+                disabled={loading}
+                onClick={async () => {
+                  if (!confirm('Tem certeza que deseja registrar a devolução deste pedido?\n\nIsso criará um lançamento negativo para descontar a comissão do vendedor.')) return;
+                  setLoading(true);
+                  try {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (!user) throw new Error("Usuário não autenticado");
+                    const item = formData.items[0];
+                    const refundRow = {
+                      user_id: user.id,
+                      cliente: formData.cliente,
+                      email_cliente: formData.emailCliente,
+                      data: format(new Date(), 'dd/MM/yyyy'),
+                      pedido: formData.pedido ? `${formData.pedido} (DEV)` : '(DEV)',
+                      vendedor: formData.vendedor,
+                      status: 'Devolução',
+                      produto: `↩ DEVOLUÇÃO - ${item.produto || 'Pedido'}`,
+                      fornecedor: item.fornecedor,
+                      venda: -Math.abs(item.venda),
+                      comissao: item.comissao,
+                      comissao_total: -Math.abs(item.comissaoTotal),
+                      porcentagem_vendedor: item.porcentagemVendedor,
+                      comissao_vendedor: -Math.abs(item.comissaoVendedor),
+                      guia: (item.guia || null),
+                      comissao_guia: item.comissaoGuia ? -Math.abs(item.comissaoGuia) : 0,
+                    };
+                    const { error } = await supabase.from('orders').insert(refundRow);
+                    if (error) throw error;
+                    // Also update original order status
+                    await supabase.from('orders').update({ status: 'Devolvido' }).eq('id', order.id);
+                    toast({ title: "Devolução registrada!", description: "O lançamento negativo foi criado e aparecerá no relatório do vendedor." });
+                    setOpen(false);
+                    onSuccess?.();
+                  } catch (error) {
+                    console.error(error);
+                    toast({ title: "Erro", description: "Não foi possível registrar a devolução.", variant: "destructive" });
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+              >
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
+                Devolução
+              </Button>
+            )}
+            <div className="flex gap-3 ml-auto">
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+              <Button type="submit" disabled={loading}>
+                {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                {mode === 'add' ? 'Adicionar Pedido' : 'Salvar Alterações'}
+              </Button>
+            </div>
           </div>
         </form>
       </DialogContent>
