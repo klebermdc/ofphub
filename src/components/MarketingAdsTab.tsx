@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { MetricCard } from "@/components/MetricCard";
-import { DollarSign, TrendingUp, TrendingDown, UserPlus, Target, RefreshCw, BarChart2, Calendar, Clock, Eye, MousePointerClick, Gauge, Users } from "lucide-react";
+import { DollarSign, TrendingUp, TrendingDown, UserPlus, Target, RefreshCw, BarChart2, Calendar, Clock, Eye, MousePointerClick, Gauge, Users, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
@@ -36,6 +36,8 @@ interface DailyStat {
   top_creatives?: any[];
   leads_by_campaign?: Record<string, number>;
   leads_by_medium?: Record<string, number>;
+  leads_by_term?: Record<string, number>;
+  leads_by_content?: Record<string, number>;
   forms_data?: Record<string, number>;
 }
 
@@ -374,6 +376,63 @@ export function MarketingAdsTab() {
                 return spentPct > timePct + 10 ? "destructive" : "success";
               })() as any} 
               formula="Ritmo de gasto vs dias do mês" 
+            />
+           </div>
+          {/* Fourth row: Top Criativo & Top Público */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <MetricCard 
+              title="Top Criativo" 
+              value={(() => {
+                const content = today?.leads_by_content;
+                if (!content || typeof content !== 'object') return "—";
+                const entries = Object.entries(content as Record<string, number>);
+                if (entries.length === 0) return "—";
+                const top = entries.sort((a, b) => (Number(b[1]) || 0) - (Number(a[1]) || 0))[0];
+                const name = top[0];
+                return name.length > 18 ? name.slice(0, 15) + "…" : name;
+              })()} 
+              icon={Palette} 
+              variant="default" 
+            />
+            <MetricCard 
+              title="Leads do Top Criativo" 
+              value={(() => {
+                const content = today?.leads_by_content;
+                if (!content || typeof content !== 'object') return "0";
+                const entries = Object.entries(content as Record<string, number>);
+                if (entries.length === 0) return "0";
+                const top = entries.sort((a, b) => (Number(b[1]) || 0) - (Number(a[1]) || 0))[0];
+                return String(Number(top[1]) || 0);
+              })()} 
+              icon={Target} 
+              variant="success" 
+            />
+            <MetricCard 
+              title="Top Público" 
+              value={(() => {
+                const term = today?.leads_by_term;
+                if (!term || typeof term !== 'object') return "—";
+                const entries = Object.entries(term as Record<string, number>);
+                if (entries.length === 0) return "—";
+                const top = entries.sort((a, b) => (Number(b[1]) || 0) - (Number(a[1]) || 0))[0];
+                const name = top[0];
+                return name.length > 18 ? name.slice(0, 15) + "…" : name;
+              })()} 
+              icon={Users} 
+              variant="info" 
+            />
+            <MetricCard 
+              title="Leads do Top Público" 
+              value={(() => {
+                const term = today?.leads_by_term;
+                if (!term || typeof term !== 'object') return "0";
+                const entries = Object.entries(term as Record<string, number>);
+                if (entries.length === 0) return "0";
+                const top = entries.sort((a, b) => (Number(b[1]) || 0) - (Number(a[1]) || 0))[0];
+                return String(Number(top[1]) || 0);
+              })()} 
+              icon={Target} 
+              variant="success" 
             />
           </div>
         </div>

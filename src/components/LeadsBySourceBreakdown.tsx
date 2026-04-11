@@ -9,6 +9,8 @@ interface DailyStat {
   leads_organic?: number;
   leads_by_campaign?: Record<string, number>;
   leads_by_medium?: Record<string, number>;
+  leads_by_term?: Record<string, number>;
+  leads_by_content?: Record<string, number>;
   forms_data?: Record<string, number>;
   [key: string]: any;
 }
@@ -97,6 +99,22 @@ export function LeadsBySourceBreakdown({ stats }: Props) {
         fill: MEDIUM_COLORS[name.toLowerCase()] || DEFAULT_COLORS[Object.keys(merged).indexOf(name) % DEFAULT_COLORS.length],
       }))
       .filter((d) => d.value > 0);
+  }, [stats]);
+
+  const contentData = useMemo(() => {
+    const merged = mergeJsonbMaps(stats, "leads_by_content");
+    return Object.entries(merged)
+      .map(([name, value]) => ({ name: name.length > 25 ? name.slice(0, 22) + "…" : name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 10);
+  }, [stats]);
+
+  const termData = useMemo(() => {
+    const merged = mergeJsonbMaps(stats, "leads_by_term");
+    return Object.entries(merged)
+      .map(([name, value]) => ({ name: name.length > 25 ? name.slice(0, 22) + "…" : name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 10);
   }, [stats]);
 
   const formsData = useMemo(() => mergeJsonbMaps(stats, "forms_data"), [stats]);
@@ -194,6 +212,91 @@ export function LeadsBySourceBreakdown({ stats }: Props) {
           )}
         </div>
       </div>
+
+      {/* Linha 2: Por Criativo | Por Público | Ranking Criativos */}
+      {(contentData.length > 0 || termData.length > 0) && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+          {/* Por Criativo (UTM Content) */}
+          <div className="flex flex-col items-center">
+            <p className="text-xs font-medium text-muted-foreground mb-2">Por Criativo (UTM Content)</p>
+            {contentData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={180}>
+                <BarChart data={contentData} layout="vertical" margin={{ left: 0, right: 10, top: 0, bottom: 0 }}>
+                  <XAxis type="number" tick={{ fontSize: 10 }} />
+                  <YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 9 }} />
+                  <Tooltip />
+                  <Bar dataKey="value" fill="#8B5CF6" radius={[0, 4, 4, 0]} name="Leads" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-xs text-muted-foreground py-10">Sem dados</p>
+            )}
+          </div>
+
+          {/* Por Público (UTM Term) */}
+          <div className="flex flex-col items-center">
+            <p className="text-xs font-medium text-muted-foreground mb-2">Por Público (UTM Term)</p>
+            {termData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={180}>
+                <BarChart data={termData} layout="vertical" margin={{ left: 0, right: 10, top: 0, bottom: 0 }}>
+                  <XAxis type="number" tick={{ fontSize: 10 }} />
+                  <YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 9 }} />
+                  <Tooltip />
+                  <Bar dataKey="value" fill="#457B9D" radius={[0, 4, 4, 0]} name="Leads" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-xs text-muted-foreground py-10">Sem dados</p>
+            )}
+          </div>
+
+          {/* Ranking de Criativos por Leads */}
+          <div className="flex flex-col">
+            <p className="text-xs font-medium text-muted-foreground mb-2 text-center">Ranking de Criativos por Leads</p>
+            {contentData.length > 0 ? (
+              <div className="overflow-auto max-h-[180px]">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-border/50">
+                      <th className="text-left py-1 px-1 font-medium text-muted-foreground">Criativo</th>
+                      <th className="text-right py-1 px-1 font-medium text-muted-foreground">Leads</th>
+                      <th className="text-right py-1 px-1 font-medium text-muted-foreground">%</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {contentData.slice(0, 10).map((item, i) => {
+                      const totalContentLeads = contentData.reduce((s, d) => s + d.value, 0);
+                      const pct = totalContentLeads > 0 ? (item.value / totalContentLeads) * 100 : 0;
+                      return (
+                        <tr key={i} className={i % 2 === 0 ? "" : "bg-muted/30"}>
+                          <td className="py-1 px-1 truncate max-w-[120px]" title={item.name}>{item.name}</td>
+                          <td className="py-1 px-1 text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <div className="w-12 h-1.5 bg-muted rounded-full overflow-hidden">
+                                <div
+                                  className="h-full rounded-full"
+                                  style={{
+                                    width: `${pct}%`,
+                                    background: "#8B5CF6",
+                                  }}
+                                />
+                              </div>
+                              <span className="font-medium">{item.value}</span>
+                            </div>
+                          </td>
+                          <td className="py-1 px-1 text-right text-muted-foreground">{pct.toFixed(1)}%</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground py-10 text-center">Sem dados</p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <div className="mt-4 pt-3 border-t border-border/50 flex items-center justify-between text-xs text-muted-foreground">
