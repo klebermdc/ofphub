@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { FileSpreadsheet, Users, Megaphone, Receipt, Kanban, Calendar, ClipboardList } from "lucide-react";
+import { FileSpreadsheet, Users, Megaphone, Receipt, Kanban, Calendar, ClipboardList, TrendingUp } from "lucide-react";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { resolveSalespersonName } from "@/config/salaries";
@@ -66,6 +66,7 @@ const CostProjectionCard = lazy(() => import("@/components/dashboard/CostProject
 const SalespersonROITable = lazy(() => import("@/components/SalespersonROITable").then(m => ({ default: m.SalespersonROITable })));
 const WhatsAppStatusCard = lazy(() => import("@/components/WhatsAppStatusCard").then(m => ({ default: m.WhatsAppStatusCard })));
 const WeeklyReportModal = lazy(() => import("@/components/WeeklyReportModal").then(m => ({ default: m.WeeklyReportModal })));
+const GrowthDashboard = lazy(() => import("@/components/GrowthDashboard").then(m => ({ default: m.GrowthDashboard })));
 
 // Data source: database-only (no Google Sheets dependency)
 
@@ -357,6 +358,10 @@ const Index = () => {
                 <Megaphone className="h-3 w-3 sm:h-4 sm:w-4 hidden sm:block" />
                 Marketing
               </TabsTrigger>
+              <TabsTrigger value="crescimento" className="gap-1 text-xs sm:text-sm py-2 hidden sm:flex">
+                <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 hidden sm:block" />
+                Crescimento
+              </TabsTrigger>
               <TabsTrigger value="contabilidade" className="gap-1 text-xs sm:text-sm py-2 hidden sm:flex">
                 <Receipt className="h-3 w-3 sm:h-4 sm:w-4 hidden sm:block" />
                 Contabilidade
@@ -365,7 +370,11 @@ const Index = () => {
 
             {/* Mobile additional tabs */}
             <div className="flex sm:hidden gap-2">
-              <TabsList className="grid grid-cols-1 gap-1 w-full h-auto p-1">
+              <TabsList className="grid grid-cols-2 gap-1 w-full h-auto p-1">
+                <TabsTrigger value="crescimento" className="gap-1 text-xs py-2">
+                  <TrendingUp className="h-3 w-3" />
+                  Crescimento
+                </TabsTrigger>
                 <TabsTrigger value="contabilidade" className="gap-1 text-xs py-2">
                   <Receipt className="h-3 w-3" />
                   Contabilidade
@@ -694,6 +703,14 @@ const Index = () => {
                     getCostForMonth={getCostForMonth}
                     salesReps={salesReps}
                   />
+                </Suspense>
+              </ErrorBoundary>
+            </TabsContent>
+
+            <TabsContent value="crescimento" className="space-y-6">
+              <ErrorBoundary>
+                <Suspense fallback={<ChartSkeleton />}>
+                  <GrowthDashboard />
                 </Suspense>
               </ErrorBoundary>
             </TabsContent>
