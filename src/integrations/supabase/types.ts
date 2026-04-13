@@ -510,6 +510,33 @@ export type Database = {
         }
         Relationships: []
       }
+      growth_metrics: {
+        Row: {
+          created_at: string | null
+          id: string
+          month: number
+          revenue: number
+          updated_at: string | null
+          year: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          month: number
+          revenue?: number
+          updated_at?: string | null
+          year: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          month?: number
+          revenue?: number
+          updated_at?: string | null
+          year?: number
+        }
+        Relationships: []
+      }
       marketing_costs: {
         Row: {
           category: string | null
