@@ -236,8 +236,8 @@ export function GrowthDashboard() {
           </div>
           <GrowthProductMix orders={orders} filterYear={selectedYear} />
           <GrowthSeasonality orders={orders} />
+          <GrowthMarketingVsSales orders={orders} growthData={data} filterYear={selectedYear} />
         </>
-      )}
       {ordersLoading && (
         <div className="flex items-center justify-center py-8">
           <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
