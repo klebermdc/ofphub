@@ -707,6 +707,14 @@ const Index = () => {
               </ErrorBoundary>
             </TabsContent>
 
+            <TabsContent value="crescimento" className="space-y-6">
+              <ErrorBoundary>
+                <Suspense fallback={<ChartSkeleton />}>
+                  <GrowthDashboard />
+                </Suspense>
+              </ErrorBoundary>
+            </TabsContent>
+
             <TabsContent value="contabilidade" className="space-y-6">
               <ErrorBoundary>
                 <Suspense fallback={<TableSkeleton rows={8} columns={5} />}>
