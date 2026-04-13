@@ -22,6 +22,7 @@ import { GrowthTopSellers } from "./growth/GrowthTopSellers";
 import { GrowthProductMix } from "./growth/GrowthProductMix";
 import { GrowthTopSuppliers } from "./growth/GrowthTopSuppliers";
 import { GrowthSeasonality } from "./growth/GrowthSeasonality";
+import { GrowthMarketingVsSales } from "./growth/GrowthMarketingVsSales";
 import { GrowthRow, MONTH_NAMES, MONTH_FULL, YEAR_COLORS, formatBRL, formatCompact } from "./growth/growthUtils";
 
 const tooltipStyle = { backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' };
@@ -235,6 +236,7 @@ export function GrowthDashboard() {
           </div>
           <GrowthProductMix orders={orders} filterYear={selectedYear} />
           <GrowthSeasonality orders={orders} />
+          <GrowthMarketingVsSales orders={orders} growthData={data} filterYear={selectedYear} />
         </>
       )}
       {ordersLoading && (
