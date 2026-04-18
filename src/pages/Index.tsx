@@ -129,6 +129,30 @@ const Index = () => {
   const marketingCost = getTotalForMonth(currentGoalMonth, currentGoalYear);
   const operationalCost = getOperationalCostsForMonth(currentGoalMonth, currentGoalYear);
 
+  // Real ad spend accumulated for the selected period (Meta + Google) from marketing_daily_stats
+  const [realAdSpendToDate, setRealAdSpendToDate] = useState<number>(0);
+
+  useEffect(() => {
+    const fetchAdSpend = async () => {
+      const startDate = `${currentGoalYear}-${String(currentGoalMonth).padStart(2, '0')}-01`;
+      const now = new Date();
+      const isCurrentMonth = currentGoalMonth === now.getMonth() + 1 && currentGoalYear === now.getFullYear();
+      const endDay = isCurrentMonth ? now.getDate() : new Date(currentGoalYear, currentGoalMonth, 0).getDate();
+      const endDate = `${currentGoalYear}-${String(currentGoalMonth).padStart(2, '0')}-${String(endDay).padStart(2, '0')}`;
+      const { data } = await supabase
+        .from('marketing_daily_stats')
+        .select('meta_spend, google_spend')
+        .gte('date', startDate)
+        .lte('date', endDate);
+      if (data) {
+        setRealAdSpendToDate(data.reduce((sum, d) => sum + Number(d.meta_spend || 0) + Number(d.google_spend || 0), 0));
+      } else {
+        setRealAdSpendToDate(0);
+      }
+    };
+    fetchAdSpend();
+  }, [currentGoalMonth, currentGoalYear]);
+
   const costCalc = useCostCalculation({
     filteredSalesReps: dashboardFilteredSalesReps,
     totalComissao: metrics.totalComissao,
@@ -139,6 +163,7 @@ const Index = () => {
     getSalary,
     selectedMonth: dashboardMonth,
     totalDiscounts: getTotalDiscounts(),
+    realAdSpendToDate,
   });
 
   // Leads from marketing_daily_stats (single source of truth)
