@@ -23,6 +23,8 @@ interface CostCalculationParams {
   getSalary: (name: string) => number;
   selectedMonth: string;
   totalDiscounts?: number;
+  /** Gasto real acumulado de ads (Meta+Google) do mês até a data atual, vindo de marketing_daily_stats */
+  realAdSpendToDate?: number;
 }
 
 /**
@@ -38,6 +40,7 @@ export function useCostCalculation({
   getSalary,
   selectedMonth,
   totalDiscounts = 0,
+  realAdSpendToDate = 0,
 }: CostCalculationParams): CostCalculationResult {
   return useMemo(() => {
     // Total salaries
@@ -61,13 +64,13 @@ export function useCostCalculation({
     // Resultado final
     const resultado = totalComissaoTotal - totalCost;
 
-    // Proportional costs based on elapsed days
+    // Resultado Parcial = mesma lógica do Resultado do Dia, mas acumulado no período:
+    // - Custos fixos (salários + operacional + marketing fixo): proporcionais ao tempo decorrido
+    // - Marketing variável: gasto REAL de ads acumulado do período
+    // - Imposto: 12% sobre a comissão total REAL faturada (não proporcional ao tempo)
     const proporcao = getMonthProportionalRatio(selectedMonth);
-    const custosProporcional = (totalSalaries + marketingCost + operationalCost) * proporcao;
-    const impostoProporcional = impostoEstimado * proporcao;
-    const custoProporcional = custosProporcional + impostoProporcional;
-    
-    // Resultado parcial
+    const custosFixosProporcional = (totalSalaries + operationalCost + marketingCost) * proporcao;
+    const custoProporcional = custosFixosProporcional + realAdSpendToDate + impostoEstimado;
     const resultadoParcial = ganhoBruto - custoProporcional;
 
     return {
@@ -89,5 +92,6 @@ export function useCostCalculation({
     getSalary,
     selectedMonth,
     totalDiscounts,
+    realAdSpendToDate,
   ]);
 }
