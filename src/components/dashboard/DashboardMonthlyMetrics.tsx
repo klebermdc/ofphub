@@ -147,8 +147,8 @@ export function DashboardMonthlyMetrics({
           icon={TrendingUp}
           delay={125}
           variant={resultadoParcial >= 0 ? "success" : "danger"}
-          formula="Ganho Bruto − Custos Proporcionais ao Dia
-= Lucro considerando apenas custos incorridos até hoje (custos mensais ÷ dias úteis × dias úteis passados)"
+          formula="Ganho Bruto − (Custos Fixos Proporcionais + Gasto Real de Ads acumulado + Imposto 12% sobre Comissão Total)
+= Lucro real do período até hoje, alinhado com a lógica do Resultado do Dia"
         />
         <MetricCard
           title="Resultado Final"
