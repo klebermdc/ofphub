@@ -23,6 +23,8 @@ interface CostCalculationParams {
   getSalary: (name: string) => number;
   selectedMonth: string;
   totalDiscounts?: number;
+  /** Gasto real acumulado de ads (Meta+Google) do mês até a data atual, vindo de marketing_daily_stats */
+  realAdSpendToDate?: number;
 }
 
 /**
