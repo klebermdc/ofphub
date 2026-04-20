@@ -196,14 +196,45 @@ Retorne APENAS JSON válido (sem markdown, sem comentários) chamando a função
 
     const aiData = await aiResp.json();
     const toolCall = aiData?.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall?.function?.arguments) {
-      console.error("No tool call:", JSON.stringify(aiData).slice(0, 500));
+    const rawArgs: string | undefined = toolCall?.function?.arguments;
+    if (!rawArgs) {
+      console.error("No tool call:", JSON.stringify(aiData).slice(0, 1000));
       return new Response(JSON.stringify({ error: "IA não conseguiu extrair dados do PDF" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const extracted = JSON.parse(toolCall.function.arguments);
+    function safeParseArgs(s: string): any {
+      let t = s.trim().replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```$/g, "").trim();
+      try { return JSON.parse(t); } catch {}
+      // Repair truncated JSON
+      let repaired = t.replace(/,\s*$/, "");
+      const opens = (repaired.match(/[\{\[]/g) || []).length;
+      const closes = (repaired.match(/[\}\]]/g) || []).length;
+      if (opens > closes) {
+        const lastComma = repaired.lastIndexOf(",");
+        if (lastComma > 0) repaired = repaired.slice(0, lastComma);
+      }
+      const stack: string[] = [];
+      let inStr = false, esc = false;
+      for (const ch of repaired) {
+        if (esc) { esc = false; continue; }
+        if (ch === "\\") { esc = true; continue; }
+        if (ch === '"') { inStr = !inStr; continue; }
+        if (inStr) continue;
+        if (ch === "{") stack.push("}");
+        else if (ch === "[") stack.push("]");
+        else if (ch === "}" || ch === "]") stack.pop();
+      }
+      if (inStr) repaired += '"';
+      while (stack.length) repaired += stack.pop();
+      try { return JSON.parse(repaired); } catch (e) {
+        console.error("Parse failed. Start:", s.slice(0, 300), "End:", s.slice(-300));
+        throw new Error("Resposta da IA truncada. Tente um PDF menor ou com menos páginas.");
+      }
+    }
+
+    const extracted = safeParseArgs(rawArgs);
     const reportOrders: any[] = Array.isArray(extracted.orders) ? extracted.orders : [];
 
     // --- 2) Fetch DB orders for Just Travel (paginated) ---
