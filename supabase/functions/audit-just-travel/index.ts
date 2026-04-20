@@ -159,7 +159,7 @@ Retorne APENAS JSON válido (sem markdown, sem comentários) chamando a função
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-pro",
+        model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: extractionPrompt },
           {
