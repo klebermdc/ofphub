@@ -698,6 +698,10 @@ const Index = () => {
                       <SupplierSalesBreakdown salesReps={filteredSalesReps} />
                     </Suspense>
 
+                    <Suspense fallback={<ChartSkeleton />}>
+                      <JustTravelAuditCard />
+                    </Suspense>
+
                     <Suspense fallback={<TableSkeleton rows={5} columns={7} />}>
                       <SalesRepTable 
                         salesReps={filteredSalesReps} 
