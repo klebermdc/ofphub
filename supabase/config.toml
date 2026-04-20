@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.ai-write]
 verify_jwt = false
+
+[functions.audit-just-travel]
+verify_jwt = true

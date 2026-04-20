@@ -48,6 +48,7 @@ const RevenueForecastChart = lazy(() => import("@/components/RevenueForecastChar
 const RevenueWaterfallChart = lazy(() => import("@/components/RevenueWaterfallChart").then(m => ({ default: m.RevenueWaterfallChart })));
 const SalespersonROI = lazy(() => import("@/components/SalespersonROI").then(m => ({ default: m.SalespersonROI })));
 const SalespersonGoalChart = lazy(() => import("@/components/SalespersonGoalChart").then(m => ({ default: m.SalespersonGoalChart })));
+const JustTravelAuditCard = lazy(() => import("@/components/JustTravelAuditCard").then(m => ({ default: m.JustTravelAuditCard })));
 const SalespersonVelocityChart = lazy(() => import("@/components/SalespersonVelocityChart").then(m => ({ default: m.SalespersonVelocityChart })));
 const DailySalesTracker = lazy(() => import("@/components/DailySalesTracker").then(m => ({ default: m.DailySalesTracker })));
 const EBITDACard = lazy(() => import("@/components/EBITDACard").then(m => ({ default: m.EBITDACard })));
@@ -695,6 +696,10 @@ const Index = () => {
 
                     <Suspense fallback={<ChartSkeleton />}>
                       <SupplierSalesBreakdown salesReps={filteredSalesReps} />
+                    </Suspense>
+
+                    <Suspense fallback={<ChartSkeleton />}>
+                      <JustTravelAuditCard />
                     </Suspense>
 
                     <Suspense fallback={<TableSkeleton rows={5} columns={7} />}>
