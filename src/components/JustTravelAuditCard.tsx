@@ -303,7 +303,7 @@ export function JustTravelAuditCard() {
                   <ScrollArea className="flex-1 -mx-2 px-2">
                     {filtered.length === 0 ? (
                       <div className="flex flex-col items-center justify-center py-12 text-center">
-                        <CheckCircle2 className="h-12 w-12 text-green-500 mb-3" />
+                        <CheckCircle2 className="h-12 w-12 text-success mb-3" />
                         <p className="font-medium">Nenhuma divergência nesta categoria.</p>
                         <p className="text-sm text-muted-foreground">O relatório bate com o banco.</p>
                       </div>
@@ -323,7 +323,7 @@ export function JustTravelAuditCard() {
       </CardHeader>
       <CardContent>
         <div className="flex items-center gap-3 text-sm text-muted-foreground">
-          <AlertTriangle className="h-4 w-4 text-amber-500" />
+          <AlertTriangle className="h-4 w-4 text-warning" />
           <span>Use sempre que receber o fechamento da Just Travel para validar valores antes de pagar/receber.</span>
         </div>
       </CardContent>
@@ -332,7 +332,7 @@ export function JustTravelAuditCard() {
 }
 
 function SummaryTile({ label, value, tone }: { label: string; value: string; tone?: "ok" | "danger" }) {
-  const cls = tone === "danger" ? "text-red-500" : tone === "ok" ? "text-green-500" : "text-foreground";
+  const cls = tone === "danger" ? "text-destructive" : tone === "ok" ? "text-success" : "text-foreground";
   return (
     <div className="rounded-lg bg-card/50 border border-border/50 p-3">
       <div className="text-xs text-muted-foreground">{label}</div>
@@ -344,7 +344,7 @@ function SummaryTile({ label, value, tone }: { label: string; value: string; ton
 function FilterChip({ children, active, onClick, tone }: { children: React.ReactNode; active: boolean; onClick: () => void; tone?: "danger" }) {
   const base = "px-3 py-1 rounded-full text-xs font-medium transition-colors border";
   const activeCls = tone === "danger"
-    ? "bg-red-500/15 border-red-500/40 text-red-500"
+    ? "bg-destructive/15 border-destructive/40 text-destructive"
     : "bg-primary/15 border-primary/40 text-primary";
   const idle = "bg-card/40 border-border/50 text-muted-foreground hover:bg-card/70";
   return (
@@ -357,8 +357,8 @@ function FilterChip({ children, active, onClick, tone }: { children: React.React
 function DivergenciaItem({ d }: { d: Divergencia }) {
   const isCritical = d.severidade === "critica";
   const Icon = isCritical ? XCircle : AlertTriangle;
-  const colorCls = isCritical ? "text-red-500" : "text-amber-500";
-  const borderCls = isCritical ? "border-red-500/30" : "border-amber-500/30";
+  const colorCls = isCritical ? "text-destructive" : "text-warning";
+  const borderCls = isCritical ? "border-destructive/30" : "border-warning/30";
 
   return (
     <div className={`rounded-lg border ${borderCls} bg-card/40 p-3`}>
