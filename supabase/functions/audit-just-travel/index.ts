@@ -172,6 +172,7 @@ Retorne APENAS JSON válido (sem markdown, sem comentários) chamando a função
         ],
         tools: [extractionTool],
         tool_choice: { type: "function", function: { name: "extract_just_travel_report" } },
+        max_tokens: 16000,
       }),
     });
 
