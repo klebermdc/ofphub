@@ -1,0 +1,1 @@
+DELETE FROM public.marketing_costs WHERE id = '4784465e-f965-4d12-8618-de7db38e3382';
