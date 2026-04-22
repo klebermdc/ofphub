@@ -5,11 +5,13 @@ import { MetricCard } from "@/components/MetricCard";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend, LineChart, Line,
 } from "recharts";
-import { DollarSign, TrendingUp, Megaphone, Wrench, FileText } from "lucide-react";
+import { DollarSign, TrendingUp, Megaphone, Wrench, FileText, Calendar, Search, Download, X } from "lucide-react";
 import { getMonthName } from "@/utils/dateUtils";
 import { formatCurrency } from "@/utils/formatters";
 import { ChartSkeleton } from "@/components/ui/skeletons";
@@ -31,9 +33,21 @@ interface CostRow {
 }
 
 interface DailyStat {
+  id: string;
   date: string;
   meta_spend: number;
   google_spend: number;
+  leads_total: number;
+  leads_meta: number;
+  leads_google: number;
+  leads_organic: number;
+  meta_clicks: number;
+  google_clicks: number;
+  meta_impressions: number;
+  meta_cpl: number;
+  google_cpl: number;
+  monthly_budget: number | null;
+  updated_at: string;
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -52,12 +66,24 @@ export function CostsTab({ userId }: { userId?: string }) {
   const [yearFilter, setYearFilter] = useState<string>("all");
   const { salaries } = useSalespersonSalaries(userId);
 
+  // Daily table filters
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
+  const [platformFilter, setPlatformFilter] = useState<string>("all");
+  const [minValue, setMinValue] = useState<string>("");
+  const [maxValue, setMaxValue] = useState<string>("");
+  const [search, setSearch] = useState<string>("");
+  const [sortBy, setSortBy] = useState<string>("date_desc");
+
   useEffect(() => {
     (async () => {
       setLoading(true);
       const [costsRes, dailyRes] = await Promise.all([
         supabase.from("marketing_costs").select("*").order("period_year", { ascending: false }).order("period_month", { ascending: false }),
-        supabase.from("marketing_daily_stats").select("date, meta_spend, google_spend"),
+        supabase
+          .from("marketing_daily_stats")
+          .select("id, date, meta_spend, google_spend, leads_total, leads_meta, leads_google, leads_organic, meta_clicks, google_clicks, meta_impressions, meta_cpl, google_cpl, monthly_budget, updated_at")
+          .order("date", { ascending: false }),
       ]);
       if (costsRes.data) setCosts(costsRes.data as any);
       if (dailyRes.data) setDaily(dailyRes.data as any);
@@ -120,7 +146,73 @@ export function CostsTab({ userId }: { userId?: string }) {
     );
   }, [filtered]);
 
-  // Bar chart - cost evolution per month
+  // Daily entries enriched with totals
+  const dailyEnriched = useMemo(() => {
+    return daily.map(d => ({
+      ...d,
+      total_spend: (Number(d.meta_spend) || 0) + (Number(d.google_spend) || 0),
+    }));
+  }, [daily]);
+
+  // Filtered + sorted daily table
+  const dailyFiltered = useMemo(() => {
+    let rows = dailyEnriched;
+    if (dateFrom) rows = rows.filter(r => r.date >= dateFrom);
+    if (dateTo) rows = rows.filter(r => r.date <= dateTo);
+    if (platformFilter === "meta") rows = rows.filter(r => Number(r.meta_spend) > 0);
+    if (platformFilter === "google") rows = rows.filter(r => Number(r.google_spend) > 0);
+    if (platformFilter === "both") rows = rows.filter(r => Number(r.meta_spend) > 0 && Number(r.google_spend) > 0);
+    if (minValue) rows = rows.filter(r => r.total_spend >= parseFloat(minValue));
+    if (maxValue) rows = rows.filter(r => r.total_spend <= parseFloat(maxValue));
+    if (search.trim()) {
+      const s = search.toLowerCase();
+      rows = rows.filter(r => r.date.includes(s));
+    }
+    const sorted = [...rows];
+    switch (sortBy) {
+      case "date_asc": sorted.sort((a, b) => a.date.localeCompare(b.date)); break;
+      case "date_desc": sorted.sort((a, b) => b.date.localeCompare(a.date)); break;
+      case "total_desc": sorted.sort((a, b) => b.total_spend - a.total_spend); break;
+      case "total_asc": sorted.sort((a, b) => a.total_spend - b.total_spend); break;
+      case "leads_desc": sorted.sort((a, b) => (b.leads_total || 0) - (a.leads_total || 0)); break;
+    }
+    return sorted;
+  }, [dailyEnriched, dateFrom, dateTo, platformFilter, minValue, maxValue, search, sortBy]);
+
+  const dailyTotals = useMemo(() => {
+    return dailyFiltered.reduce(
+      (acc, r) => ({
+        meta: acc.meta + (Number(r.meta_spend) || 0),
+        google: acc.google + (Number(r.google_spend) || 0),
+        total: acc.total + r.total_spend,
+        leads: acc.leads + (Number(r.leads_total) || 0),
+        clicks: acc.clicks + (Number(r.meta_clicks) || 0) + (Number(r.google_clicks) || 0),
+      }),
+      { meta: 0, google: 0, total: 0, leads: 0, clicks: 0 }
+    );
+  }, [dailyFiltered]);
+
+  const clearFilters = () => {
+    setDateFrom(""); setDateTo(""); setPlatformFilter("all");
+    setMinValue(""); setMaxValue(""); setSearch(""); setSortBy("date_desc");
+  };
+
+  const exportCSV = () => {
+    const headers = ["Data", "Meta Ads", "Google Ads", "Total Gasto", "Leads Total", "Leads Meta", "Leads Google", "Leads Organico", "Cliques Meta", "Cliques Google", "CPL Meta", "CPL Google"];
+    const rows = dailyFiltered.map(r => [
+      r.date, r.meta_spend, r.google_spend, r.total_spend,
+      r.leads_total, r.leads_meta, r.leads_google, r.leads_organic,
+      r.meta_clicks, r.google_clicks, r.meta_cpl, r.google_cpl,
+    ]);
+    const csv = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `custos-diarios-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+  };
+
   const barData = useMemo(() => {
     return [...filtered]
       .sort((a, b) =>
@@ -345,6 +437,153 @@ export function CostsTab({ userId }: { userId?: string }) {
               )}
             </TableBody>
           </Table>
+        </CardContent>
+      </Card>
+
+      {/* DAILY ENTRIES TABLE - Lançamentos diários completos */}
+      <Card className="glass">
+        <CardHeader>
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-primary" />
+              Lançamentos Diários de Custos
+              <Badge variant="secondary" className="ml-2">{dailyFiltered.length} registros</Badge>
+            </CardTitle>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={clearFilters}>
+                <X className="h-4 w-4 mr-1" /> Limpar
+              </Button>
+              <Button variant="default" size="sm" onClick={exportCSV}>
+                <Download className="h-4 w-4 mr-1" /> CSV
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {/* Filters */}
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-4 p-3 bg-muted/30 rounded-lg">
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">De</label>
+              <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="h-9" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Até</label>
+              <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="h-9" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Plataforma</label>
+              <Select value={platformFilter} onValueChange={setPlatformFilter}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas</SelectItem>
+                  <SelectItem value="meta">Meta Ads</SelectItem>
+                  <SelectItem value="google">Google Ads</SelectItem>
+                  <SelectItem value="both">Ambas</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Valor mín. (R$)</label>
+              <Input type="number" value={minValue} onChange={(e) => setMinValue(e.target.value)} placeholder="0" className="h-9" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Valor máx. (R$)</label>
+              <Input type="number" value={maxValue} onChange={(e) => setMaxValue(e.target.value)} placeholder="∞" className="h-9" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Buscar data</label>
+              <div className="relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="2025-01" className="h-9 pl-8" />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Ordenar por</label>
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="date_desc">Data ↓</SelectItem>
+                  <SelectItem value="date_asc">Data ↑</SelectItem>
+                  <SelectItem value="total_desc">Maior gasto</SelectItem>
+                  <SelectItem value="total_asc">Menor gasto</SelectItem>
+                  <SelectItem value="leads_desc">Mais leads</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Summary row */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4">
+            <div className="p-2 rounded bg-muted/40 text-center">
+              <p className="text-xs text-muted-foreground">Total Gasto</p>
+              <p className="font-bold text-primary">{formatCurrency(dailyTotals.total)}</p>
+            </div>
+            <div className="p-2 rounded bg-muted/40 text-center">
+              <p className="text-xs text-muted-foreground">Meta</p>
+              <p className="font-bold">{formatCurrency(dailyTotals.meta)}</p>
+            </div>
+            <div className="p-2 rounded bg-muted/40 text-center">
+              <p className="text-xs text-muted-foreground">Google</p>
+              <p className="font-bold">{formatCurrency(dailyTotals.google)}</p>
+            </div>
+            <div className="p-2 rounded bg-muted/40 text-center">
+              <p className="text-xs text-muted-foreground">Leads</p>
+              <p className="font-bold">{dailyTotals.leads.toLocaleString("pt-BR")}</p>
+            </div>
+            <div className="p-2 rounded bg-muted/40 text-center">
+              <p className="text-xs text-muted-foreground">Cliques</p>
+              <p className="font-bold">{dailyTotals.clicks.toLocaleString("pt-BR")}</p>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+            <Table>
+              <TableHeader className="sticky top-0 bg-card z-10">
+                <TableRow>
+                  <TableHead>Data</TableHead>
+                  <TableHead className="text-right">Meta Ads</TableHead>
+                  <TableHead className="text-right">Google Ads</TableHead>
+                  <TableHead className="text-right font-bold">Total</TableHead>
+                  <TableHead className="text-right">Leads</TableHead>
+                  <TableHead className="text-right">L. Meta</TableHead>
+                  <TableHead className="text-right">L. Google</TableHead>
+                  <TableHead className="text-right">L. Orgânico</TableHead>
+                  <TableHead className="text-right">Cliques M.</TableHead>
+                  <TableHead className="text-right">Cliques G.</TableHead>
+                  <TableHead className="text-right">CPL Meta</TableHead>
+                  <TableHead className="text-right">CPL Google</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {dailyFiltered.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={12} className="text-center text-muted-foreground py-8">
+                      Nenhum lançamento encontrado com os filtros atuais.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  dailyFiltered.map(r => (
+                    <TableRow key={r.id}>
+                      <TableCell className="font-medium whitespace-nowrap">
+                        {new Date(r.date + "T12:00:00").toLocaleDateString("pt-BR")}
+                      </TableCell>
+                      <TableCell className="text-right">{formatCurrency(Number(r.meta_spend) || 0)}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(Number(r.google_spend) || 0)}</TableCell>
+                      <TableCell className="text-right font-bold text-primary">{formatCurrency(r.total_spend)}</TableCell>
+                      <TableCell className="text-right">{r.leads_total || 0}</TableCell>
+                      <TableCell className="text-right text-xs">{r.leads_meta || 0}</TableCell>
+                      <TableCell className="text-right text-xs">{r.leads_google || 0}</TableCell>
+                      <TableCell className="text-right text-xs">{r.leads_organic || 0}</TableCell>
+                      <TableCell className="text-right text-xs">{r.meta_clicks || 0}</TableCell>
+                      <TableCell className="text-right text-xs">{r.google_clicks || 0}</TableCell>
+                      <TableCell className="text-right text-xs">{formatCurrency(Number(r.meta_cpl) || 0)}</TableCell>
+                      <TableCell className="text-right text-xs">{formatCurrency(Number(r.google_cpl) || 0)}</TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>
