@@ -439,6 +439,153 @@ export function CostsTab({ userId }: { userId?: string }) {
           </Table>
         </CardContent>
       </Card>
+
+      {/* DAILY ENTRIES TABLE - Lançamentos diários completos */}
+      <Card className="glass">
+        <CardHeader>
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-primary" />
+              Lançamentos Diários de Custos
+              <Badge variant="secondary" className="ml-2">{dailyFiltered.length} registros</Badge>
+            </CardTitle>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={clearFilters}>
+                <X className="h-4 w-4 mr-1" /> Limpar
+              </Button>
+              <Button variant="default" size="sm" onClick={exportCSV}>
+                <Download className="h-4 w-4 mr-1" /> CSV
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {/* Filters */}
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-4 p-3 bg-muted/30 rounded-lg">
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">De</label>
+              <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="h-9" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Até</label>
+              <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="h-9" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Plataforma</label>
+              <Select value={platformFilter} onValueChange={setPlatformFilter}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas</SelectItem>
+                  <SelectItem value="meta">Meta Ads</SelectItem>
+                  <SelectItem value="google">Google Ads</SelectItem>
+                  <SelectItem value="both">Ambas</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Valor mín. (R$)</label>
+              <Input type="number" value={minValue} onChange={(e) => setMinValue(e.target.value)} placeholder="0" className="h-9" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Valor máx. (R$)</label>
+              <Input type="number" value={maxValue} onChange={(e) => setMaxValue(e.target.value)} placeholder="∞" className="h-9" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Buscar data</label>
+              <div className="relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="2025-01" className="h-9 pl-8" />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Ordenar por</label>
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="date_desc">Data ↓</SelectItem>
+                  <SelectItem value="date_asc">Data ↑</SelectItem>
+                  <SelectItem value="total_desc">Maior gasto</SelectItem>
+                  <SelectItem value="total_asc">Menor gasto</SelectItem>
+                  <SelectItem value="leads_desc">Mais leads</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Summary row */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4">
+            <div className="p-2 rounded bg-muted/40 text-center">
+              <p className="text-xs text-muted-foreground">Total Gasto</p>
+              <p className="font-bold text-primary">{formatCurrency(dailyTotals.total)}</p>
+            </div>
+            <div className="p-2 rounded bg-muted/40 text-center">
+              <p className="text-xs text-muted-foreground">Meta</p>
+              <p className="font-bold">{formatCurrency(dailyTotals.meta)}</p>
+            </div>
+            <div className="p-2 rounded bg-muted/40 text-center">
+              <p className="text-xs text-muted-foreground">Google</p>
+              <p className="font-bold">{formatCurrency(dailyTotals.google)}</p>
+            </div>
+            <div className="p-2 rounded bg-muted/40 text-center">
+              <p className="text-xs text-muted-foreground">Leads</p>
+              <p className="font-bold">{dailyTotals.leads.toLocaleString("pt-BR")}</p>
+            </div>
+            <div className="p-2 rounded bg-muted/40 text-center">
+              <p className="text-xs text-muted-foreground">Cliques</p>
+              <p className="font-bold">{dailyTotals.clicks.toLocaleString("pt-BR")}</p>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+            <Table>
+              <TableHeader className="sticky top-0 bg-card z-10">
+                <TableRow>
+                  <TableHead>Data</TableHead>
+                  <TableHead className="text-right">Meta Ads</TableHead>
+                  <TableHead className="text-right">Google Ads</TableHead>
+                  <TableHead className="text-right font-bold">Total</TableHead>
+                  <TableHead className="text-right">Leads</TableHead>
+                  <TableHead className="text-right">L. Meta</TableHead>
+                  <TableHead className="text-right">L. Google</TableHead>
+                  <TableHead className="text-right">L. Orgânico</TableHead>
+                  <TableHead className="text-right">Cliques M.</TableHead>
+                  <TableHead className="text-right">Cliques G.</TableHead>
+                  <TableHead className="text-right">CPL Meta</TableHead>
+                  <TableHead className="text-right">CPL Google</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {dailyFiltered.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={12} className="text-center text-muted-foreground py-8">
+                      Nenhum lançamento encontrado com os filtros atuais.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  dailyFiltered.map(r => (
+                    <TableRow key={r.id}>
+                      <TableCell className="font-medium whitespace-nowrap">
+                        {new Date(r.date + "T12:00:00").toLocaleDateString("pt-BR")}
+                      </TableCell>
+                      <TableCell className="text-right">{formatCurrency(Number(r.meta_spend) || 0)}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(Number(r.google_spend) || 0)}</TableCell>
+                      <TableCell className="text-right font-bold text-primary">{formatCurrency(r.total_spend)}</TableCell>
+                      <TableCell className="text-right">{r.leads_total || 0}</TableCell>
+                      <TableCell className="text-right text-xs">{r.leads_meta || 0}</TableCell>
+                      <TableCell className="text-right text-xs">{r.leads_google || 0}</TableCell>
+                      <TableCell className="text-right text-xs">{r.leads_organic || 0}</TableCell>
+                      <TableCell className="text-right text-xs">{r.meta_clicks || 0}</TableCell>
+                      <TableCell className="text-right text-xs">{r.google_clicks || 0}</TableCell>
+                      <TableCell className="text-right text-xs">{formatCurrency(Number(r.meta_cpl) || 0)}</TableCell>
+                      <TableCell className="text-right text-xs">{formatCurrency(Number(r.google_cpl) || 0)}</TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
