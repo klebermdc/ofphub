@@ -64,6 +64,9 @@ export function CostsTab({ userId }: { userId?: string }) {
   const [daily, setDaily] = useState<DailyStat[]>([]);
   const [loading, setLoading] = useState(true);
   const [yearFilter, setYearFilter] = useState<string>("all");
+  const now = new Date();
+  const [kpiMonth, setKpiMonth] = useState<number>(now.getMonth() + 1);
+  const [kpiYear, setKpiYear] = useState<number>(now.getFullYear());
   const { salaries } = useSalespersonSalaries(userId);
 
   // Daily table filters
