@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { FileSpreadsheet, Users, Megaphone, Receipt, Kanban, Calendar, ClipboardList, TrendingUp } from "lucide-react";
+import { FileSpreadsheet, Users, Megaphone, Receipt, Kanban, Calendar, ClipboardList, TrendingUp, DollarSign } from "lucide-react";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { resolveSalespersonName } from "@/config/salaries";
@@ -68,6 +68,7 @@ const SalespersonROITable = lazy(() => import("@/components/SalespersonROITable"
 const WhatsAppStatusCard = lazy(() => import("@/components/WhatsAppStatusCard").then(m => ({ default: m.WhatsAppStatusCard })));
 const WeeklyReportModal = lazy(() => import("@/components/WeeklyReportModal").then(m => ({ default: m.WeeklyReportModal })));
 const GrowthDashboard = lazy(() => import("@/components/GrowthDashboard").then(m => ({ default: m.GrowthDashboard })));
+const CostsTab = lazy(() => import("@/components/CostsTab").then(m => ({ default: m.CostsTab })));
 
 // Data source: database-only (no Google Sheets dependency)
 
@@ -374,7 +375,7 @@ const Index = () => {
         
         <main className="container mx-auto px-3 sm:px-6 py-4 sm:py-6 relative">
           <Tabs defaultValue={initialTab} className="space-y-4 sm:space-y-6">
-            <TabsList className="w-full grid grid-cols-3 sm:grid-cols-5 gap-1 h-auto p-1">
+            <TabsList className="w-full grid grid-cols-3 sm:grid-cols-6 gap-1 h-auto p-1">
               <TabsTrigger value="dashboard" className="text-xs sm:text-sm py-2">Dashboard</TabsTrigger>
               <TabsTrigger value="vendedores" className="gap-1 text-xs sm:text-sm py-2">
                 <Users className="h-3 w-3 sm:h-4 sm:w-4 hidden sm:block" />
@@ -383,6 +384,10 @@ const Index = () => {
               <TabsTrigger value="marketing" className="gap-1 text-xs sm:text-sm py-2">
                 <Megaphone className="h-3 w-3 sm:h-4 sm:w-4 hidden sm:block" />
                 Marketing
+              </TabsTrigger>
+              <TabsTrigger value="custos" className="gap-1 text-xs sm:text-sm py-2 hidden sm:flex">
+                <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 hidden sm:block" />
+                Custos
               </TabsTrigger>
               <TabsTrigger value="crescimento" className="gap-1 text-xs sm:text-sm py-2 hidden sm:flex">
                 <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 hidden sm:block" />
@@ -396,7 +401,11 @@ const Index = () => {
 
             {/* Mobile additional tabs */}
             <div className="flex sm:hidden gap-2">
-              <TabsList className="grid grid-cols-2 gap-1 w-full h-auto p-1">
+              <TabsList className="grid grid-cols-3 gap-1 w-full h-auto p-1">
+                <TabsTrigger value="custos" className="gap-1 text-xs py-2">
+                  <DollarSign className="h-3 w-3" />
+                  Custos
+                </TabsTrigger>
                 <TabsTrigger value="crescimento" className="gap-1 text-xs py-2">
                   <TrendingUp className="h-3 w-3" />
                   Crescimento
@@ -741,6 +750,14 @@ const Index = () => {
               <ErrorBoundary>
                 <Suspense fallback={<ChartSkeleton />}>
                   <GrowthDashboard />
+                </Suspense>
+              </ErrorBoundary>
+            </TabsContent>
+
+            <TabsContent value="custos" className="space-y-6">
+              <ErrorBoundary>
+                <Suspense fallback={<DashboardSkeleton />}>
+                  <CostsTab userId={user?.id} />
                 </Suspense>
               </ErrorBoundary>
             </TabsContent>
