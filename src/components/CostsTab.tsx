@@ -33,9 +33,21 @@ interface CostRow {
 }
 
 interface DailyStat {
+  id: string;
   date: string;
   meta_spend: number;
   google_spend: number;
+  leads_total: number;
+  leads_meta: number;
+  leads_google: number;
+  leads_organic: number;
+  meta_clicks: number;
+  google_clicks: number;
+  meta_impressions: number;
+  meta_cpl: number;
+  google_cpl: number;
+  monthly_budget: number | null;
+  updated_at: string;
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
