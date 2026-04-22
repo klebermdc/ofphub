@@ -64,6 +64,9 @@ export function CostsTab({ userId }: { userId?: string }) {
   const [daily, setDaily] = useState<DailyStat[]>([]);
   const [loading, setLoading] = useState(true);
   const [yearFilter, setYearFilter] = useState<string>("all");
+  const now = new Date();
+  const [kpiMonth, setKpiMonth] = useState<number>(now.getMonth() + 1);
+  const [kpiYear, setKpiYear] = useState<number>(now.getFullYear());
   const { salaries } = useSalespersonSalaries(userId);
 
   // Daily table filters
@@ -145,6 +148,21 @@ export function CostsTab({ userId }: { userId?: string }) {
       { meta: 0, google: 0, other: 0, software: 0, telefonia: 0, total: 0 }
     );
   }, [filtered]);
+
+  // Monthly totals for the KPI cards (single selected month)
+  const monthlyTotals = useMemo(() => {
+    const row = enriched.find(e => e.period_month === kpiMonth && e.period_year === kpiYear);
+    const ds = dailyByMonth[`${kpiYear}-${kpiMonth}`];
+    const meta = row?.meta ?? (ds?.meta ?? 0);
+    const google = row?.google ?? (ds?.google ?? 0);
+    const other = row?.other ?? 0;
+    const software = row?.software ?? 0;
+    const telefonia = row?.telefonia ?? 0;
+    return {
+      meta, google, other, software, telefonia,
+      total: meta + google + other + software + telefonia,
+    };
+  }, [enriched, dailyByMonth, kpiMonth, kpiYear]);
 
   // Daily entries enriched with totals
   const dailyEnriched = useMemo(() => {
@@ -266,29 +284,54 @@ export function CostsTab({ userId }: { userId?: string }) {
         </Select>
       </div>
 
-      {/* KPI cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard
-          title="Custo Total"
-          value={formatCurrency(totals.total)}
-          icon={DollarSign}
-          variant="danger"
-        />
-        <MetricCard
-          title="Marketing (Meta+Google)"
-          value={formatCurrency(totals.meta + totals.google)}
-          icon={Megaphone}
-        />
-        <MetricCard
-          title="Operacional (Soft+Tel)"
-          value={formatCurrency(totals.software + totals.telefonia)}
-          icon={Wrench}
-        />
-        <MetricCard
-          title="Outros Marketing"
-          value={formatCurrency(totals.other)}
-          icon={FileText}
-        />
+      {/* KPI cards - monthly */}
+      <div className="space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <h3 className="text-sm font-medium text-muted-foreground">
+            Custos do Mês — {getMonthName(kpiMonth)} {kpiYear}
+          </h3>
+          <div className="flex gap-2">
+            <Select value={String(kpiMonth)} onValueChange={(v) => setKpiMonth(parseInt(v))}>
+              <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                  <SelectItem key={m} value={String(m)}>{getMonthName(m)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={String(kpiYear)} onValueChange={(v) => setKpiYear(parseInt(v))}>
+              <SelectTrigger className="w-[110px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {(availableYears.length ? availableYears : [now.getFullYear()]).map(y => (
+                  <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <MetricCard
+            title="Custo Total do Mês"
+            value={formatCurrency(monthlyTotals.total)}
+            icon={DollarSign}
+            variant="danger"
+          />
+          <MetricCard
+            title="Marketing (Meta+Google)"
+            value={formatCurrency(monthlyTotals.meta + monthlyTotals.google)}
+            icon={Megaphone}
+          />
+          <MetricCard
+            title="Operacional (Soft+Tel)"
+            value={formatCurrency(monthlyTotals.software + monthlyTotals.telefonia)}
+            icon={Wrench}
+          />
+          <MetricCard
+            title="Outros Marketing"
+            value={formatCurrency(monthlyTotals.other)}
+            icon={FileText}
+          />
+        </div>
       </div>
 
       {/* Salary info card */}
