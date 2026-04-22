@@ -754,6 +754,14 @@ const Index = () => {
               </ErrorBoundary>
             </TabsContent>
 
+            <TabsContent value="custos" className="space-y-6">
+              <ErrorBoundary>
+                <Suspense fallback={<DashboardSkeleton />}>
+                  <CostsTab userId={user?.id} />
+                </Suspense>
+              </ErrorBoundary>
+            </TabsContent>
+
             <TabsContent value="contabilidade" className="space-y-6">
               <ErrorBoundary>
                 <Suspense fallback={<TableSkeleton rows={8} columns={5} />}>
