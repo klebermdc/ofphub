@@ -5,11 +5,13 @@ import { MetricCard } from "@/components/MetricCard";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend, LineChart, Line,
 } from "recharts";
-import { DollarSign, TrendingUp, Megaphone, Wrench, FileText } from "lucide-react";
+import { DollarSign, TrendingUp, Megaphone, Wrench, FileText, Calendar, Search, Download, X } from "lucide-react";
 import { getMonthName } from "@/utils/dateUtils";
 import { formatCurrency } from "@/utils/formatters";
 import { ChartSkeleton } from "@/components/ui/skeletons";
