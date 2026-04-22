@@ -66,12 +66,24 @@ export function CostsTab({ userId }: { userId?: string }) {
   const [yearFilter, setYearFilter] = useState<string>("all");
   const { salaries } = useSalespersonSalaries(userId);
 
+  // Daily table filters
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
+  const [platformFilter, setPlatformFilter] = useState<string>("all");
+  const [minValue, setMinValue] = useState<string>("");
+  const [maxValue, setMaxValue] = useState<string>("");
+  const [search, setSearch] = useState<string>("");
+  const [sortBy, setSortBy] = useState<string>("date_desc");
+
   useEffect(() => {
     (async () => {
       setLoading(true);
       const [costsRes, dailyRes] = await Promise.all([
         supabase.from("marketing_costs").select("*").order("period_year", { ascending: false }).order("period_month", { ascending: false }),
-        supabase.from("marketing_daily_stats").select("date, meta_spend, google_spend"),
+        supabase
+          .from("marketing_daily_stats")
+          .select("id, date, meta_spend, google_spend, leads_total, leads_meta, leads_google, leads_organic, meta_clicks, google_clicks, meta_impressions, meta_cpl, google_cpl, monthly_budget, updated_at")
+          .order("date", { ascending: false }),
       ]);
       if (costsRes.data) setCosts(costsRes.data as any);
       if (dailyRes.data) setDaily(dailyRes.data as any);
