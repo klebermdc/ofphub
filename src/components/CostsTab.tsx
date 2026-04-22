@@ -284,29 +284,54 @@ export function CostsTab({ userId }: { userId?: string }) {
         </Select>
       </div>
 
-      {/* KPI cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard
-          title="Custo Total"
-          value={formatCurrency(totals.total)}
-          icon={DollarSign}
-          variant="danger"
-        />
-        <MetricCard
-          title="Marketing (Meta+Google)"
-          value={formatCurrency(totals.meta + totals.google)}
-          icon={Megaphone}
-        />
-        <MetricCard
-          title="Operacional (Soft+Tel)"
-          value={formatCurrency(totals.software + totals.telefonia)}
-          icon={Wrench}
-        />
-        <MetricCard
-          title="Outros Marketing"
-          value={formatCurrency(totals.other)}
-          icon={FileText}
-        />
+      {/* KPI cards - monthly */}
+      <div className="space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <h3 className="text-sm font-medium text-muted-foreground">
+            Custos do Mês — {getMonthName(kpiMonth)} {kpiYear}
+          </h3>
+          <div className="flex gap-2">
+            <Select value={String(kpiMonth)} onValueChange={(v) => setKpiMonth(parseInt(v))}>
+              <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                  <SelectItem key={m} value={String(m)}>{getMonthName(m)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={String(kpiYear)} onValueChange={(v) => setKpiYear(parseInt(v))}>
+              <SelectTrigger className="w-[110px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {(availableYears.length ? availableYears : [now.getFullYear()]).map(y => (
+                  <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <MetricCard
+            title="Custo Total do Mês"
+            value={formatCurrency(monthlyTotals.total)}
+            icon={DollarSign}
+            variant="danger"
+          />
+          <MetricCard
+            title="Marketing (Meta+Google)"
+            value={formatCurrency(monthlyTotals.meta + monthlyTotals.google)}
+            icon={Megaphone}
+          />
+          <MetricCard
+            title="Operacional (Soft+Tel)"
+            value={formatCurrency(monthlyTotals.software + monthlyTotals.telefonia)}
+            icon={Wrench}
+          />
+          <MetricCard
+            title="Outros Marketing"
+            value={formatCurrency(monthlyTotals.other)}
+            icon={FileText}
+          />
+        </div>
       </div>
 
       {/* Salary info card */}
