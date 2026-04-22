@@ -146,7 +146,73 @@ export function CostsTab({ userId }: { userId?: string }) {
     );
   }, [filtered]);
 
-  // Bar chart - cost evolution per month
+  // Daily entries enriched with totals
+  const dailyEnriched = useMemo(() => {
+    return daily.map(d => ({
+      ...d,
+      total_spend: (Number(d.meta_spend) || 0) + (Number(d.google_spend) || 0),
+    }));
+  }, [daily]);
+
+  // Filtered + sorted daily table
+  const dailyFiltered = useMemo(() => {
+    let rows = dailyEnriched;
+    if (dateFrom) rows = rows.filter(r => r.date >= dateFrom);
+    if (dateTo) rows = rows.filter(r => r.date <= dateTo);
+    if (platformFilter === "meta") rows = rows.filter(r => Number(r.meta_spend) > 0);
+    if (platformFilter === "google") rows = rows.filter(r => Number(r.google_spend) > 0);
+    if (platformFilter === "both") rows = rows.filter(r => Number(r.meta_spend) > 0 && Number(r.google_spend) > 0);
+    if (minValue) rows = rows.filter(r => r.total_spend >= parseFloat(minValue));
+    if (maxValue) rows = rows.filter(r => r.total_spend <= parseFloat(maxValue));
+    if (search.trim()) {
+      const s = search.toLowerCase();
+      rows = rows.filter(r => r.date.includes(s));
+    }
+    const sorted = [...rows];
+    switch (sortBy) {
+      case "date_asc": sorted.sort((a, b) => a.date.localeCompare(b.date)); break;
+      case "date_desc": sorted.sort((a, b) => b.date.localeCompare(a.date)); break;
+      case "total_desc": sorted.sort((a, b) => b.total_spend - a.total_spend); break;
+      case "total_asc": sorted.sort((a, b) => a.total_spend - b.total_spend); break;
+      case "leads_desc": sorted.sort((a, b) => (b.leads_total || 0) - (a.leads_total || 0)); break;
+    }
+    return sorted;
+  }, [dailyEnriched, dateFrom, dateTo, platformFilter, minValue, maxValue, search, sortBy]);
+
+  const dailyTotals = useMemo(() => {
+    return dailyFiltered.reduce(
+      (acc, r) => ({
+        meta: acc.meta + (Number(r.meta_spend) || 0),
+        google: acc.google + (Number(r.google_spend) || 0),
+        total: acc.total + r.total_spend,
+        leads: acc.leads + (Number(r.leads_total) || 0),
+        clicks: acc.clicks + (Number(r.meta_clicks) || 0) + (Number(r.google_clicks) || 0),
+      }),
+      { meta: 0, google: 0, total: 0, leads: 0, clicks: 0 }
+    );
+  }, [dailyFiltered]);
+
+  const clearFilters = () => {
+    setDateFrom(""); setDateTo(""); setPlatformFilter("all");
+    setMinValue(""); setMaxValue(""); setSearch(""); setSortBy("date_desc");
+  };
+
+  const exportCSV = () => {
+    const headers = ["Data", "Meta Ads", "Google Ads", "Total Gasto", "Leads Total", "Leads Meta", "Leads Google", "Leads Organico", "Cliques Meta", "Cliques Google", "CPL Meta", "CPL Google"];
+    const rows = dailyFiltered.map(r => [
+      r.date, r.meta_spend, r.google_spend, r.total_spend,
+      r.leads_total, r.leads_meta, r.leads_google, r.leads_organic,
+      r.meta_clicks, r.google_clicks, r.meta_cpl, r.google_cpl,
+    ]);
+    const csv = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `custos-diarios-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+  };
+
   const barData = useMemo(() => {
     return [...filtered]
       .sort((a, b) =>
