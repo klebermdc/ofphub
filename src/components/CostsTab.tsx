@@ -149,6 +149,21 @@ export function CostsTab({ userId }: { userId?: string }) {
     );
   }, [filtered]);
 
+  // Monthly totals for the KPI cards (single selected month)
+  const monthlyTotals = useMemo(() => {
+    const row = enriched.find(e => e.period_month === kpiMonth && e.period_year === kpiYear);
+    const ds = dailyByMonth[`${kpiYear}-${kpiMonth}`];
+    const meta = row?.meta ?? (ds?.meta ?? 0);
+    const google = row?.google ?? (ds?.google ?? 0);
+    const other = row?.other ?? 0;
+    const software = row?.software ?? 0;
+    const telefonia = row?.telefonia ?? 0;
+    return {
+      meta, google, other, software, telefonia,
+      total: meta + google + other + software + telefonia,
+    };
+  }, [enriched, dailyByMonth, kpiMonth, kpiYear]);
+
   // Daily entries enriched with totals
   const dailyEnriched = useMemo(() => {
     return daily.map(d => ({
