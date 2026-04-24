@@ -16,8 +16,10 @@ import { getMonthName } from "@/hooks/useCommissionHistory";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useTheme } from "@/components/ThemeProvider";
+import { getOFPCommission } from "@/utils/orderCommission";
 
 interface Order {
+  id?: string;
   cliente: string;
   emailCliente?: string;
   data: string;
@@ -32,6 +34,8 @@ interface Order {
   salesperson_name: string;
   status?: string;
   rowIndex?: number;
+  guia?: string;
+  comissaoGuia?: number;
 }
 
 const AllOrders = () => {
@@ -265,7 +269,7 @@ const AllOrders = () => {
   const totals = useMemo(() => {
     const totalVendas = filteredOrders.reduce((sum, o) => sum + o.venda, 0);
     const totalComissao = filteredOrders.reduce((sum, o) => sum + o.comissaoVendedor, 0);
-    const totalComissaoTotal = filteredOrders.reduce((sum, o) => sum + o.comissaoTotal, 0);
+    const totalComissaoTotal = filteredOrders.reduce((sum, o) => sum + getOFPCommission(o), 0);
     const totalPedidos = filteredOrders.length;
     return { totalVendas, totalComissao, totalComissaoTotal, totalPedidos };
   }, [filteredOrders]);
@@ -505,7 +509,7 @@ const AllOrders = () => {
               />
               <MetricCard
                 title="Ganho Bruto"
-                value={formatCurrency(totals.totalComissaoTotal - totals.totalComissao)}
+                value={formatCurrency(totals.totalComissaoTotal)}
                 icon={Wallet}
                 variant="success"
               />
@@ -607,13 +611,13 @@ const AllOrders = () => {
                               {formatCurrency(order.venda)}
                             </TableCell>
                             <TableCell className="text-right font-mono text-warning text-xs sm:text-sm whitespace-nowrap">
-                              {formatCurrency(order.comissaoTotal)}
+                              {formatCurrency(getOFPCommission(order))}
                             </TableCell>
                             <TableCell className="text-right font-mono text-orange-400 text-xs sm:text-sm whitespace-nowrap">
                               {formatCurrency(order.comissaoVendedor)}
                             </TableCell>
                             <TableCell className="text-right font-mono text-success text-xs sm:text-sm whitespace-nowrap">
-                              {formatCurrency(order.comissaoTotal - order.comissaoVendedor)}
+                              {formatCurrency(getOFPCommission(order))}
                             </TableCell>
                           </TableRow>
                         ))}

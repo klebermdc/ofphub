@@ -16,6 +16,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
 import { useAuth } from "@/hooks/useAuth";
+import { getOFPCommission } from "@/utils/orderCommission";
 
 interface DailyOrder {
   id?: string;
@@ -235,9 +236,9 @@ export function DailyOrdersList({
   // Period KPI metrics
   const periodMetrics = useMemo(() => {
     const totalVenda = displayOrders.reduce((sum, o) => sum + o.venda, 0);
-    const totalComissao = displayOrders.reduce((sum, o) => sum + o.comissaoTotal, 0);
+    const totalComissao = displayOrders.reduce((sum, o) => sum + getOFPCommission(o), 0);
     const totalComissaoVendedor = displayOrders.reduce((sum, o) => sum + o.comissaoVendedor, 0);
-    const ganho = totalComissao - totalComissaoVendedor;
+    const ganho = totalComissao;
     const resultado = ganho - totalComissaoVendedor;
     return { totalVenda, totalComissao, totalComissaoVendedor, ganho, resultado };
   }, [displayOrders]);
@@ -257,7 +258,7 @@ export function DailyOrdersList({
   const profitByRep = useMemo(() => {
     const map: Record<string, number> = {};
     displayOrders.forEach(o => {
-      const ganho = o.comissaoTotal - o.comissaoVendedor;
+      const ganho = getOFPCommission(o);
       map[o.vendedor] = (map[o.vendedor] || 0) + ganho;
     });
     return Object.entries(map)
@@ -270,7 +271,7 @@ export function DailyOrdersList({
     const ganhoMap: Record<string, number> = {};
     const vendaMap: Record<string, number> = {};
     displayOrders.forEach(o => {
-      const ganho = o.comissaoTotal - o.comissaoVendedor;
+      const ganho = getOFPCommission(o);
       ganhoMap[o.vendedor] = (ganhoMap[o.vendedor] || 0) + ganho;
       vendaMap[o.vendedor] = (vendaMap[o.vendedor] || 0) + o.venda;
     });
@@ -576,7 +577,7 @@ export function DailyOrdersList({
                           {formatCurrency(order.comissaoTotal)}
                         </TableCell>
                         <TableCell className="text-xs text-right text-success">
-                          {formatCurrency(order.comissaoTotal - order.comissaoVendedor)}
+                          {formatCurrency(getOFPCommission(order))}
                         </TableCell>
                       </TableRow>
                     ))}
