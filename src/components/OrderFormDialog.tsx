@@ -267,7 +267,11 @@ export function OrderFormDialog({
 
   // Totals across all items
   const totalVenda = formData.items.reduce((s, i) => s + i.venda, 0);
-  const totalComissao = formData.items.reduce((s, i) => s + i.comissaoTotal, 0);
+  // Total Comissão = parte que fica para a OFP (líquido após vendedor e guia)
+  const totalComissao = formData.items.reduce(
+    (s, i) => s + (i.comissaoTotal - i.comissaoVendedor - (i.comissaoGuia || 0)),
+    0
+  );
   const totalComissaoVendedor = formData.items.reduce((s, i) => s + i.comissaoVendedor, 0);
 
   const handleSubmit = async (e: React.FormEvent) => {
