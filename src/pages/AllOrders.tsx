@@ -560,6 +560,7 @@ const AllOrders = () => {
                               <OrderFormDialog
                                 mode="edit"
                                 order={{
+                                  id: (order as any).id,
                                   cliente: order.cliente,
                                   emailCliente: order.emailCliente || '',
                                   data: order.data,
@@ -573,8 +574,10 @@ const AllOrders = () => {
                                   comissaoVendedor: order.comissaoVendedor,
                                   vendedor: order.salesperson_name,
                                   status: order.status || 'Pendente',
-                                  rowIndex: order.rowIndex
-                                }}
+                                  rowIndex: order.rowIndex,
+                                  guia: (order as any).guia || '',
+                                  comissaoGuia: (order as any).comissaoGuia || 0,
+                                } as any}
                                 sheetUrl={savedUrl}
                                 availableVendedores={availableVendedores}
                                 availableProdutos={availableProdutos}
