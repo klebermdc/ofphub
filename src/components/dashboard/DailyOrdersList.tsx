@@ -532,7 +532,9 @@ export function DailyOrdersList({
                                 comissaoVendedor: order.comissaoVendedor,
                                 vendedor: order.vendedor,
                                 status: 'Pendente',
-                              }}
+                                guia: (order as any).guia || '',
+                                comissaoGuia: (order as any).comissaoGuia || 0,
+                              } as any}
                               availableVendedores={availableVendedores}
                               availableProdutos={availableProdutos}
                               availableFornecedores={availableFornecedores}
