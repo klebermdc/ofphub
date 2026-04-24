@@ -19,6 +19,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { getOFPCommission } from "@/utils/orderCommission";
 
 interface ProductLineItem {
   produto: string;
@@ -189,6 +190,14 @@ export function OrderFormDialog({
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<OrderFormData>(emptyOrder);
 
+  const availableGuias = Array.from(
+    new Set(
+      [...availableVendedores, order?.guia]
+        .map((value) => value?.trim())
+        .filter((value): value is string => Boolean(value))
+    )
+  ).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
   useEffect(() => {
     if (order) {
       setFormData({
@@ -270,10 +279,7 @@ export function OrderFormDialog({
   // Totals across all items
   const totalVenda = formData.items.reduce((s, i) => s + i.venda, 0);
   // Total Comissão = parte que fica para a OFP (líquido após vendedor e guia)
-  const totalComissao = formData.items.reduce(
-    (s, i) => s + (i.comissaoTotal - i.comissaoVendedor - (i.comissaoGuia || 0)),
-    0
-  );
+  const totalComissao = formData.items.reduce((s, i) => s + getOFPCommission(i), 0);
   const totalComissaoVendedor = formData.items.reduce((s, i) => s + i.comissaoVendedor, 0);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -531,11 +537,17 @@ export function OrderFormDialog({
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="space-y-1">
                         <Label className="text-xs">Guia</Label>
-                        <Select value={item.guia} onValueChange={(v) => handleItemChange(idx, 'guia', v)}>
+                        <Select value={item.guia || undefined} onValueChange={(v) => handleItemChange(idx, 'guia', v)}>
                           <SelectTrigger className="h-9"><SelectValue placeholder="Selecione o guia" /></SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Kleber">Kleber (100%)</SelectItem>
-                            <SelectItem value="Rafael">Rafael (50%)</SelectItem>
+                            {availableGuias.map((guia) => {
+                              const isKleber = guia.trim().toLowerCase() === 'kleber';
+                              return (
+                                <SelectItem key={guia} value={guia}>
+                                  {guia}{isKleber ? ' (100%)' : ' (50%)'}
+                                </SelectItem>
+                              );
+                            })}
                           </SelectContent>
                         </Select>
                       </div>
@@ -554,13 +566,13 @@ export function OrderFormDialog({
                     </div>
                     {item.guia && (
                       <div className="text-[11px] text-muted-foreground mt-1">
-                        {item.guia === 'Kleber' 
-                          ? (formData.vendedor === 'Kleber' 
-                              ? 'Kleber é o vendedor — recebe 100% sem desconto de comissão.'
-                              : `Comissão do vendedor: ${formatCurrency(item.comissaoVendedor)} | Kleber recebe: ${formatCurrency(item.comissaoGuia)}`)
-                          : (formData.vendedor === 'Rafael' || formData.vendedor === 'Kleber'
-                              ? `${formData.vendedor} é o vendedor — Rafael recebe 50%: ${formatCurrency(item.comissaoGuia)}`
-                              : `Comissão vendedor: ${formatCurrency(item.comissaoVendedor)} | Rafael (50%): ${formatCurrency(item.comissaoGuia)}`)}
+                         {item.guia.trim().toLowerCase() === 'kleber'
+                           ? (formData.vendedor.trim().toLowerCase() === 'kleber'
+                               ? 'Kleber é o vendedor — recebe 100% sem desconto de comissão.'
+                               : `Comissão do vendedor: ${formatCurrency(item.comissaoVendedor)} | Kleber recebe: ${formatCurrency(item.comissaoGuia)}`)
+                           : (formData.vendedor.trim().toLowerCase() === item.guia.trim().toLowerCase()
+                               ? `${item.guia} é o vendedor — recebe 50%: ${formatCurrency(item.comissaoGuia)}`
+                               : `Comissão vendedor: ${formatCurrency(item.comissaoVendedor)} | ${item.guia} (50%): ${formatCurrency(item.comissaoGuia)}`)}
                       </div>
                     )}
                   </div>
