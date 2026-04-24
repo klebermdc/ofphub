@@ -30,6 +30,9 @@ interface DailyOrder {
   comissaoTotal: number;
   porcentagemVendedor: number;
   comissaoVendedor: number;
+  guia?: string;
+  comissaoGuia?: number;
+  status?: string;
   dia: string;
   createdAt?: string;
 }
@@ -142,6 +145,9 @@ export function DailyOrdersList({
           comissaoTotal: Number(row.comissao_total) || 0,
           porcentagemVendedor: Number(row.porcentagem_vendedor) || 0,
           comissaoVendedor: Number(row.comissao_vendedor) || 0,
+          guia: row.guia || '',
+          comissaoGuia: Number(row.comissao_guia) || 0,
+          status: row.status || 'Pendente',
           dia,
           createdAt: row.created_at || '',
         };
@@ -183,6 +189,9 @@ export function DailyOrdersList({
             comissaoTotal: order.comissaoTotal || 0,
             porcentagemVendedor: order.porcentagemVendedor || 0,
             comissaoVendedor: order.comissaoVendedor || 0,
+            guia: order.guia || '',
+            comissaoGuia: order.comissaoGuia || 0,
+            status: order.status || 'Pendente',
             dia: `${parsed.day.toString().padStart(2, '0')}/${parsed.month.toString().padStart(2, '0')}`,
             createdAt: order.createdAt || order.created_at || '',
           });
@@ -531,10 +540,10 @@ export function DailyOrdersList({
                                 porcentagemVendedor: order.porcentagemVendedor,
                                 comissaoVendedor: order.comissaoVendedor,
                                 vendedor: order.vendedor,
-                                status: 'Pendente',
-                                guia: (order as any).guia || '',
-                                comissaoGuia: (order as any).comissaoGuia || 0,
-                              } as any}
+                                status: order.status || 'Pendente',
+                                guia: order.guia || '',
+                                comissaoGuia: order.comissaoGuia || 0,
+                              }}
                               availableVendedores={availableVendedores}
                               availableProdutos={availableProdutos}
                               availableFornecedores={availableFornecedores}
