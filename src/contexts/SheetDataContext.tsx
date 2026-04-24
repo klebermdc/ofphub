@@ -35,6 +35,8 @@ function groupOrdersIntoReps(rows: any[]): SalesRep[] {
       comissaoVendedor: Number(row.comissao_vendedor) || 0,
       status: row.status || undefined,
       created_at: row.created_at || '',
+      guia: row.guia || '',
+      comissaoGuia: Number(row.comissao_guia) || 0,
     };
 
     const existing = repMap.get(name);

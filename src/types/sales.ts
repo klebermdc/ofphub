@@ -14,6 +14,8 @@ export interface OrderDetail {
   status?: string;
   rowIndex?: number;
   created_at?: string;
+  guia?: string;
+  comissaoGuia?: number;
 }
 
 export interface SalesRep {
