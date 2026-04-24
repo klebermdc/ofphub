@@ -139,27 +139,27 @@ function calcItem(item: ProductLineItem, vendedor: string): ProductLineItem {
   
   if (isGuiamento && item.guia) {
     const guiaIsVendedor = vendedor === item.guia;
-    
+    // Vendedor (que não é o guia) recebe 5% fixo sobre a venda
+    const VENDEDOR_GUIAMENTO_PCT = 0.05;
+
     if (item.guia === 'Kleber') {
-      // Kleber gets 100% of the value (minus commission if vendedor is different)
       if (guiaIsVendedor) {
-        // Kleber is the vendedor: no commission deduction, he gets everything
+        // Kleber é o vendedor: ele leva 100%, OFP fica com 0
         return { ...item, comissaoTotal, comissaoVendedor: 0, comissaoGuia: item.venda };
       } else {
-        // Different vendedor: deduct vendedor commission, Kleber gets the rest
-        const comissaoVendedor = comissaoTotal * (item.porcentagemVendedor / 100);
+        // Vendedor leva 5%, Kleber leva o restante (95%), OFP 0
+        const comissaoVendedor = item.venda * VENDEDOR_GUIAMENTO_PCT;
         const comissaoGuia = item.venda - comissaoVendedor;
         return { ...item, comissaoTotal, comissaoVendedor, comissaoGuia };
       }
     } else if (item.guia === 'Rafael') {
-      // Rafael gets 50% of the payment
       if (guiaIsVendedor) {
-        // Rafael is the vendedor: no commission deduction, he gets 50%
+        // Rafael é o vendedor: 50% Rafael / 50% OFP
         const comissaoGuia = item.venda * 0.5;
         return { ...item, comissaoTotal, comissaoVendedor: 0, comissaoGuia };
       } else {
-        // Different vendedor: deduct vendedor commission first, then Rafael gets 50% of remainder
-        const comissaoVendedor = comissaoTotal * (item.porcentagemVendedor / 100);
+        // Vendedor leva 5%, restante (95%) é dividido 50% Rafael / 50% OFP
+        const comissaoVendedor = item.venda * VENDEDOR_GUIAMENTO_PCT;
         const comissaoGuia = (item.venda - comissaoVendedor) * 0.5;
         return { ...item, comissaoTotal, comissaoVendedor, comissaoGuia };
       }
