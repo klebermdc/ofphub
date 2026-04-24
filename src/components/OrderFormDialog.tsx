@@ -252,17 +252,19 @@ export function OrderFormDialog({
           newItems[index].porcentagemVendedor = preset.porcentagemVendedor;
         }
       }
-      // Recalculate when relevant fields change, but preserve manual comissaoGuia
+      // Recalculate when relevant fields change, but preserve manual comissaoGuia/comissaoVendedor
       if (['venda', 'comissao', 'porcentagemVendedor', 'guia', 'produto'].includes(field)) {
         const previousGuia = newItems[index].comissaoGuia;
+        const previousVendedor = newItems[index].comissaoVendedor;
         newItems[index] = calcItem(newItems[index], prev.vendedor);
-        // Only auto-fill comissaoGuia when guia or produto changes (suggestion);
+        // Only auto-fill comissaoGuia/comissaoVendedor when guia or produto changes (suggestion);
         // for other fields (venda, comissao, porcentagemVendedor), keep manual value
         if (!['guia', 'produto'].includes(field) && field !== 'venda') {
           newItems[index].comissaoGuia = previousGuia;
+          newItems[index].comissaoVendedor = previousVendedor;
         }
       }
-      // If user manually edits comissaoGuia, don't recalculate it
+      // If user manually edits comissaoGuia or comissaoVendedor, don't recalculate
       return { ...prev, items: newItems };
     });
   };
@@ -534,7 +536,7 @@ export function OrderFormDialog({
                 {item.produto.toLowerCase().includes('guiamento') && (
                   <div className="border border-primary/30 rounded-lg p-3 bg-primary/5 space-y-2">
                     <Label className="text-xs font-semibold text-primary">🧭 Guiamento</Label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div className="space-y-1">
                         <Label className="text-xs">Guia</Label>
                         <Select value={item.guia || undefined} onValueChange={(v) => handleItemChange(idx, 'guia', v)}>
@@ -552,16 +554,28 @@ export function OrderFormDialog({
                         </Select>
                       </div>
                       {item.guia && (
-                        <div className="space-y-1">
-                          <Label className="text-xs">Pagamento Guia (R$)</Label>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            className="h-9"
-                            value={item.comissaoGuia || ''}
-                            onChange={(e) => handleItemChange(idx, 'comissaoGuia', Number(e.target.value) || 0)}
-                          />
-                        </div>
+                        <>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Comissão Vendedor (R$)</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              className="h-9"
+                              value={item.comissaoVendedor || ''}
+                              onChange={(e) => handleItemChange(idx, 'comissaoVendedor', Number(e.target.value) || 0)}
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Pagamento Guia (R$)</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              className="h-9"
+                              value={item.comissaoGuia || ''}
+                              onChange={(e) => handleItemChange(idx, 'comissaoGuia', Number(e.target.value) || 0)}
+                            />
+                          </div>
+                        </>
                       )}
                     </div>
                     {item.guia && (
