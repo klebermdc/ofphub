@@ -36,6 +36,7 @@ interface Order {
   rowIndex?: number;
   guia?: string;
   comissaoGuia?: number;
+  isGuideEntry?: boolean;
 }
 
 const AllOrders = () => {
@@ -137,7 +138,7 @@ const AllOrders = () => {
       rep.orders?.forEach(order => {
         orders.push({
           ...order,
-          salesperson_name: rep.name
+          salesperson_name: rep.name,
         });
       });
     });
@@ -561,38 +562,40 @@ const AllOrders = () => {
                         {filteredOrders.map((order, index) => (
                           <TableRow key={`${order.pedido}-${index}`}>
                             <TableCell className="text-xs sm:text-sm p-1">
-                              <OrderFormDialog
-                                mode="edit"
-                                order={{
-                                  id: (order as any).id,
-                                  cliente: order.cliente,
-                                  emailCliente: order.emailCliente || '',
-                                  data: order.data,
-                                  pedido: order.pedido,
-                                  venda: order.venda,
-                                  fornecedor: order.fornecedor,
-                                  produto: order.produto,
-                                  comissao: order.comissao,
-                                  comissaoTotal: order.comissaoTotal,
-                                  porcentagemVendedor: order.porcentagemVendedor,
-                                  comissaoVendedor: order.comissaoVendedor,
-                                  vendedor: order.salesperson_name,
-                                  status: order.status || 'Pendente',
-                                  rowIndex: order.rowIndex,
-                                  guia: (order as any).guia || '',
-                                  comissaoGuia: (order as any).comissaoGuia || 0,
-                                } as any}
-                                sheetUrl={savedUrl}
-                                availableVendedores={availableVendedores}
-                                availableProdutos={availableProdutos}
-                                availableFornecedores={availableFornecedores}
-                                onSuccess={refreshData}
-                                trigger={
-                                  <Button variant="ghost" size="icon" className="h-7 w-7">
-                                    <Edit2 className="h-3.5 w-3.5" />
-                                  </Button>
-                                }
-                              />
+                              {order.isGuideEntry ? null : (
+                                <OrderFormDialog
+                                  mode="edit"
+                                  order={{
+                                    id: order.id,
+                                    cliente: order.cliente,
+                                    emailCliente: order.emailCliente || '',
+                                    data: order.data,
+                                    pedido: order.pedido,
+                                    venda: order.venda,
+                                    fornecedor: order.fornecedor,
+                                    produto: order.produto,
+                                    comissao: order.comissao,
+                                    comissaoTotal: order.comissaoTotal,
+                                    porcentagemVendedor: order.porcentagemVendedor,
+                                    comissaoVendedor: order.comissaoVendedor,
+                                    vendedor: order.salesperson_name,
+                                    status: order.status || 'Pendente',
+                                    rowIndex: order.rowIndex,
+                                    guia: order.guia || '',
+                                    comissaoGuia: order.comissaoGuia || 0,
+                                  }}
+                                  sheetUrl={savedUrl}
+                                  availableVendedores={availableVendedores}
+                                  availableProdutos={availableProdutos}
+                                  availableFornecedores={availableFornecedores}
+                                  onSuccess={refreshData}
+                                  trigger={
+                                    <Button variant="ghost" size="icon" className="h-7 w-7">
+                                      <Edit2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                  }
+                                />
+                              )}
                             </TableCell>
                             <TableCell className="text-center">
                               <Checkbox

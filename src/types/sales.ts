@@ -16,6 +16,7 @@ export interface OrderDetail {
   created_at?: string;
   guia?: string;
   comissaoGuia?: number;
+  isGuideEntry?: boolean;
 }
 
 export interface SalesRep {
