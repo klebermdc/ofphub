@@ -536,7 +536,7 @@ export function OrderFormDialog({
                 {item.produto.toLowerCase().includes('guiamento') && (
                   <div className="border border-primary/30 rounded-lg p-3 bg-primary/5 space-y-2">
                     <Label className="text-xs font-semibold text-primary">🧭 Guiamento</Label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div className="space-y-1">
                         <Label className="text-xs">Guia</Label>
                         <Select value={item.guia || undefined} onValueChange={(v) => handleItemChange(idx, 'guia', v)}>
@@ -554,16 +554,28 @@ export function OrderFormDialog({
                         </Select>
                       </div>
                       {item.guia && (
-                        <div className="space-y-1">
-                          <Label className="text-xs">Pagamento Guia (R$)</Label>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            className="h-9"
-                            value={item.comissaoGuia || ''}
-                            onChange={(e) => handleItemChange(idx, 'comissaoGuia', Number(e.target.value) || 0)}
-                          />
-                        </div>
+                        <>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Comissão Vendedor (R$)</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              className="h-9"
+                              value={item.comissaoVendedor || ''}
+                              onChange={(e) => handleItemChange(idx, 'comissaoVendedor', Number(e.target.value) || 0)}
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Pagamento Guia (R$)</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              className="h-9"
+                              value={item.comissaoGuia || ''}
+                              onChange={(e) => handleItemChange(idx, 'comissaoGuia', Number(e.target.value) || 0)}
+                            />
+                          </div>
+                        </>
                       )}
                     </div>
                     {item.guia && (
