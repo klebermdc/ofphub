@@ -57,6 +57,8 @@ interface OrderFormDataLegacy {
   comissaoVendedor: number;
   vendedor: string;
   status: string;
+  guia?: string;
+  comissaoGuia?: number;
 }
 
 interface OrderFormDialogProps {
