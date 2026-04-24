@@ -543,10 +543,13 @@ export function OrderFormDialog({
                           <SelectTrigger className="h-9"><SelectValue placeholder="Selecione o guia" /></SelectTrigger>
                           <SelectContent>
                             {availableGuias.map((guia) => {
-                              const isKleber = guia.trim().toLowerCase() === 'kleber';
+                              const name = guia.trim().toLowerCase();
+                              const isKleber = name === 'kleber';
+                              const isRafael = name === 'rafael';
+                              const label = isKleber ? ' (100%)' : isRafael ? ' (50%)' : '';
                               return (
                                 <SelectItem key={guia} value={guia}>
-                                  {guia}{isKleber ? ' (100%)' : ' (50%)'}
+                                  {guia}{label}
                                 </SelectItem>
                               );
                             })}
