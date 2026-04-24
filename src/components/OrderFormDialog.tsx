@@ -138,27 +138,28 @@ function calcItem(item: ProductLineItem, vendedor: string): ProductLineItem {
   const comissaoTotal = item.venda * (effectiveComissao / 100);
   
   if (isGuiamento && item.guia) {
-    const guiaIsVendedor = vendedor === item.guia;
+    const guiaIsVendedor = vendedor.trim().toLowerCase() === item.guia.trim().toLowerCase();
     // Vendedor (que não é o guia) recebe 5% fixo sobre a venda
     const VENDEDOR_GUIAMENTO_PCT = 0.05;
+    const isKleber = item.guia.trim().toLowerCase() === 'kleber';
 
-    if (item.guia === 'Kleber') {
+    if (isKleber) {
+      // Regra Kleber: leva tudo (sem OFP)
       if (guiaIsVendedor) {
-        // Kleber é o vendedor: ele leva 100%, OFP fica com 0
         return { ...item, comissaoTotal, comissaoVendedor: 0, comissaoGuia: item.venda };
       } else {
-        // Vendedor leva 5%, Kleber leva o restante (95%), OFP 0
         const comissaoVendedor = item.venda * VENDEDOR_GUIAMENTO_PCT;
         const comissaoGuia = item.venda - comissaoVendedor;
         return { ...item, comissaoTotal, comissaoVendedor, comissaoGuia };
       }
-    } else if (item.guia === 'Rafael') {
+    } else {
+      // Regra padrão para todos os outros guias (Rafael, Daiane, etc.): 50/50 com OFP
       if (guiaIsVendedor) {
-        // Rafael é o vendedor: 50% Rafael / 50% OFP
+        // Guia é o vendedor: 50% guia / 50% OFP
         const comissaoGuia = item.venda * 0.5;
         return { ...item, comissaoTotal, comissaoVendedor: 0, comissaoGuia };
       } else {
-        // Vendedor leva 5%, restante (95%) é dividido 50% Rafael / 50% OFP
+        // Vendedor leva 5%, restante (95%) dividido 50% guia / 50% OFP
         const comissaoVendedor = item.venda * VENDEDOR_GUIAMENTO_PCT;
         const comissaoGuia = (item.venda - comissaoVendedor) * 0.5;
         return { ...item, comissaoTotal, comissaoVendedor, comissaoGuia };
