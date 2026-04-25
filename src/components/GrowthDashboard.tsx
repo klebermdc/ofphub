@@ -78,22 +78,19 @@ export function GrowthDashboard() {
     return <div className="flex items-center justify-center py-12"><div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" /></div>;
   }
 
-  // Live revenue from real orders for current year (2026): overrides manual growth_metrics
-  // so the dashboard reflects sales as they happen.
-  const liveRevenueByMonth = new Map<string, number>();
+  // Live revenue ONLY for current month of 2026 (April). All other months keep manual values.
+  const LIVE_MONTH = 4;
+  const LIVE_YEAR = 2026;
+  let liveAprilRevenue = 0;
   for (const o of orders) {
-    if (o.year !== 2026) continue;
-    const key = `${o.year}-${o.month}`;
-    liveRevenueByMonth.set(key, (liveRevenueByMonth.get(key) || 0) + o.venda);
+    if (o.year === LIVE_YEAR && o.month === LIVE_MONTH) {
+      liveAprilRevenue += o.venda;
+    }
   }
 
-  // Merge: replace 2026 entries with live data, add months that exist in orders but not in growth_metrics
   const mergedData: GrowthRow[] = [
-    ...data.filter(d => d.year !== 2026),
-    ...Array.from(liveRevenueByMonth.entries()).map(([key, revenue]) => {
-      const [y, m] = key.split('-').map(Number);
-      return { year: y, month: m, revenue };
-    }),
+    ...data.filter(d => !(d.year === LIVE_YEAR && d.month === LIVE_MONTH)),
+    ...(liveAprilRevenue > 0 ? [{ year: LIVE_YEAR, month: LIVE_MONTH, revenue: liveAprilRevenue }] : []),
   ];
 
   const byYear = (y: number) => mergedData.filter(d => d.year === y);
