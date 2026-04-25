@@ -118,7 +118,7 @@ export function GrowthDashboard() {
     const month = i + 1;
     const row: any = { month: MONTH_NAMES[i] };
     [2023, 2024, 2025, 2026].forEach(y => {
-      const found = data.find(d => d.year === y && d.month === month);
+      const found = mergedData.find(d => d.year === y && d.month === month);
       row[`${y}`] = found ? found.revenue : null;
     });
     return row;
@@ -126,7 +126,7 @@ export function GrowthDashboard() {
 
   const tableData = Array.from({ length: 12 }, (_, i) => {
     const month = i + 1;
-    const get = (y: number) => data.find(d => d.year === y && d.month === month)?.revenue;
+    const get = (y: number) => mergedData.find(d => d.year === y && d.month === month)?.revenue;
     const r2023 = get(2023); const r2024 = get(2024); const r2025 = get(2025); const r2026 = get(2026);
     const growth = (curr?: number, prev?: number) =>
       curr != null && prev != null && prev > 0 ? ((curr - prev) / prev) * 100 : null;
