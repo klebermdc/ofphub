@@ -10,12 +10,14 @@ export function useGrowthOrders() {
     async function fetchAll() {
       const allRows: any[] = [];
       let from = 0;
-      const PAGE = 5000;
+      const PAGE = 1000;
       while (true) {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from("orders")
           .select("data, venda, comissao_total, vendedor, produto, fornecedor")
+          .order("created_at", { ascending: false })
           .range(from, from + PAGE - 1);
+        if (error) { console.error("useGrowthOrders error:", error); break; }
         if (!data || data.length === 0) break;
         allRows.push(...data);
         if (data.length < PAGE) break;
