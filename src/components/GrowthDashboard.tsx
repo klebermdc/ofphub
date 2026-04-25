@@ -78,7 +78,25 @@ export function GrowthDashboard() {
     return <div className="flex items-center justify-center py-12"><div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" /></div>;
   }
 
-  const byYear = (y: number) => data.filter(d => d.year === y);
+  // Live revenue from real orders for current year (2026): overrides manual growth_metrics
+  // so the dashboard reflects sales as they happen.
+  const liveRevenueByMonth = new Map<string, number>();
+  for (const o of orders) {
+    if (o.year !== 2026) continue;
+    const key = `${o.year}-${o.month}`;
+    liveRevenueByMonth.set(key, (liveRevenueByMonth.get(key) || 0) + o.venda);
+  }
+
+  // Merge: replace 2026 entries with live data, add months that exist in orders but not in growth_metrics
+  const mergedData: GrowthRow[] = [
+    ...data.filter(d => d.year !== 2026),
+    ...Array.from(liveRevenueByMonth.entries()).map(([key, revenue]) => {
+      const [y, m] = key.split('-').map(Number);
+      return { year: y, month: m, revenue };
+    }),
+  ];
+
+  const byYear = (y: number) => mergedData.filter(d => d.year === y);
   const rev2026 = byYear(2026);
   const sum2026 = rev2026.reduce((s, d) => s + d.revenue, 0);
   const months2026 = rev2026.length;
@@ -100,7 +118,7 @@ export function GrowthDashboard() {
     const month = i + 1;
     const row: any = { month: MONTH_NAMES[i] };
     [2023, 2024, 2025, 2026].forEach(y => {
-      const found = data.find(d => d.year === y && d.month === month);
+      const found = mergedData.find(d => d.year === y && d.month === month);
       row[`${y}`] = found ? found.revenue : null;
     });
     return row;
@@ -108,7 +126,7 @@ export function GrowthDashboard() {
 
   const tableData = Array.from({ length: 12 }, (_, i) => {
     const month = i + 1;
-    const get = (y: number) => data.find(d => d.year === y && d.month === month)?.revenue;
+    const get = (y: number) => mergedData.find(d => d.year === y && d.month === month)?.revenue;
     const r2023 = get(2023); const r2024 = get(2024); const r2025 = get(2025); const r2026 = get(2026);
     const growth = (curr?: number, prev?: number) =>
       curr != null && prev != null && prev > 0 ? ((curr - prev) / prev) * 100 : null;
