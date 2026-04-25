@@ -136,10 +136,21 @@ function getCommissionPreset(produto: string, vendedor: string): { comissao: num
 
 function calcItem(item: ProductLineItem, vendedor: string): ProductLineItem {
   const isGuiamento = item.produto.toLowerCase().includes('guiamento');
+  const isSite = vendedor.trim().toLowerCase() === 'site';
   // Guiamento is always 100% commission (OFP product)
   const effectiveComissao = isGuiamento ? 100 : item.comissao;
   const comissaoTotal = item.venda * (effectiveComissao / 100);
-  
+
+  // Vendedor "Site" não recebe comissão — tudo fica para a OFP (ou guia, em guiamento)
+  if (isSite) {
+    if (isGuiamento && item.guia) {
+      const isKleber = item.guia.trim().toLowerCase() === 'kleber';
+      const comissaoGuia = isKleber ? item.venda : item.venda * 0.5;
+      return { ...item, comissaoTotal, comissaoVendedor: 0, comissaoGuia };
+    }
+    return { ...item, comissaoTotal, comissaoVendedor: 0, comissaoGuia: 0 };
+  }
+
   if (isGuiamento && item.guia) {
     const guiaIsVendedor = vendedor.trim().toLowerCase() === item.guia.trim().toLowerCase();
     // Vendedor (que não é o guia) recebe 5% fixo sobre a venda
