@@ -23,11 +23,14 @@ import { GrowthProductMix } from "./growth/GrowthProductMix";
 import { GrowthTopSuppliers } from "./growth/GrowthTopSuppliers";
 import { GrowthSeasonality } from "./growth/GrowthSeasonality";
 import { GrowthMarketingVsSales } from "./growth/GrowthMarketingVsSales";
-import { GrowthRow, MONTH_NAMES, MONTH_FULL, YEAR_COLORS, formatBRL, formatCompact } from "./growth/growthUtils";
+import { GrowthRow, MONTH_NAMES, MONTH_FULL, YEAR_COLORS, formatBRL, formatCompact, parseOrderDate } from "./growth/growthUtils";
 
 const tooltipStyle = { backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' };
 
 type EditingCell = { month: number; year: number } | null;
+
+const LIVE_MONTH = 4;
+const LIVE_YEAR = 2026;
 
 export function GrowthDashboard() {
   const [data, setData] = useState<GrowthRow[]>([]);
@@ -36,6 +39,7 @@ export function GrowthDashboard() {
   const [editValue, setEditValue] = useState("");
   const [saving, setSaving] = useState(false);
   const [filterYear, setFilterYear] = useState<string>("all");
+  const [liveAprilRevenueFromDb, setLiveAprilRevenueFromDb] = useState<number | null>(null);
   const { orders, loading: ordersLoading } = useGrowthOrders();
 
   const selectedYear = filterYear === "all" ? null : Number(filterYear);
@@ -51,6 +55,45 @@ export function GrowthDashboard() {
   };
 
   useEffect(() => { fetchData(); }, []);
+
+  useEffect(() => {
+    async function fetchLiveAprilRevenue() {
+      let total = 0;
+      let from = 0;
+      const PAGE = 1000;
+
+      while (true) {
+        const { data: rows, error } = await supabase
+          .from("orders")
+          .select("data, venda")
+          .or(`data.like.%/04/${LIVE_YEAR},data.like.%/04/${String(LIVE_YEAR).slice(-2)},data.like.${LIVE_YEAR}-04-%`)
+          .order("id", { ascending: true })
+          .range(from, from + PAGE - 1);
+
+        if (error) {
+          console.error("fetchLiveAprilRevenue error:", error);
+          setLiveAprilRevenueFromDb(null);
+          return;
+        }
+
+        if (!rows || rows.length === 0) break;
+
+        for (const row of rows) {
+          const dt = parseOrderDate(row.data);
+          if (dt?.year === LIVE_YEAR && dt.month === LIVE_MONTH) {
+            total += Number(row.venda) || 0;
+          }
+        }
+
+        if (rows.length < PAGE) break;
+        from += PAGE;
+      }
+
+      setLiveAprilRevenueFromDb(total);
+    }
+
+    fetchLiveAprilRevenue();
+  }, []);
 
   const startEdit = (month: number, year: number, currentValue?: number) => {
     setEditing({ month, year });
@@ -78,15 +121,11 @@ export function GrowthDashboard() {
     return <div className="flex items-center justify-center py-12"><div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" /></div>;
   }
 
-  // Live revenue ONLY for current month of 2026 (April). All other months keep manual values.
-  const LIVE_MONTH = 4;
-  const LIVE_YEAR = 2026;
-  let liveAprilRevenue = 0;
-  for (const o of orders) {
-    if (o.year === LIVE_YEAR && o.month === LIVE_MONTH) {
-      liveAprilRevenue += o.venda;
-    }
-  }
+  // Live revenue ONLY for April/2026. All other months keep manual values.
+  const liveAprilRevenueFromOrders = orders.reduce((sum, o) => {
+    return o.year === LIVE_YEAR && o.month === LIVE_MONTH ? sum + o.venda : sum;
+  }, 0);
+  const liveAprilRevenue = liveAprilRevenueFromDb ?? liveAprilRevenueFromOrders;
 
   const mergedData: GrowthRow[] = [
     ...data.filter(d => !(d.year === LIVE_YEAR && d.month === LIVE_MONTH)),
