@@ -121,15 +121,11 @@ export function GrowthDashboard() {
     return <div className="flex items-center justify-center py-12"><div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" /></div>;
   }
 
-  // Live revenue ONLY for current month of 2026 (April). All other months keep manual values.
-  const LIVE_MONTH = 4;
-  const LIVE_YEAR = 2026;
-  let liveAprilRevenue = 0;
-  for (const o of orders) {
-    if (o.year === LIVE_YEAR && o.month === LIVE_MONTH) {
-      liveAprilRevenue += o.venda;
-    }
-  }
+  // Live revenue ONLY for April/2026. All other months keep manual values.
+  const liveAprilRevenueFromOrders = orders.reduce((sum, o) => {
+    return o.year === LIVE_YEAR && o.month === LIVE_MONTH ? sum + o.venda : sum;
+  }, 0);
+  const liveAprilRevenue = liveAprilRevenueFromDb ?? liveAprilRevenueFromOrders;
 
   const mergedData: GrowthRow[] = [
     ...data.filter(d => !(d.year === LIVE_YEAR && d.month === LIVE_MONTH)),
