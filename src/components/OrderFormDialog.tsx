@@ -244,7 +244,10 @@ export function OrderFormDialog({
           const updatedItem = preset
             ? { ...item, comissao: preset.comissao, porcentagemVendedor: preset.porcentagemVendedor }
             : item;
-          return calcItem(updatedItem, value);
+          const previousVendedor = item.comissaoVendedor;
+          const recalculated = calcItem(updatedItem, value);
+          // Preservar comissão do vendedor manual
+          return { ...recalculated, comissaoVendedor: previousVendedor };
         });
       }
       return updated;
