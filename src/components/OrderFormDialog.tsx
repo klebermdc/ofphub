@@ -244,7 +244,10 @@ export function OrderFormDialog({
           const updatedItem = preset
             ? { ...item, comissao: preset.comissao, porcentagemVendedor: preset.porcentagemVendedor }
             : item;
-          return calcItem(updatedItem, value);
+          const previousVendedor = item.comissaoVendedor;
+          const recalculated = calcItem(updatedItem, value);
+          // Preservar comissão do vendedor manual
+          return { ...recalculated, comissaoVendedor: previousVendedor };
         });
       }
       return updated;
@@ -263,16 +266,16 @@ export function OrderFormDialog({
           newItems[index].porcentagemVendedor = preset.porcentagemVendedor;
         }
       }
-      // Recalculate when relevant fields change, but preserve manual comissaoGuia/comissaoVendedor
+      // Recalculate when relevant fields change, but always preserve manual comissaoVendedor
       if (['venda', 'comissao', 'porcentagemVendedor', 'guia', 'produto'].includes(field)) {
         const previousGuia = newItems[index].comissaoGuia;
         const previousVendedor = newItems[index].comissaoVendedor;
         newItems[index] = calcItem(newItems[index], prev.vendedor);
-        // Only auto-fill comissaoGuia/comissaoVendedor when guia or produto changes (suggestion);
-        // for other fields (venda, comissao, porcentagemVendedor), keep manual value
-        if (!['guia', 'produto'].includes(field) && field !== 'venda') {
+        // comissaoVendedor é sempre manual — nunca sobrescrever
+        newItems[index].comissaoVendedor = previousVendedor;
+        // comissaoGuia: só auto-preencher quando guia/produto mudar
+        if (!['guia', 'produto'].includes(field)) {
           newItems[index].comissaoGuia = previousGuia;
-          newItems[index].comissaoVendedor = previousVendedor;
         }
       }
       // If user manually edits comissaoGuia or comissaoVendedor, don't recalculate
