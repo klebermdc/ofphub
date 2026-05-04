@@ -473,7 +473,7 @@ export function OrderFormDialog({
               <Select value={formData.vendedor} onValueChange={(v) => handleHeaderChange('vendedor', v)}>
                 <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                 <SelectContent>
-                  {availableVendedores.map(v => (<SelectItem key={v} value={v}>{v}</SelectItem>))}
+                  {availableVendedores.filter(v => v && v.trim()).map(v => (<SelectItem key={v} value={v}>{v}</SelectItem>))}
                 </SelectContent>
               </Select>
             </div>
