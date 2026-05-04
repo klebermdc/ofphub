@@ -542,7 +542,7 @@ export function OrderFormDialog({
                     <Select value={item.fornecedor} onValueChange={(v) => handleItemChange(idx, 'fornecedor', v)}>
                       <SelectTrigger className="h-9"><SelectValue placeholder="Selecione" /></SelectTrigger>
                       <SelectContent>
-                        {availableFornecedores.map(f => (<SelectItem key={f} value={f}>{f}</SelectItem>))}
+                        {availableFornecedores.filter(f => f && f.trim()).map(f => (<SelectItem key={f} value={f}>{f}</SelectItem>))}
                       </SelectContent>
                     </Select>
                   </div>
