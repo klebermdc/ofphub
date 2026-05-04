@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { DollarSign, TrendingUp, Package, Calendar, Filter, ArrowLeft, Users, ShoppingBag, Building, RefreshCw, Edit2, Wallet, Send, Search, X, Sun, Moon } from "lucide-react";
+import { DollarSign, TrendingUp, Package, Calendar, Filter, ArrowLeft, Users, ShoppingBag, Building, RefreshCw, Edit2, Wallet, Send, Search, X, Sun, Moon, Trash2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { MetricCard } from "@/components/MetricCard";
 import { OrderFormDialog } from "@/components/OrderFormDialog";
 import { useAuth } from "@/hooks/useAuth";
@@ -113,7 +114,20 @@ const AllOrders = () => {
     }
   };
 
-  // Filters
+  // Delete order
+  const handleDeleteOrder = async (orderId?: string) => {
+    if (!orderId) {
+      toast({ title: "Erro", description: "ID do pedido não encontrado", variant: "destructive" });
+      return;
+    }
+    const { error } = await supabase.from('orders').delete().eq('id', orderId);
+    if (error) {
+      toast({ title: "Erro ao excluir", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Pedido excluído", description: "O pedido foi removido com sucesso." });
+    await refreshData();
+  };
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
   const [selectedVendedor, setSelectedVendedor] = useState<string>('all');
   const [selectedProduto, setSelectedProduto] = useState<string>('all');
@@ -543,6 +557,7 @@ const AllOrders = () => {
                       <TableHeader>
                         <TableRow>
                           <TableHead className="text-xs sm:text-sm w-10"></TableHead>
+                          <TableHead className="text-xs sm:text-sm w-10"></TableHead>
                           <TableHead className="text-xs sm:text-sm text-center w-16">
                             <Send className="h-3.5 w-3.5 mx-auto" />
                           </TableHead>
@@ -595,6 +610,34 @@ const AllOrders = () => {
                                     </Button>
                                   }
                                 />
+                              )}
+                            </TableCell>
+                            <TableCell className="text-xs sm:text-sm p-1">
+                              {order.isGuideEntry ? null : (
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10">
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Excluir pedido?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Esta ação não pode ser desfeita. O pedido <strong>{order.pedido || '-'}</strong> de <strong>{order.cliente || '-'}</strong> será removido permanentemente.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => handleDeleteOrder(order.id)}
+                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                      >
+                                        Excluir
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
                               )}
                             </TableCell>
                             <TableCell className="text-center">
