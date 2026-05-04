@@ -200,12 +200,16 @@ const Index = () => {
       const allRows: any[] = [];
 
       for (let offset = 0; ; offset += pageSize) {
-        const { data, error } = await supabase
+        // Manager loads global data without user_id filter (per data visibility rule)
+        let query = supabase
           .from('orders')
           .select('*')
-          .eq('user_id', user.id)
           .order('created_at', { ascending: false })
           .range(offset, offset + pageSize - 1);
+        if (role !== 'manager') {
+          query = query.eq('user_id', user.id);
+        }
+        const { data, error } = await query;
 
         if (error) throw error;
         if (!data || data.length === 0) break;
@@ -286,7 +290,7 @@ const Index = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user, refetchGoals]);
+  }, [user, refetchGoals, role]);
 
   useEffect(() => {
     setHasLoadedOnEntry(false);
