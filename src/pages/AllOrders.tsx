@@ -114,7 +114,20 @@ const AllOrders = () => {
     }
   };
 
-  // Filters
+  // Delete order
+  const handleDeleteOrder = async (orderId?: string) => {
+    if (!orderId) {
+      toast({ title: "Erro", description: "ID do pedido não encontrado", variant: "destructive" });
+      return;
+    }
+    const { error } = await supabase.from('orders').delete().eq('id', orderId);
+    if (error) {
+      toast({ title: "Erro ao excluir", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Pedido excluído", description: "O pedido foi removido com sucesso." });
+    await refreshData();
+  };
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
   const [selectedVendedor, setSelectedVendedor] = useState<string>('all');
   const [selectedProduto, setSelectedProduto] = useState<string>('all');
