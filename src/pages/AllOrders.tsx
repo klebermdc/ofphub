@@ -557,6 +557,7 @@ const AllOrders = () => {
                       <TableHeader>
                         <TableRow>
                           <TableHead className="text-xs sm:text-sm w-10"></TableHead>
+                          <TableHead className="text-xs sm:text-sm w-10"></TableHead>
                           <TableHead className="text-xs sm:text-sm text-center w-16">
                             <Send className="h-3.5 w-3.5 mx-auto" />
                           </TableHead>
