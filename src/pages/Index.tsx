@@ -290,7 +290,7 @@ const Index = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user, refetchGoals]);
+  }, [user, refetchGoals, role]);
 
   useEffect(() => {
     setHasLoadedOnEntry(false);
