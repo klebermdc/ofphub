@@ -473,7 +473,7 @@ export function OrderFormDialog({
               <Select value={formData.vendedor} onValueChange={(v) => handleHeaderChange('vendedor', v)}>
                 <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                 <SelectContent>
-                  {availableVendedores.map(v => (<SelectItem key={v} value={v}>{v}</SelectItem>))}
+                  {availableVendedores.filter(v => v && v.trim()).map(v => (<SelectItem key={v} value={v}>{v}</SelectItem>))}
                 </SelectContent>
               </Select>
             </div>
@@ -533,7 +533,7 @@ export function OrderFormDialog({
                     <Select value={item.produto} onValueChange={(v) => handleItemChange(idx, 'produto', v)}>
                       <SelectTrigger className="h-9"><SelectValue placeholder="Selecione" /></SelectTrigger>
                       <SelectContent>
-                        {availableProdutos.map(p => (<SelectItem key={p} value={p}>{p}</SelectItem>))}
+                        {availableProdutos.filter(p => p && p.trim()).map(p => (<SelectItem key={p} value={p}>{p}</SelectItem>))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -542,7 +542,7 @@ export function OrderFormDialog({
                     <Select value={item.fornecedor} onValueChange={(v) => handleItemChange(idx, 'fornecedor', v)}>
                       <SelectTrigger className="h-9"><SelectValue placeholder="Selecione" /></SelectTrigger>
                       <SelectContent>
-                        {availableFornecedores.map(f => (<SelectItem key={f} value={f}>{f}</SelectItem>))}
+                        {availableFornecedores.filter(f => f && f.trim()).map(f => (<SelectItem key={f} value={f}>{f}</SelectItem>))}
                       </SelectContent>
                     </Select>
                   </div>
