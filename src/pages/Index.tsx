@@ -92,6 +92,7 @@ const Index = () => {
   // Month filters
   const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonthKey());
   const [dashboardMonth, setDashboardMonth] = useState<string>(getCurrentMonthKey());
+  const [dashboardDateRange, setDashboardDateRange] = useState<{ from?: Date; to?: Date }>({});
 
   // Hooks for data fetching
   const { salaries, saveSalaries, getSalary } = useSalespersonSalaries(user?.id);
