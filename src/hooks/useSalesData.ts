@@ -16,7 +16,8 @@ const isGuiamento = (produto?: string) =>
 
 export function useFilteredSalesReps(
   salesReps: SalesRep[],
-  selectedMonth: string
+  selectedMonth: string,
+  dateRange?: { from?: Date; to?: Date }
 ): FilteredSalesData {
   // Extract available months from orders data
   const availableMonths = useMemo(() => {
