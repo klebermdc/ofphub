@@ -1,13 +1,18 @@
 import { useState } from "react";
-import { Database, Calendar, ClipboardList, Download, Loader2, RefreshCw, FileText } from "lucide-react";
+import { Database, Calendar as CalendarIcon, ClipboardList, Download, Loader2, RefreshCw, FileText, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { OperationalCostsDialog } from "@/components/OperationalCostsDialog";
 import { getMonthName } from "@/utils/dateUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 interface DashboardHeaderControlsProps {
   dataSource: 'sheet' | 'history';
@@ -21,6 +26,8 @@ interface DashboardHeaderControlsProps {
   userId?: string;
   hasApiIntegration?: boolean;
   onOpenWeeklyReport?: () => void;
+  dateRange?: { from?: Date; to?: Date };
+  setDateRange?: (range: { from?: Date; to?: Date }) => void;
 }
 
 export function DashboardHeaderControls({
