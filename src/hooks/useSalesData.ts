@@ -41,9 +41,32 @@ export function useFilteredSalesReps(
     });
   }, [salesReps]);
 
-  // Filter sales reps by selected month (guiamento stays in base data, excluded only for commission % calc)
+  // Filter sales reps by date range OR selected month
   const filteredSalesReps = useMemo(() => {
-    const baseReps = selectedMonth === 'all'
+    const hasRange = !!(dateRange && (dateRange.from || dateRange.to));
+    const fromTime = dateRange?.from ? new Date(dateRange.from.getFullYear(), dateRange.from.getMonth(), dateRange.from.getDate()).getTime() : -Infinity;
+    const toTime = dateRange?.to ? new Date(dateRange.to.getFullYear(), dateRange.to.getMonth(), dateRange.to.getDate(), 23, 59, 59).getTime() : Infinity;
+
+    const baseReps = hasRange
+      ? salesReps.map(rep => {
+          const filtered = (rep.orders || []).filter(order => {
+            if (!order.data) return false;
+            const p = (() => {
+              const iso = order.data.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+              if (iso) return { y: +iso[1], m: +iso[2], d: +iso[3] };
+              const parts = order.data.split('/');
+              if (parts.length < 2) return null;
+              let y = parts[2] ? parseInt(parts[2]) : new Date().getFullYear();
+              if (y < 100) y += 2000;
+              return { y, m: parseInt(parts[1]), d: parseInt(parts[0]) };
+            })();
+            if (!p) return false;
+            const t = new Date(p.y, p.m - 1, p.d).getTime();
+            return t >= fromTime && t <= toTime;
+          });
+          return { ...rep, orders: filtered };
+        })
+      : selectedMonth === 'all'
       ? salesReps.map(rep => ({ ...rep, orders: rep.orders || [] }))
       : salesReps.map(rep => {
           const filtered = (rep.orders || []).filter(order => {
@@ -68,7 +91,7 @@ export function useFilteredSalesReps(
           : 0,
       };
     }).filter(rep => rep.orders.length > 0);
-  }, [salesReps, selectedMonth]);
+  }, [salesReps, selectedMonth, dateRange?.from, dateRange?.to]);
 
   return { filteredSalesReps, availableMonths };
 }
