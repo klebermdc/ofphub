@@ -131,8 +131,14 @@ export function DashboardHeaderControls({
         
         {/* Filtro de Mês */}
         <div className="flex items-center gap-2">
-          <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
-          <Select value={dashboardMonth} onValueChange={setDashboardMonth}>
+          <CalendarIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
+          <Select
+            value={dashboardMonth}
+            onValueChange={(v) => {
+              setDashboardMonth(v);
+              setDateRange?.({});
+            }}
+          >
             <SelectTrigger className="w-[130px] sm:w-[160px] h-8 text-xs sm:text-sm">
               <SelectValue placeholder="Todos os meses" />
             </SelectTrigger>
@@ -149,6 +155,66 @@ export function DashboardHeaderControls({
             </SelectContent>
           </Select>
         </div>
+
+        {/* Filtro por Data Inicial e Final */}
+        {setDateRange && (
+          <div className="flex items-center gap-1">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn("h-8 text-xs gap-1", !dateRange?.from && "text-muted-foreground")}
+                >
+                  <CalendarIcon className="h-3.5 w-3.5" />
+                  {dateRange?.from ? format(dateRange.from, "dd/MM/yy", { locale: ptBR }) : "Data inicial"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={dateRange?.from}
+                  onSelect={(d) => setDateRange({ ...dateRange, from: d || undefined })}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+            <span className="text-xs text-muted-foreground">→</span>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn("h-8 text-xs gap-1", !dateRange?.to && "text-muted-foreground")}
+                >
+                  <CalendarIcon className="h-3.5 w-3.5" />
+                  {dateRange?.to ? format(dateRange.to, "dd/MM/yy", { locale: ptBR }) : "Data final"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={dateRange?.to}
+                  onSelect={(d) => setDateRange({ ...dateRange, to: d || undefined })}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+            {(dateRange?.from || dateRange?.to) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2"
+                onClick={() => setDateRange({})}
+                title="Limpar filtro de datas"
+              >
+                <X className="h-3.5 w-3.5" />
+              </Button>
+            )}
+          </div>
+        )}
       </div>
       
       <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
