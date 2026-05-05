@@ -92,6 +92,7 @@ const Index = () => {
   // Month filters
   const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonthKey());
   const [dashboardMonth, setDashboardMonth] = useState<string>(getCurrentMonthKey());
+  const [dashboardDateRange, setDashboardDateRange] = useState<{ from?: Date; to?: Date }>({});
 
   // Hooks for data fetching
   const { salaries, saveSalaries, getSalary } = useSalespersonSalaries(user?.id);
@@ -106,7 +107,7 @@ const Index = () => {
   } = useMarketingCosts(user?.id, role === 'marketing' || role === 'manager');
 
   // Filtered sales data
-  const { filteredSalesReps: dashboardFilteredSalesReps, availableMonths } = useFilteredSalesReps(salesReps, dashboardMonth);
+  const { filteredSalesReps: dashboardFilteredSalesReps, availableMonths } = useFilteredSalesReps(salesReps, dashboardMonth, dashboardDateRange);
   const { filteredSalesReps } = useFilteredSalesReps(salesReps, selectedMonth);
 
   // Dashboard metrics
@@ -456,6 +457,8 @@ const Index = () => {
                       userId={user?.id}
                       hasApiIntegration={!!getAccountingIntegration()}
                       onOpenWeeklyReport={() => setWeeklyReportOpen(true)}
+                      dateRange={dashboardDateRange}
+                      setDateRange={setDashboardDateRange}
                     />
 
                     <DailySalesTracker
