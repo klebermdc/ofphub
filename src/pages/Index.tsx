@@ -457,6 +457,8 @@ const Index = () => {
                       userId={user?.id}
                       hasApiIntegration={!!getAccountingIntegration()}
                       onOpenWeeklyReport={() => setWeeklyReportOpen(true)}
+                      dateRange={dashboardDateRange}
+                      setDateRange={setDashboardDateRange}
                     />
 
                     <DailySalesTracker
