@@ -42,6 +42,8 @@ export function DashboardHeaderControls({
   userId,
   hasApiIntegration,
   onOpenWeeklyReport,
+  dateRange,
+  setDateRange,
 }: DashboardHeaderControlsProps) {
   const navigate = useNavigate();
   const [importing, setImporting] = useState(false);
