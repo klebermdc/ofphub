@@ -107,7 +107,7 @@ const Index = () => {
   } = useMarketingCosts(user?.id, role === 'marketing' || role === 'manager');
 
   // Filtered sales data
-  const { filteredSalesReps: dashboardFilteredSalesReps, availableMonths } = useFilteredSalesReps(salesReps, dashboardMonth);
+  const { filteredSalesReps: dashboardFilteredSalesReps, availableMonths } = useFilteredSalesReps(salesReps, dashboardMonth, dashboardDateRange);
   const { filteredSalesReps } = useFilteredSalesReps(salesReps, selectedMonth);
 
   // Dashboard metrics
