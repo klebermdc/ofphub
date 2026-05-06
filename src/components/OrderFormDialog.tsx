@@ -116,6 +116,19 @@ const COMMISSION_PRESETS: Record<string, { comissao: number; porcentagemVendedor
   'carro': { comissao: 10, porcentagemVendedor: 30, porcentagemVendedorEspecial: 40 },
 };
 
+const PRODUTOS_PERMITIDOS = [
+  'Ingresso',
+  'Carro',
+  'Guiamento',
+  'Chip',
+  'Seguro',
+  'Hotel',
+  'Parcele JT',
+  'Ingressos',
+  'Up Grade',
+  'Casa',
+];
+
 const VENDEDORES_ESPECIAIS = ['maria gabriela', 'gabriela'];
 
 function getCommissionPreset(produto: string, vendedor: string): { comissao: number; porcentagemVendedor: number } | null {
@@ -527,7 +540,7 @@ export function OrderFormDialog({
                     <Select value={item.produto} onValueChange={(v) => handleItemChange(idx, 'produto', v)}>
                       <SelectTrigger className="h-9"><SelectValue placeholder="Selecione" /></SelectTrigger>
                       <SelectContent>
-                        {availableProdutos.filter(p => p && p.trim()).map(p => (<SelectItem key={p} value={p}>{p}</SelectItem>))}
+                        {PRODUTOS_PERMITIDOS.map(p => (<SelectItem key={p} value={p}>{p}</SelectItem>))}
                       </SelectContent>
                     </Select>
                   </div>
