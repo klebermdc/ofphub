@@ -116,6 +116,19 @@ const COMMISSION_PRESETS: Record<string, { comissao: number; porcentagemVendedor
   'carro': { comissao: 10, porcentagemVendedor: 30, porcentagemVendedorEspecial: 40 },
 };
 
+const PRODUTOS_PERMITIDOS = [
+  'Ingresso',
+  'Carro',
+  'Guiamento',
+  'Chip',
+  'Seguro',
+  'Hotel',
+  'Parcele JT',
+  'Ingressos',
+  'Up Grade',
+  'Casa',
+];
+
 const VENDEDORES_ESPECIAIS = ['maria gabriela', 'gabriela'];
 
 function getCommissionPreset(produto: string, vendedor: string): { comissao: number; porcentagemVendedor: number } | null {
