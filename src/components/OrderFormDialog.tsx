@@ -201,13 +201,7 @@ export function OrderFormDialog({
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<OrderFormData>(emptyOrder);
 
-  const availableGuias = Array.from(
-    new Set(
-      [...availableVendedores, order?.guia]
-        .map((value) => value?.trim())
-        .filter((value): value is string => Boolean(value))
-    )
-  ).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  const availableGuias = ['Rafael', 'Kleber'];
 
   useEffect(() => {
     if (order) {
