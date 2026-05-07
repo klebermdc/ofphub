@@ -432,7 +432,7 @@ const Index = () => {
           style={{ background: 'var(--gradient-glow)' }}
         />
         
-        <DashboardHeader availableSalespeople={salesReps.map(r => r.name)} />
+        <DashboardHeader availableSalespeople={availableSalespeople} />
         
         <main className="container mx-auto px-3 sm:px-6 py-4 sm:py-6 relative">
           <Tabs defaultValue={initialTab} className="space-y-4 sm:space-y-6">
@@ -528,7 +528,7 @@ const Index = () => {
                     <DailyOrdersList
                       salesReps={hasDashboardDateRange || dashboardFornecedor !== 'all' ? dashboardFilteredSalesReps : salesReps}
                       currentMonth={hasDashboardDateRange || dashboardMonth === 'all' ? 'all' : dashboardMonth}
-                      availableVendedores={salesReps.map(r => r.name)}
+                      availableVendedores={availableSalespeople}
                       availableProdutos={availableProdutos}
                       availableFornecedores={availableFornecedores}
                       selectedFornecedor={dashboardFornecedor}
