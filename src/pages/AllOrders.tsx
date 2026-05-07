@@ -232,10 +232,12 @@ const AllOrders = () => {
   // Filter orders
   const filteredOrders = useMemo(() => {
     const filtered = allOrders.filter(order => {
-      // Search by pedido number
+      // Search by pedido number or cliente name
       if (searchPedido.trim()) {
         const search = searchPedido.trim().toLowerCase();
-        if (!order.pedido?.toLowerCase().includes(search)) {
+        const matchPedido = order.pedido?.toLowerCase().includes(search) ?? false;
+        const matchCliente = order.cliente?.toLowerCase().includes(search) ?? false;
+        if (!matchPedido && !matchCliente) {
           return false;
         }
       }
@@ -396,7 +398,7 @@ const AllOrders = () => {
                 <div className="relative max-w-xs">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                   <Input
-                    placeholder="Buscar nº do pedido..."
+                    placeholder="Buscar nº do pedido ou cliente..."
                     value={searchPedido}
                     onChange={(e) => setSearchPedido(e.target.value)}
                     className="pl-9 pr-8 h-9 text-xs sm:text-sm"
