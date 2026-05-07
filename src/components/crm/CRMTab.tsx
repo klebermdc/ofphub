@@ -97,8 +97,10 @@ export function CRMTab({ salespeople = [], salespersonFilter, isReadOnly = false
     const spNames = new Set<string>();
 
     leads.forEach((lead) => {
-      if (lead.product) products.add(lead.product);
-      if (lead.salesperson_name) spNames.add(lead.salesperson_name);
+      const product = lead.product?.trim();
+      const salespersonName = lead.salesperson_name?.trim();
+      if (product) products.add(product);
+      if (salespersonName) spNames.add(salespersonName);
       // Use notion_created_at if available, otherwise created_at
       const leadDate = lead.notion_created_at || lead.created_at;
       if (leadDate) {
@@ -111,7 +113,10 @@ export function CRMTab({ salespeople = [], salespersonFilter, isReadOnly = false
     return {
       uniqueProducts: Array.from(products).sort(),
       uniqueMonths: Array.from(months),
-      uniqueSalespeople: salespeople.length > 0 ? salespeople : Array.from(spNames).sort(),
+      uniqueSalespeople: (salespeople.length > 0 ? salespeople : Array.from(spNames))
+        .map((name) => name?.trim())
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b, 'pt-BR')),
     };
   }, [leads, salespeople]);
 
@@ -465,7 +470,7 @@ export function CRMTab({ salespeople = [], salespersonFilter, isReadOnly = false
         onOpenChange={setDialogOpen}
         lead={editingLead}
         defaultStage={defaultStage}
-        salespeople={salespersonFilter ? [salespersonFilter] : uniqueSalespeople}
+        salespeople={salespersonFilter?.trim() ? [salespersonFilter.trim()] : uniqueSalespeople}
         onSave={handleSaveLead}
         onUpdate={handleUpdateLead}
       />
