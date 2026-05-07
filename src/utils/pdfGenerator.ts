@@ -49,6 +49,7 @@ export const generateSalesRepPDF = async (
   getSalary: (name: string) => number,
   getDiscount: (name: string) => number = () => 0,
   getDiscountDescription: (name: string) => string = () => '',
+  getDiscountItems: (name: string) => Array<{ amount: number; description: string }> = () => [],
   options: { returnBlob?: boolean; fileName?: string } = {}
 ): Promise<Blob | void> => {
   const doc = new jsPDF({ orientation: 'landscape' });
