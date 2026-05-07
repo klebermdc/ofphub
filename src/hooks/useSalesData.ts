@@ -84,7 +84,7 @@ export function useFilteredSalesReps(
           : 0,
       };
     }).filter(rep => rep.orders.length > 0);
-  }, [salesReps, selectedMonth, dateRange?.from, dateRange?.to, selectedFornecedor]);
+  }, [salesReps, selectedMonth, dateRange, dateRange?.from, dateRange?.to, selectedFornecedor]);
 
   return { filteredSalesReps, availableMonths };
 }
@@ -151,8 +151,8 @@ export function useDashboardMetrics(filteredSalesReps: SalesRep[]): DashboardMet
     )].filter(Boolean).length;
 
     // Calculate results by fortnight
-    let primeira = { comissaoTotal: 0, comissaoVendedor: 0 };
-    let segunda = { comissaoTotal: 0, comissaoVendedor: 0 };
+    const primeira = { comissaoTotal: 0, comissaoVendedor: 0 };
+    const segunda = { comissaoTotal: 0, comissaoVendedor: 0 };
     
     filteredSalesReps.forEach(rep => {
       rep.orders?.forEach(order => {
