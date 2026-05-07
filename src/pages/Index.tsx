@@ -522,6 +522,7 @@ const Index = () => {
                       availableVendedores={salesReps.map(r => r.name)}
                       availableProdutos={[...new Set(salesReps.flatMap(r => r.orders?.map((o: any) => o.produto).filter(Boolean) || []))]}
                       availableFornecedores={availableFornecedores}
+                      selectedFornecedor={dashboardFornecedor}
                       onOrderSuccess={refreshOrders}
                     />
 
