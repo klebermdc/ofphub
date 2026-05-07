@@ -49,6 +49,7 @@ export const generateSalesRepPDF = async (
   getSalary: (name: string) => number,
   getDiscount: (name: string) => number = () => 0,
   getDiscountDescription: (name: string) => string = () => '',
+  getDiscountItems: (name: string) => Array<{ amount: number; description: string }> = () => [],
   options: { returnBlob?: boolean; fileName?: string } = {}
 ): Promise<Blob | void> => {
   const doc = new jsPDF({ orientation: 'landscape' });
@@ -112,7 +113,10 @@ export const generateSalesRepPDF = async (
 
   // Get salary and discount for this salesperson
   const salary = getSalary(rep.name);
-  const discount = getDiscount(rep.name);
+  const discountItems = getDiscountItems(rep.name);
+  const discount = discountItems.length > 0
+    ? discountItems.reduce((s, d) => s + (d.amount || 0), 0)
+    : getDiscount(rep.name);
   const discountDescription = getDiscountDescription(rep.name);
   const totalReceiver = salary + rep.commission - discount;
 
@@ -332,9 +336,11 @@ export const generateSalesRepPDF = async (
 
   // Final Summary Box - Salary + Commission - Discount = Total
   currentY += 18;
-  addNewPageIfNeeded(40);
-  
-  const summaryBoxHeight = discountDescription ? 42 : 32;
+  const itemsCount = discountItems.length;
+  const itemsBlockHeight = itemsCount > 0 ? 8 + itemsCount * 5 : (discountDescription ? 10 : 0);
+  const summaryBoxHeight = 32 + itemsBlockHeight;
+  addNewPageIfNeeded(summaryBoxHeight + 10);
+
   doc.setFillColor(250, 250, 250);
   doc.roundedRect(margin, currentY, pageWidth - margin * 2, summaryBoxHeight, 4, 4, 'F');
   doc.setDrawColor(COLORS.primary.r, COLORS.primary.g, COLORS.primary.b);
@@ -395,8 +401,27 @@ export const generateSalesRepPDF = async (
   doc.setTextColor(180, 50, 100);
   doc.text(formatCurrency(totalReceiver), margin + 10 + colSpacing * 3 + 45, summaryY);
 
-  // Discount observation
-  if (discountDescription) {
+  // Detalhamento dos descontos
+  if (discountItems.length > 0) {
+    let dy = summaryY + 10;
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(COLORS.dark.r, COLORS.dark.g, COLORS.dark.b);
+    doc.text("Detalhamento dos descontos:", margin + 10, dy);
+    dy += 5;
+    doc.setFontSize(7);
+    doc.setFont("helvetica", "normal");
+    discountItems.forEach((item, i) => {
+      doc.setTextColor(COLORS.gray.r, COLORS.gray.g, COLORS.gray.b);
+      const desc = item.description ? item.description : '(sem descrição)';
+      doc.text(`${i + 1}. ${desc}`, margin + 14, dy);
+      doc.setTextColor(200, 50, 50);
+      doc.setFont("helvetica", "bold");
+      doc.text(`- ${formatCurrency(item.amount)}`, pageWidth - margin - 12, dy, { align: 'right' });
+      doc.setFont("helvetica", "normal");
+      dy += 5;
+    });
+  } else if (discountDescription) {
     doc.setFontSize(7);
     doc.setFont("helvetica", "italic");
     doc.setTextColor(COLORS.gray.r, COLORS.gray.g, COLORS.gray.b);

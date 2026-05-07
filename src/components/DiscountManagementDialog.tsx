@@ -48,17 +48,15 @@ export function DiscountManagementDialog({
     }
   }, [open, discounts]);
 
-  const availableSalespeople = salespeople.filter(
-    sp => !entries.some(e => e.salesperson_name === sp)
-  );
+  // Allow multiple discount entries per salesperson (no filtering)
 
   const handleAddEntry = () => {
-    const firstAvailable = availableSalespeople[0] || '';
-    if (!firstAvailable) {
-      toast.error('Todos os vendedores já possuem desconto lançado');
+    const first = salespeople[0] || '';
+    if (!first) {
+      toast.error('Nenhum vendedor disponível');
       return;
     }
-    setEntries([...entries, { salesperson_name: firstAvailable, amount: 0, description: '' }]);
+    setEntries([...entries, { salesperson_name: first, amount: 0, description: '' }]);
   };
 
   const handleRemoveEntry = (index: number) => {
@@ -177,12 +175,7 @@ export function DiscountManagementDialog({
                         <SelectValue placeholder="Selecione..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {entry.salesperson_name && (
-                          <SelectItem value={entry.salesperson_name}>
-                            {entry.salesperson_name}
-                          </SelectItem>
-                        )}
-                        {availableSalespeople.map(sp => (
+                        {salespeople.map(sp => (
                           <SelectItem key={sp} value={sp}>{sp}</SelectItem>
                         ))}
                       </SelectContent>

@@ -24,9 +24,10 @@ interface SalesRepTableProps {
   getSalary: (name: string) => number;
   getDiscount?: (name: string) => number;
   getDiscountDescription?: (name: string) => string;
+  getDiscountItems?: (name: string) => Array<{ amount: number; description: string }>;
 }
 
-export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selectedYear, getSalary, getDiscount, getDiscountDescription }: SalesRepTableProps) {
+export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selectedYear, getSalary, getDiscount, getDiscountDescription, getDiscountItems }: SalesRepTableProps) {
   const { isPaid, togglePayment, uploadReceipt, getReceiptUrl, getSignedReceiptUrl, loading } = useCommissionPayments(selectedMonth, selectedYear);
   
   // Filter out excluded names (partners) but add salary-only people (like Henrique TI)
@@ -78,11 +79,12 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
       const safeSalary = getSalary;
       const safeDiscount = getDiscount || (() => 0);
       const safeDiscountDesc = getDiscountDescription || (() => '');
+      const safeDiscountItems = getDiscountItems || (() => []);
 
       for (const rep of reps) {
         const safeName = rep.name.replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '_');
         const fileName = `${safeName}_${monthName}_${selectedYear}.pdf`;
-        const blob = await generateSalesRepPDF(rep, safeSalary, safeDiscount, safeDiscountDesc, { returnBlob: true }) as Blob;
+        const blob = await generateSalesRepPDF(rep, safeSalary, safeDiscount, safeDiscountDesc, safeDiscountItems, { returnBlob: true }) as Blob;
         zip.file(fileName, blob);
       }
 
