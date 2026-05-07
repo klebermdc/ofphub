@@ -53,12 +53,12 @@ export function DiscountManagementDialog({
   );
 
   const handleAddEntry = () => {
-    const firstAvailable = availableSalespeople[0] || '';
-    if (!firstAvailable) {
-      toast.error('Todos os vendedores já possuem desconto lançado');
+    const first = salespeople[0] || '';
+    if (!first) {
+      toast.error('Nenhum vendedor disponível');
       return;
     }
-    setEntries([...entries, { salesperson_name: firstAvailable, amount: 0, description: '' }]);
+    setEntries([...entries, { salesperson_name: first, amount: 0, description: '' }]);
   };
 
   const handleRemoveEntry = (index: number) => {
