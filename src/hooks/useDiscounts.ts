@@ -129,6 +129,7 @@ export function useDiscounts(month: number, year: number) {
     saveDiscounts,
     getDiscount,
     getDiscountDescription,
+    getDiscountItems,
     getTotalDiscounts,
     refetch: fetchDiscounts
   };
