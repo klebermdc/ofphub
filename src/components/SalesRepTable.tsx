@@ -79,11 +79,12 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
       const safeSalary = getSalary;
       const safeDiscount = getDiscount || (() => 0);
       const safeDiscountDesc = getDiscountDescription || (() => '');
+      const safeDiscountItems = getDiscountItems || (() => []);
 
       for (const rep of reps) {
         const safeName = rep.name.replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '_');
         const fileName = `${safeName}_${monthName}_${selectedYear}.pdf`;
-        const blob = await generateSalesRepPDF(rep, safeSalary, safeDiscount, safeDiscountDesc, { returnBlob: true }) as Blob;
+        const blob = await generateSalesRepPDF(rep, safeSalary, safeDiscount, safeDiscountDesc, safeDiscountItems, { returnBlob: true }) as Blob;
         zip.file(fileName, blob);
       }
 
