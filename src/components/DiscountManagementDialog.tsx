@@ -175,12 +175,7 @@ export function DiscountManagementDialog({
                         <SelectValue placeholder="Selecione..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {entry.salesperson_name && (
-                          <SelectItem value={entry.salesperson_name}>
-                            {entry.salesperson_name}
-                          </SelectItem>
-                        )}
-                        {availableSalespeople.map(sp => (
+                        {salespeople.map(sp => (
                           <SelectItem key={sp} value={sp}>{sp}</SelectItem>
                         ))}
                       </SelectContent>
