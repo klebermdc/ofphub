@@ -389,8 +389,8 @@ const AllOrders = () => {
                 )}
               </div>
               
-              {/* Search by Pedido */}
-              <div className="mb-3 sm:mb-4">
+              {/* Search and period filters */}
+              <div className="mb-3 sm:mb-4 flex flex-col lg:flex-row gap-2 lg:items-center">
                 <div className="relative max-w-xs">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                   <Input
@@ -408,6 +408,62 @@ const AllOrders = () => {
                     </button>
                   )}
                 </div>
+                <div className="flex items-center gap-1 flex-wrap">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={cn("h-9 text-xs gap-1", !dateRange.from && "text-muted-foreground")}
+                      >
+                        <Calendar className="h-3.5 w-3.5" />
+                        {dateRange.from ? format(dateRange.from, "dd/MM/yy", { locale: ptBR }) : "Data inicial"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <DatePickerCalendar
+                        mode="single"
+                        selected={dateRange.from}
+                        onSelect={(d) => {
+                          setDateRange({ ...dateRange, from: d || undefined });
+                          if (d) setSelectedMonth('all');
+                        }}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <span className="text-xs text-muted-foreground">→</span>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={cn("h-9 text-xs gap-1", !dateRange.to && "text-muted-foreground")}
+                      >
+                        <Calendar className="h-3.5 w-3.5" />
+                        {dateRange.to ? format(dateRange.to, "dd/MM/yy", { locale: ptBR }) : "Data final"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <DatePickerCalendar
+                        mode="single"
+                        selected={dateRange.to}
+                        onSelect={(d) => {
+                          setDateRange({ ...dateRange, to: d || undefined });
+                          if (d) setSelectedMonth('all');
+                        }}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  {(dateRange.from || dateRange.to) && (
+                    <Button variant="ghost" size="sm" className="h-9 px-2" onClick={() => setDateRange({})}>
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -417,7 +473,7 @@ const AllOrders = () => {
                     <Calendar className="h-3 w-3" />
                     Mês
                   </label>
-                  <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                  <Select value={selectedMonth} onValueChange={(value) => { setSelectedMonth(value); setDateRange({}); }}>
                     <SelectTrigger className="h-9 text-xs sm:text-sm">
                       <SelectValue placeholder="Todos os meses" />
                     </SelectTrigger>
