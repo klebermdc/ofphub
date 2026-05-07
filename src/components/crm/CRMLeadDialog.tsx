@@ -63,6 +63,7 @@ export function CRMLeadDialog({
 }: CRMLeadDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditing = !!lead;
+  const safeSalespeople = Array.from(new Set(salespeople.map((name) => name?.trim()).filter(Boolean)));
 
   const form = useForm<LeadFormData>({
     resolver: zodResolver(leadSchema),
@@ -234,7 +235,7 @@ export function CRMLeadDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {salespeople.map((name) => (
+                      {safeSalespeople.map((name) => (
                         <SelectItem key={name} value={name}>
                           {name}
                         </SelectItem>
