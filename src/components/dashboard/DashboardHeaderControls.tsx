@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Database, Calendar as CalendarIcon, ClipboardList, Download, Loader2, RefreshCw, FileText, X } from "lucide-react";
+import { Database, Calendar as CalendarIcon, ClipboardList, Download, Loader2, RefreshCw, FileText, X, Building } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -22,13 +22,37 @@ interface DashboardHeaderControlsProps {
   onRefresh: () => void;
   isLoading: boolean;
   onSaveOperationalCosts: (month: number, year: number, software: number, telefonia: number, googleAds?: number, metaAds?: number, otherMarketing?: number, leads?: number, description?: string) => Promise<boolean>;
-  getCostForMonth: (month: number, year: number) => any;
+  getCostForMonth: (month: number, year: number) => OperationalCostValues;
   userId?: string;
   hasApiIntegration?: boolean;
   onOpenWeeklyReport?: () => void;
   dateRange?: { from?: Date; to?: Date };
   setDateRange?: (range: { from?: Date; to?: Date }) => void;
+  selectedFornecedor?: string;
+  setSelectedFornecedor?: (fornecedor: string) => void;
+  availableFornecedores?: string[];
 }
+
+interface OperationalCostValues {
+  software: number;
+  telefonia: number;
+  google_ads: number;
+  meta_ads: number;
+  other_marketing: number;
+  leads: number;
+  description: string;
+}
+
+interface AccountingIntegration {
+  id: string;
+  api_url: string;
+  api_key: string;
+}
+
+type AccountingApiItem = Record<string, string | number | null | undefined>;
+
+const toNumber = (value: string | number | null | undefined) => Number(value) || 0;
+const toText = (value: string | number | null | undefined) => String(value ?? '');
 
 export function DashboardHeaderControls({
   dataSource,
@@ -44,6 +68,9 @@ export function DashboardHeaderControls({
   onOpenWeeklyReport,
   dateRange,
   setDateRange,
+  selectedFornecedor = 'all',
+  setSelectedFornecedor,
+  availableFornecedores = [],
 }: DashboardHeaderControlsProps) {
   const navigate = useNavigate();
   const [importing, setImporting] = useState(false);
@@ -65,7 +92,7 @@ export function DashboardHeaderControls({
         return;
       }
 
-      const integration = integrations[0] as any;
+      const integration = integrations[0] as AccountingIntegration;
 
       const { data, error } = await supabase.functions.invoke('fetch-accounting-api', {
         body: { apiUrl: integration.api_url, apiKey: integration.api_key }
@@ -77,18 +104,18 @@ export function DashboardHeaderControls({
         return;
       }
 
-      const apiData = data.data;
+      const apiData = data.data as AccountingApiItem | AccountingApiItem[] | null | undefined;
       let software = 0;
       let telefonia = 0;
 
       if (apiData) {
         if (typeof apiData === 'object' && !Array.isArray(apiData)) {
-          software = parseFloat(apiData.software || apiData.Software || apiData.custos_software || 0);
-          telefonia = parseFloat(apiData.telefonia || apiData.Telefonia || apiData.custos_telefonia || 0);
+          software = toNumber(apiData.software || apiData.Software || apiData.custos_software);
+          telefonia = toNumber(apiData.telefonia || apiData.Telefonia || apiData.custos_telefonia);
         } else if (Array.isArray(apiData)) {
-          apiData.forEach((item: any) => {
-            const cat = (item.categoria || item.category || item.plano_de_contas || '').toLowerCase();
-            const valor = parseFloat(item.valor || item.value || item.amount || 0);
+          apiData.forEach((item) => {
+            const cat = toText(item.categoria || item.category || item.plano_de_contas).toLowerCase();
+            const valor = toNumber(item.valor || item.value || item.amount);
             if (cat.includes('software') || cat.includes('sistema') || cat.includes('tecnologia')) {
               software += valor;
             } else if (cat.includes('telefon') || cat.includes('telecom') || cat.includes('comunicação')) {
@@ -105,7 +132,7 @@ export function DashboardHeaderControls({
       if (success) {
         await supabase
           .from('api_integrations')
-          .update({ last_sync_at: new Date().toISOString() } as any)
+          .update({ last_sync_at: new Date().toISOString() })
           .eq('id', integration.id);
 
         toast({ 
@@ -113,8 +140,8 @@ export function DashboardHeaderControls({
           description: `Software: R$ ${software.toFixed(2)} | Telefonia: R$ ${telefonia.toFixed(2)}` 
         });
       }
-    } catch (err: any) {
-      toast({ title: 'Erro ao importar custos', description: err.message, variant: 'destructive' });
+    } catch (err: unknown) {
+      toast({ title: 'Erro ao importar custos', description: err instanceof Error ? err.message : 'Erro desconhecido', variant: 'destructive' });
     }
     setImporting(false);
   };
@@ -213,6 +240,25 @@ export function DashboardHeaderControls({
                 <X className="h-3.5 w-3.5" />
               </Button>
             )}
+          </div>
+        )}
+
+        {setSelectedFornecedor && (
+          <div className="flex items-center gap-2">
+            <Building className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
+            <Select value={selectedFornecedor} onValueChange={setSelectedFornecedor}>
+              <SelectTrigger className="w-[145px] sm:w-[180px] h-8 text-xs sm:text-sm">
+                <SelectValue placeholder="Fornecedor" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos fornecedores</SelectItem>
+                {availableFornecedores.map(fornecedor => (
+                  <SelectItem key={fornecedor} value={fornecedor}>
+                    {fornecedor}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         )}
       </div>

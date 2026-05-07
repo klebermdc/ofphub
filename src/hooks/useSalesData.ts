@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { SalesRep, OrderDetail } from '@/types/sales';
-import { getMonthKeyFromDate, isFirstFortnight, isSecondFortnight } from '@/utils/dateUtils';
+import { getMonthKeyFromDate, isFirstFortnight, isSecondFortnight, parseOrderDate } from '@/utils/dateUtils';
 
 interface FilteredSalesData {
   filteredSalesReps: SalesRep[];
@@ -17,7 +17,8 @@ const isGuiamento = (produto?: string) =>
 export function useFilteredSalesReps(
   salesReps: SalesRep[],
   selectedMonth: string,
-  dateRange?: { from?: Date; to?: Date }
+  dateRange?: { from?: Date; to?: Date },
+  selectedFornecedor: string = 'all'
 ): FilteredSalesData {
   // Extract available months from orders data
   const availableMonths = useMemo(() => {
@@ -47,34 +48,26 @@ export function useFilteredSalesReps(
     const fromTime = dateRange?.from ? new Date(dateRange.from.getFullYear(), dateRange.from.getMonth(), dateRange.from.getDate()).getTime() : -Infinity;
     const toTime = dateRange?.to ? new Date(dateRange.to.getFullYear(), dateRange.to.getMonth(), dateRange.to.getDate(), 23, 59, 59).getTime() : Infinity;
 
-    const baseReps = hasRange
-      ? salesReps.map(rep => {
-          const filtered = (rep.orders || []).filter(order => {
-            if (!order.data) return false;
-            const p = (() => {
-              const iso = order.data.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
-              if (iso) return { y: +iso[1], m: +iso[2], d: +iso[3] };
-              const parts = order.data.split('/');
-              if (parts.length < 2) return null;
-              let y = parts[2] ? parseInt(parts[2]) : new Date().getFullYear();
-              if (y < 100) y += 2000;
-              return { y, m: parseInt(parts[1]), d: parseInt(parts[0]) };
-            })();
-            if (!p) return false;
-            const t = new Date(p.y, p.m - 1, p.d).getTime();
-            return t >= fromTime && t <= toTime;
-          });
-          return { ...rep, orders: filtered };
-        })
-      : selectedMonth === 'all'
-      ? salesReps.map(rep => ({ ...rep, orders: rep.orders || [] }))
-      : salesReps.map(rep => {
-          const filtered = (rep.orders || []).filter(order => {
-            if (!order.data) return false;
-            return getMonthKeyFromDate(order.data) === selectedMonth;
-          });
-          return { ...rep, orders: filtered };
-        });
+    const matchesPeriod = (order: OrderDetail) => {
+      if (!order.data) return false;
+      if (hasRange) {
+        const parsed = parseOrderDate(order.data);
+        if (!parsed) return false;
+        const orderTime = new Date(parsed.year, parsed.month - 1, parsed.day).getTime();
+        return orderTime >= fromTime && orderTime <= toTime;
+      }
+
+      return selectedMonth === 'all' || getMonthKeyFromDate(order.data) === selectedMonth;
+    };
+
+    const matchesFornecedor = (order: OrderDetail) => {
+      return selectedFornecedor === 'all' || order.fornecedor === selectedFornecedor;
+    };
+
+    const baseReps = salesReps.map(rep => ({
+      ...rep,
+      orders: (rep.orders || []).filter(order => matchesPeriod(order) && matchesFornecedor(order)),
+    }));
 
     return baseReps.map(rep => {
       const orders = rep.orders;
@@ -91,7 +84,7 @@ export function useFilteredSalesReps(
           : 0,
       };
     }).filter(rep => rep.orders.length > 0);
-  }, [salesReps, selectedMonth, dateRange?.from, dateRange?.to]);
+  }, [salesReps, selectedMonth, dateRange, selectedFornecedor]);
 
   return { filteredSalesReps, availableMonths };
 }
@@ -158,8 +151,8 @@ export function useDashboardMetrics(filteredSalesReps: SalesRep[]): DashboardMet
     )].filter(Boolean).length;
 
     // Calculate results by fortnight
-    let primeira = { comissaoTotal: 0, comissaoVendedor: 0 };
-    let segunda = { comissaoTotal: 0, comissaoVendedor: 0 };
+    const primeira = { comissaoTotal: 0, comissaoVendedor: 0 };
+    const segunda = { comissaoTotal: 0, comissaoVendedor: 0 };
     
     filteredSalesReps.forEach(rep => {
       rep.orders?.forEach(order => {

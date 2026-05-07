@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { SalesRep, SalesTotals } from "@/types/sales";
 import { generateSalesRepPDF } from "@/utils/pdfGenerator";
 import { useAuth } from "@/hooks/useAuth";
@@ -71,6 +72,7 @@ const GrowthDashboard = lazy(() => import("@/components/GrowthDashboard").then(m
 const CostsTab = lazy(() => import("@/components/CostsTab").then(m => ({ default: m.CostsTab })));
 
 // Data source: database-only (no Google Sheets dependency)
+type OrderRow = Database['public']['Tables']['orders']['Row'];
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -93,6 +95,7 @@ const Index = () => {
   const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonthKey());
   const [dashboardMonth, setDashboardMonth] = useState<string>(getCurrentMonthKey());
   const [dashboardDateRange, setDashboardDateRange] = useState<{ from?: Date; to?: Date }>({});
+  const [dashboardFornecedor, setDashboardFornecedor] = useState<string>('all');
 
   // Hooks for data fetching
   const { salaries, saveSalaries, getSalary } = useSalespersonSalaries(user?.id);
@@ -107,8 +110,11 @@ const Index = () => {
   } = useMarketingCosts(user?.id, role === 'marketing' || role === 'manager');
 
   // Filtered sales data
-  const { filteredSalesReps: dashboardFilteredSalesReps, availableMonths } = useFilteredSalesReps(salesReps, dashboardMonth, dashboardDateRange);
+  const { filteredSalesReps: dashboardFilteredSalesReps, availableMonths } = useFilteredSalesReps(salesReps, dashboardMonth, dashboardDateRange, dashboardFornecedor);
   const { filteredSalesReps } = useFilteredSalesReps(salesReps, selectedMonth);
+  const availableFornecedores = [...new Set(salesReps.flatMap(r => r.orders?.map(o => o.fornecedor).filter(Boolean) || []))].sort();
+  const availableProdutos = [...new Set(salesReps.flatMap(r => r.orders?.map(o => o.produto).filter(Boolean) || []))].sort();
+  const hasDashboardDateRange = !!(dashboardDateRange.from || dashboardDateRange.to);
 
   // Dashboard metrics
   const metrics = useDashboardMetrics(dashboardFilteredSalesReps);
@@ -198,7 +204,7 @@ const Index = () => {
     setIsLoading(true);
     try {
       const pageSize = 1000;
-      const allRows: any[] = [];
+      const allRows: OrderRow[] = [];
 
       for (let offset = 0; ; offset += pageSize) {
         // Manager loads global data without user_id filter (per data visibility rule)
@@ -501,6 +507,9 @@ const Index = () => {
                       onOpenWeeklyReport={() => setWeeklyReportOpen(true)}
                       dateRange={dashboardDateRange}
                       setDateRange={setDashboardDateRange}
+                      selectedFornecedor={dashboardFornecedor}
+                      setSelectedFornecedor={setDashboardFornecedor}
+                      availableFornecedores={availableFornecedores}
                     />
 
                     <DailySalesTracker
@@ -512,11 +521,12 @@ const Index = () => {
                     />
 
                     <DailyOrdersList
-                      salesReps={salesReps}
-                      currentMonth={dashboardMonth !== 'all' ? dashboardMonth : getCurrentMonthKey()}
+                      salesReps={hasDashboardDateRange || dashboardFornecedor !== 'all' ? dashboardFilteredSalesReps : salesReps}
+                      currentMonth={hasDashboardDateRange || dashboardMonth === 'all' ? 'all' : dashboardMonth}
                       availableVendedores={salesReps.map(r => r.name)}
-                      availableProdutos={[...new Set(salesReps.flatMap(r => r.orders?.map((o: any) => o.produto).filter(Boolean) || []))]}
-                      availableFornecedores={[...new Set(salesReps.flatMap(r => r.orders?.map((o: any) => o.fornecedor).filter(Boolean) || []))]}
+                      availableProdutos={availableProdutos}
+                      availableFornecedores={availableFornecedores}
+                      selectedFornecedor={dashboardFornecedor}
                       onOrderSuccess={refreshOrders}
                     />
 

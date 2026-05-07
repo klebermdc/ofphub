@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { DollarSign, TrendingUp, Package, Calendar, Filter, ArrowLeft, Users, ShoppingBag, Building, RefreshCw, Edit2, Wallet, Send, Search, X, Sun, Moon, Trash2 } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { MetricCard } from "@/components/MetricCard";
 import { OrderFormDialog } from "@/components/OrderFormDialog";
@@ -11,6 +13,8 @@ import { useSheetSettings } from "@/hooks/useSheetSettings";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Calendar as DatePickerCalendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { getMonthName } from "@/hooks/useCommissionHistory";
@@ -18,6 +22,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useTheme } from "@/components/ThemeProvider";
 import { getOFPCommission } from "@/utils/orderCommission";
+import { cn } from "@/lib/utils";
+import { getMonthKeyFromDate, parseOrderDate } from "@/utils/dateUtils";
 
 interface Order {
   id?: string;
@@ -133,6 +139,7 @@ const AllOrders = () => {
   const [selectedProduto, setSelectedProduto] = useState<string>('all');
   const [selectedFornecedor, setSelectedFornecedor] = useState<string>('all');
   const [searchPedido, setSearchPedido] = useState<string>('');
+  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
 
   // Redirect if not manager
   useEffect(() => {
@@ -163,16 +170,9 @@ const AllOrders = () => {
   const availableMonths = useMemo(() => {
     const months = new Set<string>();
     allOrders.forEach(order => {
-      if (order.data) {
-        const parts = order.data.split('/');
-        if (parts.length >= 2) {
-          const month = parts[1].padStart(2, '0');
-          let year = parts[2] || new Date().getFullYear().toString();
-          if (year.length === 2) {
-            year = `20${year}`;
-          }
-          months.add(`${month}/${year}`);
-        }
+      const monthKey = getMonthKeyFromDate(order.data);
+      if (monthKey) {
+        months.add(monthKey);
       }
     });
     return Array.from(months).sort((a, b) => {
@@ -215,17 +215,11 @@ const AllOrders = () => {
     return Array.from(fornecedores).sort();
   }, [allOrders]);
 
-  // Parse date string DD/MM/YY or DD/MM/YYYY to Date object
-  const parseOrderDate = (dateStr: string): Date => {
+  // Parse date string DD/MM/YY, DD/MM/YYYY or YYYY-MM-DD to Date object
+  const getOrderDate = (dateStr: string): Date => {
     if (!dateStr) return new Date(0);
-    const parts = dateStr.split('/');
-    if (parts.length >= 3) {
-      const day = parseInt(parts[0], 10);
-      const month = parseInt(parts[1], 10) - 1;
-      let year = parseInt(parts[2], 10);
-      if (year < 100) year += 2000;
-      return new Date(year, month, day);
-    }
+    const parsed = parseOrderDate(dateStr);
+    if (parsed) return new Date(parsed.year, parsed.month - 1, parsed.day);
     return new Date(0);
   };
 
@@ -242,18 +236,19 @@ const AllOrders = () => {
         }
       }
 
-      // Month filter
-      if (selectedMonth !== 'all') {
+      const hasDateRange = !!(dateRange.from || dateRange.to);
+
+      // Date range filter takes priority over month filter
+      if (hasDateRange) {
         if (!order.data) return false;
-        const parts = order.data.split('/');
-        if (parts.length >= 2) {
-          const month = parts[1].padStart(2, '0');
-          let year = parts[2] || new Date().getFullYear().toString();
-          if (year.length === 2) {
-            year = `20${year}`;
-          }
-          if (`${month}/${year}` !== selectedMonth) return false;
-        }
+        const parsed = parseOrderDate(order.data);
+        if (!parsed) return false;
+        const orderTime = new Date(parsed.year, parsed.month - 1, parsed.day).getTime();
+        const fromTime = dateRange.from ? new Date(dateRange.from.getFullYear(), dateRange.from.getMonth(), dateRange.from.getDate()).getTime() : -Infinity;
+        const toTime = dateRange.to ? new Date(dateRange.to.getFullYear(), dateRange.to.getMonth(), dateRange.to.getDate(), 23, 59, 59).getTime() : Infinity;
+        if (orderTime < fromTime || orderTime > toTime) return false;
+      } else if (selectedMonth !== 'all') {
+        if (getMonthKeyFromDate(order.data) !== selectedMonth) return false;
       }
       
       // Vendedor filter
@@ -276,11 +271,11 @@ const AllOrders = () => {
 
     // Sort by date (most recent first)
     return filtered.sort((a, b) => {
-      const dateA = parseOrderDate(a.data);
-      const dateB = parseOrderDate(b.data);
+      const dateA = getOrderDate(a.data);
+      const dateB = getOrderDate(b.data);
       return dateB.getTime() - dateA.getTime();
     });
-  }, [allOrders, selectedMonth, selectedVendedor, selectedProduto, selectedFornecedor, searchPedido]);
+  }, [allOrders, selectedMonth, selectedVendedor, selectedProduto, selectedFornecedor, searchPedido, dateRange.from, dateRange.to]);
 
   // Calculate totals
   const totals = useMemo(() => {
@@ -301,9 +296,10 @@ const AllOrders = () => {
     setSelectedProduto('all');
     setSelectedFornecedor('all');
     setSearchPedido('');
+    setDateRange({});
   };
 
-  const hasActiveFilters = selectedMonth !== 'all' || selectedVendedor !== 'all' || selectedProduto !== 'all' || selectedFornecedor !== 'all' || searchPedido.trim() !== '';
+  const hasActiveFilters = selectedMonth !== 'all' || selectedVendedor !== 'all' || selectedProduto !== 'all' || selectedFornecedor !== 'all' || searchPedido.trim() !== '' || !!(dateRange.from || dateRange.to);
 
   if (loading || roleLoading || dataLoading) {
     return (
@@ -393,8 +389,8 @@ const AllOrders = () => {
                 )}
               </div>
               
-              {/* Search by Pedido */}
-              <div className="mb-3 sm:mb-4">
+              {/* Search and period filters */}
+              <div className="mb-3 sm:mb-4 flex flex-col lg:flex-row gap-2 lg:items-center">
                 <div className="relative max-w-xs">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                   <Input
@@ -412,6 +408,62 @@ const AllOrders = () => {
                     </button>
                   )}
                 </div>
+                <div className="flex items-center gap-1 flex-wrap">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={cn("h-9 text-xs gap-1", !dateRange.from && "text-muted-foreground")}
+                      >
+                        <Calendar className="h-3.5 w-3.5" />
+                        {dateRange.from ? format(dateRange.from, "dd/MM/yy", { locale: ptBR }) : "Data inicial"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <DatePickerCalendar
+                        mode="single"
+                        selected={dateRange.from}
+                        onSelect={(d) => {
+                          setDateRange({ ...dateRange, from: d || undefined });
+                          if (d) setSelectedMonth('all');
+                        }}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <span className="text-xs text-muted-foreground">→</span>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={cn("h-9 text-xs gap-1", !dateRange.to && "text-muted-foreground")}
+                      >
+                        <Calendar className="h-3.5 w-3.5" />
+                        {dateRange.to ? format(dateRange.to, "dd/MM/yy", { locale: ptBR }) : "Data final"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <DatePickerCalendar
+                        mode="single"
+                        selected={dateRange.to}
+                        onSelect={(d) => {
+                          setDateRange({ ...dateRange, to: d || undefined });
+                          if (d) setSelectedMonth('all');
+                        }}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  {(dateRange.from || dateRange.to) && (
+                    <Button variant="ghost" size="sm" className="h-9 px-2" onClick={() => setDateRange({})}>
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -421,7 +473,7 @@ const AllOrders = () => {
                     <Calendar className="h-3 w-3" />
                     Mês
                   </label>
-                  <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                  <Select value={selectedMonth} onValueChange={(value) => { setSelectedMonth(value); setDateRange({}); }}>
                     <SelectTrigger className="h-9 text-xs sm:text-sm">
                       <SelectValue placeholder="Todos os meses" />
                     </SelectTrigger>
