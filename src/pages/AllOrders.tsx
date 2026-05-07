@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { DollarSign, TrendingUp, Package, Calendar, Filter, ArrowLeft, Users, ShoppingBag, Building, RefreshCw, Edit2, Wallet, Send, Search, X, Sun, Moon, Trash2 } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { MetricCard } from "@/components/MetricCard";
 import { OrderFormDialog } from "@/components/OrderFormDialog";
@@ -11,6 +13,8 @@ import { useSheetSettings } from "@/hooks/useSheetSettings";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Calendar as DatePickerCalendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { getMonthName } from "@/hooks/useCommissionHistory";
@@ -18,6 +22,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useTheme } from "@/components/ThemeProvider";
 import { getOFPCommission } from "@/utils/orderCommission";
+import { cn } from "@/lib/utils";
+import { getMonthKeyFromDate, parseOrderDate } from "@/utils/dateUtils";
 
 interface Order {
   id?: string;
@@ -133,6 +139,7 @@ const AllOrders = () => {
   const [selectedProduto, setSelectedProduto] = useState<string>('all');
   const [selectedFornecedor, setSelectedFornecedor] = useState<string>('all');
   const [searchPedido, setSearchPedido] = useState<string>('');
+  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
 
   // Redirect if not manager
   useEffect(() => {
