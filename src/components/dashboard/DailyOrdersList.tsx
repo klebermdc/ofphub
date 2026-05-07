@@ -17,6 +17,30 @@ import { cn } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
 import { useAuth } from "@/hooks/useAuth";
 import { getOFPCommission } from "@/utils/orderCommission";
+import type { Database } from "@/integrations/supabase/types";
+
+type OrderRow = Database['public']['Tables']['orders']['Row'];
+
+interface SalesOrderInput {
+  id?: string;
+  data?: string;
+  cliente?: string;
+  emailCliente?: string;
+  pedido?: string;
+  venda: number;
+  produto?: string;
+  fornecedor?: string;
+  comissao?: number;
+  comissaoTotal?: number;
+  porcentagemVendedor?: number;
+  comissaoVendedor?: number;
+  guia?: string;
+  comissaoGuia?: number;
+  status?: string;
+  createdAt?: string;
+  created_at?: string;
+  isGuideEntry?: boolean;
+}
 
 interface DailyOrder {
   id?: string;
@@ -43,16 +67,7 @@ interface DailyOrder {
 interface DailyOrdersListProps {
   salesReps: {
     name: string;
-    orders?: {
-      data?: string;
-      cliente?: string;
-      pedido?: string;
-      venda: number;
-      produto?: string;
-      fornecedor?: string;
-      comissaoTotal?: number;
-      comissaoVendedor?: number;
-    }[];
+    orders?: SalesOrderInput[];
   }[];
   currentMonth: string;
   availableVendedores?: string[];
@@ -144,7 +159,7 @@ export function DailyOrdersList({
 
       if (error) throw error;
 
-      const results: DailyOrder[] = (data || []).map((row: any) => {
+      const results: DailyOrder[] = (data || []).map((row: OrderRow) => {
         const parsed = parseOrderDate(row.data);
         const dia = parsed ? `${parsed.day.toString().padStart(2, '0')}/${parsed.month.toString().padStart(2, '0')}` : row.data;
         return {
@@ -188,7 +203,7 @@ export function DailyOrdersList({
   const allMonthOrders: DailyOrder[] = useMemo(() => {
     const orders: DailyOrder[] = [];
     salesReps.forEach(rep => {
-      rep.orders?.forEach((order: any) => {
+      rep.orders?.forEach((order) => {
         if (!order.data) return;
         if (selectedFornecedor !== 'all' && order.fornecedor !== selectedFornecedor) return;
         const parsed = parseOrderDate(order.data);
