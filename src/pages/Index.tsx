@@ -519,7 +519,7 @@ const Index = () => {
 
                     <DailyOrdersList
                       salesReps={hasDashboardDateRange || dashboardFornecedor !== 'all' ? dashboardFilteredSalesReps : salesReps}
-                      currentMonth={hasDashboardDateRange ? 'all' : dashboardMonth !== 'all' ? dashboardMonth : getCurrentMonthKey()}
+                      currentMonth={hasDashboardDateRange || dashboardMonth === 'all' ? 'all' : dashboardMonth}
                       availableVendedores={salesReps.map(r => r.name)}
                       availableProdutos={[...new Set(salesReps.flatMap(r => r.orders?.map((o: any) => o.produto).filter(Boolean) || []))]}
                       availableFornecedores={availableFornecedores}
