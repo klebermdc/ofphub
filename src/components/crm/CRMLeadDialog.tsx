@@ -63,7 +63,7 @@ export function CRMLeadDialog({
 }: CRMLeadDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditing = !!lead;
-  const safeSalespeople = Array.from(new Set(salespeople.map((name) => name?.trim()).filter(Boolean)));
+  const safeSalespeople = Array.from(new Set(salespeople.map((name) => name?.trim()).filter((name): name is string => Boolean(name))));
 
   const form = useForm<LeadFormData>({
     resolver: zodResolver(leadSchema),
