@@ -401,8 +401,27 @@ export const generateSalesRepPDF = async (
   doc.setTextColor(180, 50, 100);
   doc.text(formatCurrency(totalReceiver), margin + 10 + colSpacing * 3 + 45, summaryY);
 
-  // Discount observation
-  if (discountDescription) {
+  // Detalhamento dos descontos
+  if (discountItems.length > 0) {
+    let dy = summaryY + 10;
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(COLORS.dark.r, COLORS.dark.g, COLORS.dark.b);
+    doc.text("Detalhamento dos descontos:", margin + 10, dy);
+    dy += 5;
+    doc.setFontSize(7);
+    doc.setFont("helvetica", "normal");
+    discountItems.forEach((item, i) => {
+      doc.setTextColor(COLORS.gray.r, COLORS.gray.g, COLORS.gray.b);
+      const desc = item.description ? item.description : '(sem descrição)';
+      doc.text(`${i + 1}. ${desc}`, margin + 14, dy);
+      doc.setTextColor(200, 50, 50);
+      doc.setFont("helvetica", "bold");
+      doc.text(`- ${formatCurrency(item.amount)}`, pageWidth - margin - 12, dy, { align: 'right' });
+      doc.setFont("helvetica", "normal");
+      dy += 5;
+    });
+  } else if (discountDescription) {
     doc.setFontSize(7);
     doc.setFont("helvetica", "italic");
     doc.setTextColor(COLORS.gray.r, COLORS.gray.g, COLORS.gray.b);
