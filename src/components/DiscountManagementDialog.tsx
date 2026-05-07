@@ -34,7 +34,8 @@ export function DiscountManagementDialog({
   const { discounts, saveDiscounts } = useDiscounts(selectedMonth, selectedYear);
 
   const sanitizedSalespeople = useMemo(
-    () => Array.from(new Set(salespeople.map((sp) => sp?.trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'pt-BR')),
+    () => Array.from(new Set(salespeople.map((sp) => sp?.trim()).filter((sp): sp is string => Boolean(sp))))
+      .sort((a, b) => a.localeCompare(b, 'pt-BR')),
     [salespeople]
   );
 
