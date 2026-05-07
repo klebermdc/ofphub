@@ -45,9 +45,9 @@ export function CRMFilters({
   months,
   showSalespersonFilter = true,
 }: CRMFiltersProps) {
-  const safeSalespeople = Array.from(new Set(salespeople.map((sp) => sp?.trim()).filter(Boolean)));
-  const safeProducts = Array.from(new Set(products.map((prod) => prod?.trim()).filter(Boolean)));
-  const safeMonths = Array.from(new Set(months.map((month) => month?.trim()).filter(Boolean)));
+  const safeSalespeople = Array.from(new Set(salespeople.map((sp) => sp?.trim()).filter((sp): sp is string => Boolean(sp))));
+  const safeProducts = Array.from(new Set(products.map((prod) => prod?.trim()).filter((prod): prod is string => Boolean(prod))));
+  const safeMonths = Array.from(new Set(months.map((month) => month?.trim()).filter((month): month is string => Boolean(month))));
 
   return (
     <div className="flex flex-wrap gap-3">
