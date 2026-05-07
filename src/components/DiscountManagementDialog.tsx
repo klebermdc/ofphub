@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,6 +33,21 @@ export function DiscountManagementDialog({
 
   const { discounts, saveDiscounts } = useDiscounts(selectedMonth, selectedYear);
 
+  const sanitizedSalespeople = useMemo(
+    () => Array.from(new Set(salespeople.map((sp) => sp?.trim()).filter((sp): sp is string => Boolean(sp))))
+      .sort((a, b) => a.localeCompare(b, 'pt-BR')),
+    [salespeople]
+  );
+
+  const discountTotalsBySalesperson = useMemo(() => {
+    return entries.reduce<Record<string, number>>((acc, entry) => {
+      const name = entry.salesperson_name?.trim();
+      if (!name || entry.amount <= 0) return acc;
+      acc[name] = (acc[name] || 0) + entry.amount;
+      return acc;
+    }, {});
+  }, [entries]);
+
   useEffect(() => {
     if (open) {
       setSelectedMonth(month);
@@ -51,7 +66,7 @@ export function DiscountManagementDialog({
   // Allow multiple discount entries per salesperson (no filtering)
 
   const handleAddEntry = () => {
-    const first = salespeople[0] || '';
+    const first = sanitizedSalespeople[0] || '';
     if (!first) {
       toast.error('Nenhum vendedor disponível');
       return;
@@ -81,7 +96,15 @@ export function DiscountManagementDialog({
   };
 
   const handleSave = async () => {
-    const validEntries = entries.filter(e => e.salesperson_name.trim() !== '' && e.amount > 0);
+    const incompleteEntry = entries.find(e => e.salesperson_name.trim() !== '' && e.amount > 0 && !e.description?.trim());
+    if (incompleteEntry) {
+      toast.error('Informe a descrição de cada desconto lançado');
+      return;
+    }
+
+    const validEntries = entries
+      .filter(e => e.salesperson_name.trim() !== '' && e.amount > 0)
+      .map(e => ({ ...e, salesperson_name: e.salesperson_name.trim(), description: e.description?.trim() || '' }));
     
     setIsSaving(true);
     const success = await saveDiscounts(validEntries, selectedMonth, selectedYear);
@@ -175,7 +198,7 @@ export function DiscountManagementDialog({
                         <SelectValue placeholder="Selecione..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {salespeople.map(sp => (
+                        {sanitizedSalespeople.map(sp => (
                           <SelectItem key={sp} value={sp}>{sp}</SelectItem>
                         ))}
                       </SelectContent>
@@ -215,12 +238,12 @@ export function DiscountManagementDialog({
                   </Button>
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor={`desc-${index}`} className="text-xs">Descrição (opcional)</Label>
+                  <Label htmlFor={`desc-${index}`} className="text-xs">Descrição do desconto</Label>
                   <Input
                     id={`desc-${index}`}
                     value={entry.description || ''}
                     onChange={(e) => handleUpdateEntry(index, 'description', e.target.value)}
-                    placeholder="Ex: Adiantamento, Vale, etc."
+                    placeholder="Ex: Adiantamento referente ao pedido 123"
                   />
                 </div>
               </div>
@@ -240,6 +263,16 @@ export function DiscountManagementDialog({
             <p className="text-sm text-muted-foreground mb-2">
               Total de descontos: <span className="font-mono text-destructive">{formatCurrency(entries.reduce((sum, e) => sum + e.amount, 0))}</span>
             </p>
+            {Object.keys(discountTotalsBySalesperson).length > 0 && (
+              <div className="mb-3 space-y-1 rounded-md border p-3 text-sm">
+                {Object.entries(discountTotalsBySalesperson).map(([name, total]) => (
+                  <div key={name} className="flex items-center justify-between gap-3">
+                    <span className="break-words text-muted-foreground">{name}</span>
+                    <span className="shrink-0 font-mono text-destructive">{formatCurrency(total)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
             <Button
               onClick={handleSave}
               disabled={isSaving}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, lazy, Suspense } from "react";
+import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { FileSpreadsheet, Users, Megaphone, Receipt, Kanban, Calendar, ClipboardList, TrendingUp, DollarSign } from "lucide-react";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -114,6 +114,11 @@ const Index = () => {
   const { filteredSalesReps } = useFilteredSalesReps(salesReps, selectedMonth);
   const availableFornecedores = [...new Set(salesReps.flatMap(r => r.orders?.map(o => o.fornecedor).filter(Boolean) || []))].sort();
   const availableProdutos = [...new Set(salesReps.flatMap(r => r.orders?.map(o => o.produto).filter(Boolean) || []))].sort();
+  const availableSalespeople = useMemo(
+    () => Array.from(new Set(salesReps.map(r => r.name?.trim()).filter((name): name is string => Boolean(name))))
+      .sort((a, b) => a.localeCompare(b, 'pt-BR')),
+    [salesReps]
+  );
   const hasDashboardDateRange = !!(dashboardDateRange.from || dashboardDateRange.to);
 
   // Dashboard metrics
@@ -427,7 +432,7 @@ const Index = () => {
           style={{ background: 'var(--gradient-glow)' }}
         />
         
-        <DashboardHeader availableSalespeople={salesReps.map(r => r.name)} />
+        <DashboardHeader availableSalespeople={availableSalespeople} />
         
         <main className="container mx-auto px-3 sm:px-6 py-4 sm:py-6 relative">
           <Tabs defaultValue={initialTab} className="space-y-4 sm:space-y-6">
@@ -523,7 +528,7 @@ const Index = () => {
                     <DailyOrdersList
                       salesReps={hasDashboardDateRange || dashboardFornecedor !== 'all' ? dashboardFilteredSalesReps : salesReps}
                       currentMonth={hasDashboardDateRange || dashboardMonth === 'all' ? 'all' : dashboardMonth}
-                      availableVendedores={salesReps.map(r => r.name)}
+                      availableVendedores={availableSalespeople}
                       availableProdutos={availableProdutos}
                       availableFornecedores={availableFornecedores}
                       selectedFornecedor={dashboardFornecedor}
@@ -697,7 +702,7 @@ const Index = () => {
 
                 {comercialView === 'crm' ? (
                   <Suspense fallback={<KanbanSkeleton />}>
-                    <CRMTab salespeople={salesReps.map(r => r.name)} />
+                    <CRMTab salespeople={availableSalespeople} />
                   </Suspense>
                 ) : hasData ? (
                   <>
@@ -732,7 +737,7 @@ const Index = () => {
                         <Suspense fallback={null}>
                           <SalaryManagementDialog salaries={salaries} onSave={saveSalaries} />
                           <DiscountManagementDialog
-                            salespeople={salesReps.map(r => r.name)}
+                            salespeople={availableSalespeople}
                             month={currentGoalMonth}
                             year={currentGoalYear}
                           />

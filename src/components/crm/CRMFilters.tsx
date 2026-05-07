@@ -45,6 +45,10 @@ export function CRMFilters({
   months,
   showSalespersonFilter = true,
 }: CRMFiltersProps) {
+  const safeSalespeople = Array.from(new Set(salespeople.map((sp) => sp?.trim()).filter((sp): sp is string => Boolean(sp))));
+  const safeProducts = Array.from(new Set(products.map((prod) => prod?.trim()).filter((prod): prod is string => Boolean(prod))));
+  const safeMonths = Array.from(new Set(months.map((month) => month?.trim()).filter((month): month is string => Boolean(month))));
+
   return (
     <div className="flex flex-wrap gap-3">
       {/* Search */}
@@ -82,7 +86,7 @@ export function CRMFilters({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos Vendedores</SelectItem>
-            {salespeople.map((sp) => (
+            {safeSalespeople.map((sp) => (
               <SelectItem key={sp} value={sp}>
                 {sp}
               </SelectItem>
@@ -99,7 +103,7 @@ export function CRMFilters({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">Todos Produtos</SelectItem>
-          {products.map((prod) => (
+          {safeProducts.map((prod) => (
             <SelectItem key={prod} value={prod}>
               {prod}
             </SelectItem>
@@ -115,7 +119,7 @@ export function CRMFilters({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">Todos Meses</SelectItem>
-          {months.map((month) => (
+          {safeMonths.map((month) => (
             <SelectItem key={month} value={month}>
               {month}
             </SelectItem>
