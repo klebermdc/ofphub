@@ -392,7 +392,7 @@ const Index = () => {
     });
 
     try {
-      await generateSalesRepPDF(rep, getSalary, getDiscount, getDiscountDescription);
+      await generateSalesRepPDF(rep, getSalary, getDiscount, getDiscountDescription, getDiscountItems);
       toast({
         title: "PDF pronto!",
         description: `Relatório de ${rep.name} baixado com sucesso.`,
