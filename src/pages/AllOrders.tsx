@@ -398,7 +398,7 @@ const AllOrders = () => {
                 <div className="relative max-w-xs">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                   <Input
-                    placeholder="Buscar nº do pedido..."
+                    placeholder="Buscar nº do pedido ou cliente..."
                     value={searchPedido}
                     onChange={(e) => setSearchPedido(e.target.value)}
                     className="pl-9 pr-8 h-9 text-xs sm:text-sm"
