@@ -22,7 +22,7 @@ interface DashboardHeaderControlsProps {
   onRefresh: () => void;
   isLoading: boolean;
   onSaveOperationalCosts: (month: number, year: number, software: number, telefonia: number, googleAds?: number, metaAds?: number, otherMarketing?: number, leads?: number, description?: string) => Promise<boolean>;
-  getCostForMonth: (month: number, year: number) => any;
+  getCostForMonth: (month: number, year: number) => unknown;
   userId?: string;
   hasApiIntegration?: boolean;
   onOpenWeeklyReport?: () => void;
@@ -32,6 +32,14 @@ interface DashboardHeaderControlsProps {
   setSelectedFornecedor?: (fornecedor: string) => void;
   availableFornecedores?: string[];
 }
+
+interface AccountingIntegration {
+  id: string;
+  api_url: string;
+  api_key: string;
+}
+
+type AccountingApiItem = Record<string, string | number | null | undefined>;
 
 export function DashboardHeaderControls({
   dataSource,
@@ -71,7 +79,7 @@ export function DashboardHeaderControls({
         return;
       }
 
-      const integration = integrations[0] as any;
+      const integration = integrations[0] as AccountingIntegration;
 
       const { data, error } = await supabase.functions.invoke('fetch-accounting-api', {
         body: { apiUrl: integration.api_url, apiKey: integration.api_key }
@@ -83,7 +91,7 @@ export function DashboardHeaderControls({
         return;
       }
 
-      const apiData = data.data;
+      const apiData = data.data as AccountingApiItem | AccountingApiItem[] | null | undefined;
       let software = 0;
       let telefonia = 0;
 
@@ -92,7 +100,7 @@ export function DashboardHeaderControls({
           software = parseFloat(apiData.software || apiData.Software || apiData.custos_software || 0);
           telefonia = parseFloat(apiData.telefonia || apiData.Telefonia || apiData.custos_telefonia || 0);
         } else if (Array.isArray(apiData)) {
-          apiData.forEach((item: any) => {
+          apiData.forEach((item) => {
             const cat = (item.categoria || item.category || item.plano_de_contas || '').toLowerCase();
             const valor = parseFloat(item.valor || item.value || item.amount || 0);
             if (cat.includes('software') || cat.includes('sistema') || cat.includes('tecnologia')) {
@@ -111,7 +119,7 @@ export function DashboardHeaderControls({
       if (success) {
         await supabase
           .from('api_integrations')
-          .update({ last_sync_at: new Date().toISOString() } as any)
+          .update({ last_sync_at: new Date().toISOString() })
           .eq('id', integration.id);
 
         toast({ 
@@ -119,8 +127,8 @@ export function DashboardHeaderControls({
           description: `Software: R$ ${software.toFixed(2)} | Telefonia: R$ ${telefonia.toFixed(2)}` 
         });
       }
-    } catch (err: any) {
-      toast({ title: 'Erro ao importar custos', description: err.message, variant: 'destructive' });
+    } catch (err: unknown) {
+      toast({ title: 'Erro ao importar custos', description: err instanceof Error ? err.message : 'Erro desconhecido', variant: 'destructive' });
     }
     setImporting(false);
   };
