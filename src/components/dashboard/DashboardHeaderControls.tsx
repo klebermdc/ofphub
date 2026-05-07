@@ -22,7 +22,7 @@ interface DashboardHeaderControlsProps {
   onRefresh: () => void;
   isLoading: boolean;
   onSaveOperationalCosts: (month: number, year: number, software: number, telefonia: number, googleAds?: number, metaAds?: number, otherMarketing?: number, leads?: number, description?: string) => Promise<boolean>;
-  getCostForMonth: (month: number, year: number) => unknown;
+  getCostForMonth: (month: number, year: number) => OperationalCostValues;
   userId?: string;
   hasApiIntegration?: boolean;
   onOpenWeeklyReport?: () => void;
@@ -33,6 +33,16 @@ interface DashboardHeaderControlsProps {
   availableFornecedores?: string[];
 }
 
+interface OperationalCostValues {
+  software: number;
+  telefonia: number;
+  google_ads: number;
+  meta_ads: number;
+  other_marketing: number;
+  leads: number;
+  description: string;
+}
+
 interface AccountingIntegration {
   id: string;
   api_url: string;
@@ -40,6 +50,9 @@ interface AccountingIntegration {
 }
 
 type AccountingApiItem = Record<string, string | number | null | undefined>;
+
+const toNumber = (value: string | number | null | undefined) => Number(value) || 0;
+const toText = (value: string | number | null | undefined) => String(value ?? '');
 
 export function DashboardHeaderControls({
   dataSource,
@@ -97,12 +110,12 @@ export function DashboardHeaderControls({
 
       if (apiData) {
         if (typeof apiData === 'object' && !Array.isArray(apiData)) {
-          software = parseFloat(apiData.software || apiData.Software || apiData.custos_software || 0);
-          telefonia = parseFloat(apiData.telefonia || apiData.Telefonia || apiData.custos_telefonia || 0);
+          software = toNumber(apiData.software || apiData.Software || apiData.custos_software);
+          telefonia = toNumber(apiData.telefonia || apiData.Telefonia || apiData.custos_telefonia);
         } else if (Array.isArray(apiData)) {
           apiData.forEach((item) => {
-            const cat = (item.categoria || item.category || item.plano_de_contas || '').toLowerCase();
-            const valor = parseFloat(item.valor || item.value || item.amount || 0);
+            const cat = toText(item.categoria || item.category || item.plano_de_contas).toLowerCase();
+            const valor = toNumber(item.valor || item.value || item.amount);
             if (cat.includes('software') || cat.includes('sistema') || cat.includes('tecnologia')) {
               software += valor;
             } else if (cat.includes('telefon') || cat.includes('telecom') || cat.includes('comunicação')) {
