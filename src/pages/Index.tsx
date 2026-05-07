@@ -131,7 +131,7 @@ const Index = () => {
   const monthlyGoal = goalsData?.goal_vendas || 0;
 
   // Discounts
-  const { discounts, saveDiscounts, getDiscount, getDiscountDescription, getTotalDiscounts } = useDiscounts(currentGoalMonth, currentGoalYear);
+  const { discounts, saveDiscounts, getDiscount, getDiscountDescription, getDiscountItems, getTotalDiscounts } = useDiscounts(currentGoalMonth, currentGoalYear);
   const { getAccountingIntegration } = useApiIntegrations(user?.id);
 
   // Costs
