@@ -412,6 +412,10 @@ export const generateSalesRepPDF = async (
   doc.setFont("helvetica", "bold");
   doc.text("Orlando Fast Pass - Sistema de Comissões", pageWidth / 2, pageHeight - 5, { align: "center" });
   
-  // Download
-  doc.save(`relatorio-${rep.name.toLowerCase().replace(/\s+/g, '-')}.pdf`);
+  // Download or return blob
+  const defaultName = `relatorio-${rep.name.toLowerCase().replace(/\s+/g, '-')}.pdf`;
+  if (options.returnBlob) {
+    return doc.output('blob');
+  }
+  doc.save(options.fileName || defaultName);
 };
