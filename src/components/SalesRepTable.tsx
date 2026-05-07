@@ -24,9 +24,10 @@ interface SalesRepTableProps {
   getSalary: (name: string) => number;
   getDiscount?: (name: string) => number;
   getDiscountDescription?: (name: string) => string;
+  getDiscountItems?: (name: string) => Array<{ amount: number; description: string }>;
 }
 
-export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selectedYear, getSalary, getDiscount, getDiscountDescription }: SalesRepTableProps) {
+export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selectedYear, getSalary, getDiscount, getDiscountDescription, getDiscountItems }: SalesRepTableProps) {
   const { isPaid, togglePayment, uploadReceipt, getReceiptUrl, getSignedReceiptUrl, loading } = useCommissionPayments(selectedMonth, selectedYear);
   
   // Filter out excluded names (partners) but add salary-only people (like Henrique TI)
