@@ -20,6 +20,7 @@ import { getOFPCommission } from "@/utils/orderCommission";
 
 interface DailyOrder {
   id?: string;
+  data?: string;
   cliente: string;
   emailCliente: string;
   pedido: string;
@@ -57,6 +58,7 @@ interface DailyOrdersListProps {
   availableVendedores?: string[];
   availableProdutos?: string[];
   availableFornecedores?: string[];
+  selectedFornecedor?: string;
   onOrderSuccess?: () => void;
 }
 
@@ -94,9 +96,14 @@ export function DailyOrdersList({
   availableVendedores = [],
   availableProdutos = [],
   availableFornecedores = [],
+  selectedFornecedor = 'all',
   onOrderSuccess,
 }: DailyOrdersListProps) {
-  const [m, y] = currentMonth.split('/').map(Number);
+  const showAllAvailableOrders = currentMonth === 'all';
+  const [parsedMonth, parsedYear] = currentMonth.split('/').map(Number);
+  const fallbackDate = new Date();
+  const m = Number.isFinite(parsedMonth) ? parsedMonth : fallbackDate.getMonth() + 1;
+  const y = Number.isFinite(parsedYear) ? parsedYear : fallbackDate.getFullYear();
   const now = new Date();
   const today = now.getDate();
 
@@ -122,12 +129,18 @@ export function DailyOrdersList({
     setIsSearching(true);
     try {
       const searchLower = term.trim().toLowerCase();
-      const { data, error } = await supabase
+      let query = supabase
         .from('orders')
         .select('*')
         .or(`pedido.ilike.%${searchLower}%,cliente.ilike.%${searchLower}%`)
         .order('created_at', { ascending: false })
         .limit(50);
+
+      if (selectedFornecedor !== 'all') {
+        query = query.eq('fornecedor', selectedFornecedor);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
 
@@ -136,6 +149,7 @@ export function DailyOrdersList({
         const dia = parsed ? `${parsed.day.toString().padStart(2, '0')}/${parsed.month.toString().padStart(2, '0')}` : row.data;
         return {
           id: row.id,
+          data: row.data || '',
           cliente: row.cliente || '-',
           emailCliente: row.email_cliente || '',
           pedido: row.pedido || '-',
@@ -161,7 +175,7 @@ export function DailyOrdersList({
     } finally {
       setIsSearching(false);
     }
-  }, []);
+  }, [selectedFornecedor]);
 
   const clearSearch = () => {
     setSearchTerm('');
