@@ -111,6 +111,7 @@ const Index = () => {
   const { filteredSalesReps: dashboardFilteredSalesReps, availableMonths } = useFilteredSalesReps(salesReps, dashboardMonth, dashboardDateRange, dashboardFornecedor);
   const { filteredSalesReps } = useFilteredSalesReps(salesReps, selectedMonth);
   const availableFornecedores = [...new Set(salesReps.flatMap(r => r.orders?.map((o: any) => o.fornecedor).filter(Boolean) || []))].sort();
+  const hasDashboardDateRange = !!(dashboardDateRange.from || dashboardDateRange.to);
 
   // Dashboard metrics
   const metrics = useDashboardMetrics(dashboardFilteredSalesReps);
@@ -517,8 +518,8 @@ const Index = () => {
                     />
 
                     <DailyOrdersList
-                      salesReps={salesReps}
-                      currentMonth={dashboardMonth !== 'all' ? dashboardMonth : getCurrentMonthKey()}
+                      salesReps={hasDashboardDateRange || dashboardFornecedor !== 'all' ? dashboardFilteredSalesReps : salesReps}
+                      currentMonth={hasDashboardDateRange ? 'all' : dashboardMonth !== 'all' ? dashboardMonth : getCurrentMonthKey()}
                       availableVendedores={salesReps.map(r => r.name)}
                       availableProdutos={[...new Set(salesReps.flatMap(r => r.orders?.map((o: any) => o.produto).filter(Boolean) || []))]}
                       availableFornecedores={availableFornecedores}
