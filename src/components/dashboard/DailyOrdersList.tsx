@@ -208,7 +208,8 @@ export function DailyOrdersList({
         if (selectedFornecedor !== 'all' && order.fornecedor !== selectedFornecedor) return;
         const parsed = parseOrderDate(order.data);
         if (!parsed) return;
-        if (showAllAvailableOrders || (parsed.month === m && parsed.year === y)) {
+        const bypassMonth = showAllAvailableOrders || (mode === 'range' && !!dateRange?.from) || (mode === 'single' && !!singleDate);
+        if (bypassMonth || (parsed.month === m && parsed.year === y)) {
           orders.push({
             id: order.id || undefined,
             data: order.data,
