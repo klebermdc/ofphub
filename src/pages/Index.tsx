@@ -115,7 +115,8 @@ const Index = () => {
   const availableFornecedores = [...new Set(salesReps.flatMap(r => r.orders?.map(o => o.fornecedor).filter(Boolean) || []))].sort();
   const availableProdutos = [...new Set(salesReps.flatMap(r => r.orders?.map(o => o.produto).filter(Boolean) || []))].sort();
   const availableSalespeople = useMemo(
-    () => Array.from(new Set(salesReps.map(r => r.name?.trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'pt-BR')),
+    () => Array.from(new Set(salesReps.map(r => r.name?.trim()).filter((name): name is string => Boolean(name))))
+      .sort((a, b) => a.localeCompare(b, 'pt-BR')),
     [salesReps]
   );
   const hasDashboardDateRange = !!(dashboardDateRange.from || dashboardDateRange.to);
