@@ -113,7 +113,10 @@ export const generateSalesRepPDF = async (
 
   // Get salary and discount for this salesperson
   const salary = getSalary(rep.name);
-  const discount = getDiscount(rep.name);
+  const discountItems = getDiscountItems(rep.name);
+  const discount = discountItems.length > 0
+    ? discountItems.reduce((s, d) => s + (d.amount || 0), 0)
+    : getDiscount(rep.name);
   const discountDescription = getDiscountDescription(rep.name);
   const totalReceiver = salary + rep.commission - discount;
 
