@@ -48,9 +48,7 @@ export function DiscountManagementDialog({
     }
   }, [open, discounts]);
 
-  const availableSalespeople = salespeople.filter(
-    sp => !entries.some(e => e.salesperson_name === sp)
-  );
+  // Allow multiple discount entries per salesperson (no filtering)
 
   const handleAddEntry = () => {
     const first = salespeople[0] || '';
