@@ -93,6 +93,7 @@ const Index = () => {
   const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonthKey());
   const [dashboardMonth, setDashboardMonth] = useState<string>(getCurrentMonthKey());
   const [dashboardDateRange, setDashboardDateRange] = useState<{ from?: Date; to?: Date }>({});
+  const [dashboardFornecedor, setDashboardFornecedor] = useState<string>('all');
 
   // Hooks for data fetching
   const { salaries, saveSalaries, getSalary } = useSalespersonSalaries(user?.id);
@@ -107,8 +108,9 @@ const Index = () => {
   } = useMarketingCosts(user?.id, role === 'marketing' || role === 'manager');
 
   // Filtered sales data
-  const { filteredSalesReps: dashboardFilteredSalesReps, availableMonths } = useFilteredSalesReps(salesReps, dashboardMonth, dashboardDateRange);
+  const { filteredSalesReps: dashboardFilteredSalesReps, availableMonths } = useFilteredSalesReps(salesReps, dashboardMonth, dashboardDateRange, dashboardFornecedor);
   const { filteredSalesReps } = useFilteredSalesReps(salesReps, selectedMonth);
+  const availableFornecedores = [...new Set(salesReps.flatMap(r => r.orders?.map((o: any) => o.fornecedor).filter(Boolean) || []))].sort();
 
   // Dashboard metrics
   const metrics = useDashboardMetrics(dashboardFilteredSalesReps);
@@ -501,6 +503,9 @@ const Index = () => {
                       onOpenWeeklyReport={() => setWeeklyReportOpen(true)}
                       dateRange={dashboardDateRange}
                       setDateRange={setDashboardDateRange}
+                      selectedFornecedor={dashboardFornecedor}
+                      setSelectedFornecedor={setDashboardFornecedor}
+                      availableFornecedores={availableFornecedores}
                     />
 
                     <DailySalesTracker
@@ -516,7 +521,7 @@ const Index = () => {
                       currentMonth={dashboardMonth !== 'all' ? dashboardMonth : getCurrentMonthKey()}
                       availableVendedores={salesReps.map(r => r.name)}
                       availableProdutos={[...new Set(salesReps.flatMap(r => r.orders?.map((o: any) => o.produto).filter(Boolean) || []))]}
-                      availableFornecedores={[...new Set(salesReps.flatMap(r => r.orders?.map((o: any) => o.fornecedor).filter(Boolean) || []))]}
+                      availableFornecedores={availableFornecedores}
                       onOrderSuccess={refreshOrders}
                     />
 
