@@ -1,4 +1,4 @@
-import { FileDown, User, Check, Circle, Image, Eye } from "lucide-react";
+import { FileDown, User, Check, Circle, Image, Eye, Archive } from "lucide-react";
 import { Button } from "./ui/button";
 import { SalesRep } from "@/types/sales";
 import { useCommissionPayments } from "@/hooks/useCommissionPayments";
@@ -12,6 +12,9 @@ import {
 } from "./ui/dialog";
 import { toast } from "sonner";
 import { SALESPERSON_SALARIES, isExcludedName } from "@/config/salaries";
+import { generateSalesRepPDF } from "@/utils/pdfGenerator";
+import { getMonthName } from "@/utils/dateUtils";
+import JSZip from "jszip";
 
 interface SalesRepTableProps {
   salesReps: SalesRep[];
