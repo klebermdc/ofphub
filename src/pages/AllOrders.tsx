@@ -170,16 +170,9 @@ const AllOrders = () => {
   const availableMonths = useMemo(() => {
     const months = new Set<string>();
     allOrders.forEach(order => {
-      if (order.data) {
-        const parts = order.data.split('/');
-        if (parts.length >= 2) {
-          const month = parts[1].padStart(2, '0');
-          let year = parts[2] || new Date().getFullYear().toString();
-          if (year.length === 2) {
-            year = `20${year}`;
-          }
-          months.add(`${month}/${year}`);
-        }
+      const monthKey = getMonthKeyFromDate(order.data);
+      if (monthKey) {
+        months.add(monthKey);
       }
     });
     return Array.from(months).sort((a, b) => {
@@ -222,17 +215,11 @@ const AllOrders = () => {
     return Array.from(fornecedores).sort();
   }, [allOrders]);
 
-  // Parse date string DD/MM/YY or DD/MM/YYYY to Date object
-  const parseOrderDate = (dateStr: string): Date => {
+  // Parse date string DD/MM/YY, DD/MM/YYYY or YYYY-MM-DD to Date object
+  const getOrderDate = (dateStr: string): Date => {
     if (!dateStr) return new Date(0);
-    const parts = dateStr.split('/');
-    if (parts.length >= 3) {
-      const day = parseInt(parts[0], 10);
-      const month = parseInt(parts[1], 10) - 1;
-      let year = parseInt(parts[2], 10);
-      if (year < 100) year += 2000;
-      return new Date(year, month, day);
-    }
+    const parsed = parseOrderDate(dateStr);
+    if (parsed) return new Date(parsed.year, parsed.month - 1, parsed.day);
     return new Date(0);
   };
 
@@ -249,18 +236,19 @@ const AllOrders = () => {
         }
       }
 
-      // Month filter
-      if (selectedMonth !== 'all') {
+      const hasDateRange = !!(dateRange.from || dateRange.to);
+
+      // Date range filter takes priority over month filter
+      if (hasDateRange) {
         if (!order.data) return false;
-        const parts = order.data.split('/');
-        if (parts.length >= 2) {
-          const month = parts[1].padStart(2, '0');
-          let year = parts[2] || new Date().getFullYear().toString();
-          if (year.length === 2) {
-            year = `20${year}`;
-          }
-          if (`${month}/${year}` !== selectedMonth) return false;
-        }
+        const parsed = parseOrderDate(order.data);
+        if (!parsed) return false;
+        const orderTime = new Date(parsed.year, parsed.month - 1, parsed.day).getTime();
+        const fromTime = dateRange.from ? new Date(dateRange.from.getFullYear(), dateRange.from.getMonth(), dateRange.from.getDate()).getTime() : -Infinity;
+        const toTime = dateRange.to ? new Date(dateRange.to.getFullYear(), dateRange.to.getMonth(), dateRange.to.getDate(), 23, 59, 59).getTime() : Infinity;
+        if (orderTime < fromTime || orderTime > toTime) return false;
+      } else if (selectedMonth !== 'all') {
+        if (getMonthKeyFromDate(order.data) !== selectedMonth) return false;
       }
       
       // Vendedor filter
@@ -283,11 +271,11 @@ const AllOrders = () => {
 
     // Sort by date (most recent first)
     return filtered.sort((a, b) => {
-      const dateA = parseOrderDate(a.data);
-      const dateB = parseOrderDate(b.data);
+      const dateA = getOrderDate(a.data);
+      const dateB = getOrderDate(b.data);
       return dateB.getTime() - dateA.getTime();
     });
-  }, [allOrders, selectedMonth, selectedVendedor, selectedProduto, selectedFornecedor, searchPedido]);
+  }, [allOrders, selectedMonth, selectedVendedor, selectedProduto, selectedFornecedor, searchPedido, dateRange.from, dateRange.to]);
 
   // Calculate totals
   const totals = useMemo(() => {
@@ -308,9 +296,10 @@ const AllOrders = () => {
     setSelectedProduto('all');
     setSelectedFornecedor('all');
     setSearchPedido('');
+    setDateRange({});
   };
 
-  const hasActiveFilters = selectedMonth !== 'all' || selectedVendedor !== 'all' || selectedProduto !== 'all' || selectedFornecedor !== 'all' || searchPedido.trim() !== '';
+  const hasActiveFilters = selectedMonth !== 'all' || selectedVendedor !== 'all' || selectedProduto !== 'all' || selectedFornecedor !== 'all' || searchPedido.trim() !== '' || !!(dateRange.from || dateRange.to);
 
   if (loading || roleLoading || dataLoading) {
     return (
