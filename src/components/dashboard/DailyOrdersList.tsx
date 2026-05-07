@@ -184,17 +184,19 @@ export function DailyOrdersList({
 
   const isFiltering = mode === 'single' ? !!singleDate : !!(dateRange?.from);
 
-  // All orders for the current month
+  // All orders for the current month or selected dashboard period
   const allMonthOrders: DailyOrder[] = useMemo(() => {
     const orders: DailyOrder[] = [];
     salesReps.forEach(rep => {
       rep.orders?.forEach((order: any) => {
         if (!order.data) return;
+        if (selectedFornecedor !== 'all' && order.fornecedor !== selectedFornecedor) return;
         const parsed = parseOrderDate(order.data);
         if (!parsed) return;
-        if (parsed.month === m && parsed.year === y) {
+        if (showAllAvailableOrders || (parsed.month === m && parsed.year === y)) {
           orders.push({
             id: order.id || undefined,
+            data: order.data,
             cliente: order.cliente || '-',
             emailCliente: order.emailCliente || '',
             pedido: order.pedido || '-',
@@ -217,14 +219,16 @@ export function DailyOrdersList({
       });
     });
     return orders.sort((a, b) => {
-      const dayA = parseInt(a.dia.split('/')[0], 10);
-      const dayB = parseInt(b.dia.split('/')[0], 10);
-      if (dayB !== dayA) return dayB - dayA;
+      const parsedA = parseOrderDate(a.data || '');
+      const parsedB = parseOrderDate(b.data || '');
+      const timeA = parsedA ? new Date(parsedA.year, parsedA.month - 1, parsedA.day).getTime() : 0;
+      const timeB = parsedB ? new Date(parsedB.year, parsedB.month - 1, parsedB.day).getTime() : 0;
+      if (timeB !== timeA) return timeB - timeA;
       // Within same day, sort by insertion order (most recent first)
       if (a.createdAt && b.createdAt) return b.createdAt.localeCompare(a.createdAt);
       return 0;
     });
-  }, [salesReps, m, y]);
+  }, [salesReps, m, y, showAllAvailableOrders, selectedFornecedor]);
 
   // Filtered orders
   const displayOrders = useMemo(() => {
@@ -232,18 +236,23 @@ export function DailyOrdersList({
 
     if (mode === 'single' && singleDate) {
       const filterDay = singleDate.getDate();
+      const filterMonth = singleDate.getMonth() + 1;
+      const filterYear = singleDate.getFullYear();
       return allMonthOrders.filter(o => {
-        const dayNum = parseInt(o.dia.split('/')[0], 10);
-        return dayNum === filterDay;
+        const parsed = parseOrderDate(o.data || '');
+        return !!parsed && parsed.day === filterDay && parsed.month === filterMonth && parsed.year === filterYear;
       });
     }
 
     if (mode === 'range' && dateRange?.from) {
-      const fromDay = dateRange.from.getDate();
-      const toDay = dateRange.to ? dateRange.to.getDate() : fromDay;
+      const fromTime = new Date(dateRange.from.getFullYear(), dateRange.from.getMonth(), dateRange.from.getDate()).getTime();
+      const toDate = dateRange.to || dateRange.from;
+      const toTime = new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate(), 23, 59, 59).getTime();
       return allMonthOrders.filter(o => {
-        const dayNum = parseInt(o.dia.split('/')[0], 10);
-        return dayNum >= fromDay && dayNum <= toDay;
+        const parsed = parseOrderDate(o.data || '');
+        if (!parsed) return false;
+        const orderTime = new Date(parsed.year, parsed.month - 1, parsed.day).getTime();
+        return orderTime >= fromTime && orderTime <= toTime;
       });
     }
 
