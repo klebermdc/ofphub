@@ -244,7 +244,7 @@ export function DailyOrdersList({
       if (a.createdAt && b.createdAt) return b.createdAt.localeCompare(a.createdAt);
       return 0;
     });
-  }, [salesReps, m, y, showAllAvailableOrders, selectedFornecedor]);
+  }, [salesReps, m, y, showAllAvailableOrders, selectedFornecedor, mode, dateRange, singleDate]);
 
   // Filtered orders
   const displayOrders = useMemo(() => {
