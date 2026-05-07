@@ -48,8 +48,9 @@ export const generateSalesRepPDF = async (
   rep: SalesRep, 
   getSalary: (name: string) => number,
   getDiscount: (name: string) => number = () => 0,
-  getDiscountDescription: (name: string) => string = () => ''
-) => {
+  getDiscountDescription: (name: string) => string = () => '',
+  options: { returnBlob?: boolean; fileName?: string } = {}
+): Promise<Blob | void> => {
   const doc = new jsPDF({ orientation: 'landscape' });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
