@@ -336,9 +336,11 @@ export const generateSalesRepPDF = async (
 
   // Final Summary Box - Salary + Commission - Discount = Total
   currentY += 18;
-  addNewPageIfNeeded(40);
-  
-  const summaryBoxHeight = discountDescription ? 42 : 32;
+  const itemsCount = discountItems.length;
+  const itemsBlockHeight = itemsCount > 0 ? 8 + itemsCount * 5 : (discountDescription ? 10 : 0);
+  const summaryBoxHeight = 32 + itemsBlockHeight;
+  addNewPageIfNeeded(summaryBoxHeight + 10);
+
   doc.setFillColor(250, 250, 250);
   doc.roundedRect(margin, currentY, pageWidth - margin * 2, summaryBoxHeight, 4, 4, 'F');
   doc.setDrawColor(COLORS.primary.r, COLORS.primary.g, COLORS.primary.b);
