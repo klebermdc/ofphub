@@ -782,6 +782,7 @@ const Index = () => {
                         getSalary={getSalary}
                         getDiscount={getDiscount}
                         getDiscountDescription={getDiscountDescription}
+                        getDiscountItems={getDiscountItems}
                       />
                     </Suspense>
                   </>
