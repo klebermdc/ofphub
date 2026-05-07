@@ -261,6 +261,48 @@ const Index = () => {
             orders: [order],
           });
         }
+
+        // Add guia commission entry to guia's rep when guia != vendedor
+        const guiaName = row.guia ? resolveSalespersonName(row.guia) : null;
+        const comissaoGuia = Number(row.comissao_guia) || 0;
+        if (guiaName && guiaName !== name && comissaoGuia > 0) {
+          const guiaOrder = {
+            id: `${row.id}-guia`,
+            cliente: row.cliente || '',
+            emailCliente: row.email_cliente || undefined,
+            data: row.data || '',
+            pedido: row.pedido ? `${row.pedido} (Guia)` : '(Guia)',
+            venda: Number(row.venda) || 0,
+            fornecedor: row.fornecedor || '',
+            produto: `🧭 ${row.produto || 'Guiamento'}`,
+            comissao: Number(row.comissao) || 0,
+            comissaoTotal: comissaoGuia,
+            porcentagemVendedor: 0,
+            comissaoVendedor: comissaoGuia,
+            status: row.status || undefined,
+            created_at: row.created_at || '',
+            guia: row.guia || '',
+            comissaoGuia,
+            isGuideEntry: true,
+          };
+
+          const existingGuia = repMap.get(guiaName);
+          if (existingGuia) {
+            existingGuia.orders.push(guiaOrder);
+            existingGuia.commission += comissaoGuia;
+            existingGuia.deals += 1;
+          } else {
+            repMap.set(guiaName, {
+              id: `rep-${repMap.size}`,
+              name: guiaName,
+              sales: 0,
+              commission: comissaoGuia,
+              deals: 1,
+              rate: 0,
+              orders: [guiaOrder],
+            });
+          }
+        }
       });
 
       const reps = Array.from(repMap.values());
