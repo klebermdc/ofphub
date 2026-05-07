@@ -48,8 +48,9 @@ export const generateSalesRepPDF = async (
   rep: SalesRep, 
   getSalary: (name: string) => number,
   getDiscount: (name: string) => number = () => 0,
-  getDiscountDescription: (name: string) => string = () => ''
-) => {
+  getDiscountDescription: (name: string) => string = () => '',
+  options: { returnBlob?: boolean; fileName?: string } = {}
+): Promise<Blob | void> => {
   const doc = new jsPDF({ orientation: 'landscape' });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -411,6 +412,10 @@ export const generateSalesRepPDF = async (
   doc.setFont("helvetica", "bold");
   doc.text("Orlando Fast Pass - Sistema de Comissões", pageWidth / 2, pageHeight - 5, { align: "center" });
   
-  // Download
-  doc.save(`relatorio-${rep.name.toLowerCase().replace(/\s+/g, '-')}.pdf`);
+  // Download or return blob
+  const defaultName = `relatorio-${rep.name.toLowerCase().replace(/\s+/g, '-')}.pdf`;
+  if (options.returnBlob) {
+    return doc.output('blob');
+  }
+  doc.save(options.fileName || defaultName);
 };

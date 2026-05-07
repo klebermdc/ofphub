@@ -1,4 +1,4 @@
-import { FileDown, User, Check, Circle, Image, Eye } from "lucide-react";
+import { FileDown, User, Check, Circle, Image, Eye, Archive } from "lucide-react";
 import { Button } from "./ui/button";
 import { SalesRep } from "@/types/sales";
 import { useCommissionPayments } from "@/hooks/useCommissionPayments";
@@ -12,6 +12,9 @@ import {
 } from "./ui/dialog";
 import { toast } from "sonner";
 import { SALESPERSON_SALARIES, isExcludedName } from "@/config/salaries";
+import { generateSalesRepPDF } from "@/utils/pdfGenerator";
+import { getMonthName } from "@/utils/dateUtils";
+import JSZip from "jszip";
 
 interface SalesRepTableProps {
   salesReps: SalesRep[];
@@ -50,6 +53,7 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
     return [...filteredSalesReps, ...salaryOnlyPeople];
   }, [salesReps]);
   const [previewRep, setPreviewRep] = useState<SalesRep | null>(null);
+  const [isDownloadingAll, setIsDownloadingAll] = useState(false);
   const [receiptDialog, setReceiptDialog] = useState<{ open: boolean; url: string; name: string }>({
     open: false,
     url: '',
@@ -60,6 +64,45 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
     name: ''
   });
   const [pastedImage, setPastedImage] = useState<string | null>(null);
+
+  const handleDownloadAllZip = async () => {
+    const reps = allPeopleForPayment.filter(r => r.orders && r.orders.length > 0);
+    if (reps.length === 0) {
+      toast.error("Nenhum vendedor com pedidos para gerar relatórios.");
+      return;
+    }
+    setIsDownloadingAll(true);
+    try {
+      const zip = new JSZip();
+      const monthName = getMonthName(selectedMonth);
+      const safeSalary = getSalary;
+      const safeDiscount = getDiscount || (() => 0);
+      const safeDiscountDesc = getDiscountDescription || (() => '');
+
+      for (const rep of reps) {
+        const safeName = rep.name.replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '_');
+        const fileName = `${safeName}_${monthName}_${selectedYear}.pdf`;
+        const blob = await generateSalesRepPDF(rep, safeSalary, safeDiscount, safeDiscountDesc, { returnBlob: true }) as Blob;
+        zip.file(fileName, blob);
+      }
+
+      const content = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(content);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `relatorios_comissao_${monthName}_${selectedYear}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success(`${reps.length} relatórios baixados em ZIP.`);
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao gerar o arquivo ZIP.");
+    } finally {
+      setIsDownloadingAll(false);
+    }
+  };
 
   const openReceiptDialog = async (name: string) => {
     const signedUrl = await getSignedReceiptUrl(name);
@@ -248,9 +291,21 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
       </Dialog>
 
       <div className="glass rounded-xl overflow-hidden animate-slide-up" style={{ animationDelay: '300ms' }}>
-        <div className="p-4 sm:p-6 border-b border-border">
-          <h3 className="text-lg font-semibold">Vendedores</h3>
-          <p className="text-sm text-muted-foreground mt-1">Clique para gerar o relatório PDF individual</p>
+        <div className="p-4 sm:p-6 border-b border-border flex items-start justify-between gap-3 flex-wrap">
+          <div>
+            <h3 className="text-lg font-semibold">Vendedores</h3>
+            <p className="text-sm text-muted-foreground mt-1">Clique para gerar o relatório PDF individual</p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            disabled={isDownloadingAll || allPeopleForPayment.filter(r => r.orders && r.orders.length > 0).length === 0}
+            onClick={handleDownloadAllZip}
+          >
+            <Archive className="h-4 w-4" />
+            {isDownloadingAll ? 'Gerando ZIP...' : 'Baixar Todos (ZIP)'}
+          </Button>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
