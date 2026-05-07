@@ -381,7 +381,7 @@ export function DailyOrdersList({
       }
       return `Pedidos a partir de ${format(dateRange.from, "dd/MM")}`;
     }
-    return `Pedidos do Mês`;
+    return showAllAvailableOrders ? `Pedidos do Período` : `Pedidos do Mês`;
   };
 
   const getButtonLabel = () => {
@@ -495,6 +495,12 @@ export function DailyOrdersList({
           />
         </div>
       </div>
+
+      {selectedFornecedor !== 'all' && (
+        <div className="text-xs text-muted-foreground bg-muted/60 rounded-md px-3 py-2 w-fit">
+          Fornecedor: <span className="font-medium text-foreground">{selectedFornecedor}</span>
+        </div>
+      )}
 
       {/* Search box */}
       <div className="relative">
