@@ -84,7 +84,7 @@ export function useFilteredSalesReps(
           : 0,
       };
     }).filter(rep => rep.orders.length > 0);
-  }, [salesReps, selectedMonth, dateRange, dateRange?.from, dateRange?.to, selectedFornecedor]);
+  }, [salesReps, selectedMonth, dateRange, selectedFornecedor]);
 
   return { filteredSalesReps, availableMonths };
 }
