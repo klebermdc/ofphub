@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Database, Calendar as CalendarIcon, ClipboardList, Download, Loader2, RefreshCw, FileText, X } from "lucide-react";
+import { Database, Calendar as CalendarIcon, ClipboardList, Download, Loader2, RefreshCw, FileText, X, Building } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -28,6 +28,9 @@ interface DashboardHeaderControlsProps {
   onOpenWeeklyReport?: () => void;
   dateRange?: { from?: Date; to?: Date };
   setDateRange?: (range: { from?: Date; to?: Date }) => void;
+  selectedFornecedor?: string;
+  setSelectedFornecedor?: (fornecedor: string) => void;
+  availableFornecedores?: string[];
 }
 
 export function DashboardHeaderControls({
@@ -44,6 +47,9 @@ export function DashboardHeaderControls({
   onOpenWeeklyReport,
   dateRange,
   setDateRange,
+  selectedFornecedor = 'all',
+  setSelectedFornecedor,
+  availableFornecedores = [],
 }: DashboardHeaderControlsProps) {
   const navigate = useNavigate();
   const [importing, setImporting] = useState(false);
@@ -213,6 +219,25 @@ export function DashboardHeaderControls({
                 <X className="h-3.5 w-3.5" />
               </Button>
             )}
+          </div>
+        )}
+
+        {setSelectedFornecedor && (
+          <div className="flex items-center gap-2">
+            <Building className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
+            <Select value={selectedFornecedor} onValueChange={setSelectedFornecedor}>
+              <SelectTrigger className="w-[145px] sm:w-[180px] h-8 text-xs sm:text-sm">
+                <SelectValue placeholder="Fornecedor" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos fornecedores</SelectItem>
+                {availableFornecedores.map(fornecedor => (
+                  <SelectItem key={fornecedor} value={fornecedor}>
+                    {fornecedor}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         )}
       </div>
