@@ -93,23 +93,27 @@ export function useDiscounts(month: number, year: number) {
     }
   };
 
-  const findDiscount = useCallback((salespersonName: string): Discount | undefined => {
+  const findDiscounts = useCallback((salespersonName: string): Discount[] => {
     const resolved = resolveSalespersonName(salespersonName).trim().toLowerCase();
-    return discounts.find(d => {
+    return discounts.filter(d => {
       const dResolved = resolveSalespersonName(d.salesperson_name).trim().toLowerCase();
-      return dResolved === resolved || 
-             dResolved.includes(resolved) || 
+      return dResolved === resolved ||
+             dResolved.includes(resolved) ||
              resolved.includes(dResolved);
     });
   }, [discounts]);
 
   const getDiscount = useCallback((salespersonName: string): number => {
-    return findDiscount(salespersonName)?.amount || 0;
-  }, [findDiscount]);
+    return findDiscounts(salespersonName).reduce((s, d) => s + (d.amount || 0), 0);
+  }, [findDiscounts]);
 
   const getDiscountDescription = useCallback((salespersonName: string): string => {
-    return findDiscount(salespersonName)?.description || '';
-  }, [findDiscount]);
+    return findDiscounts(salespersonName).map(d => d.description).filter(Boolean).join(' | ');
+  }, [findDiscounts]);
+
+  const getDiscountItems = useCallback((salespersonName: string): Array<{ amount: number; description: string }> => {
+    return findDiscounts(salespersonName).map(d => ({ amount: d.amount || 0, description: d.description || '' }));
+  }, [findDiscounts]);
 
   const getTotalDiscounts = useCallback((): number => {
     return discounts.reduce((sum, d) => sum + d.amount, 0);
