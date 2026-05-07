@@ -65,6 +65,45 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
   });
   const [pastedImage, setPastedImage] = useState<string | null>(null);
 
+  const handleDownloadAllZip = async () => {
+    const reps = allPeopleForPayment.filter(r => r.orders && r.orders.length > 0);
+    if (reps.length === 0) {
+      toast.error("Nenhum vendedor com pedidos para gerar relatórios.");
+      return;
+    }
+    setIsDownloadingAll(true);
+    try {
+      const zip = new JSZip();
+      const monthName = getMonthName(selectedMonth);
+      const safeSalary = getSalary;
+      const safeDiscount = getDiscount || (() => 0);
+      const safeDiscountDesc = getDiscountDescription || (() => '');
+
+      for (const rep of reps) {
+        const safeName = rep.name.replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '_');
+        const fileName = `${safeName}_${monthName}_${selectedYear}.pdf`;
+        const blob = await generateSalesRepPDF(rep, safeSalary, safeDiscount, safeDiscountDesc, { returnBlob: true }) as Blob;
+        zip.file(fileName, blob);
+      }
+
+      const content = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(content);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `relatorios_comissao_${monthName}_${selectedYear}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success(`${reps.length} relatórios baixados em ZIP.`);
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao gerar o arquivo ZIP.");
+    } finally {
+      setIsDownloadingAll(false);
+    }
+  };
+
   const openReceiptDialog = async (name: string) => {
     const signedUrl = await getSignedReceiptUrl(name);
     if (signedUrl) {
