@@ -232,10 +232,12 @@ const AllOrders = () => {
   // Filter orders
   const filteredOrders = useMemo(() => {
     const filtered = allOrders.filter(order => {
-      // Search by pedido number
+      // Search by pedido number or cliente name
       if (searchPedido.trim()) {
         const search = searchPedido.trim().toLowerCase();
-        if (!order.pedido?.toLowerCase().includes(search)) {
+        const matchPedido = order.pedido?.toLowerCase().includes(search) ?? false;
+        const matchCliente = order.cliente?.toLowerCase().includes(search) ?? false;
+        if (!matchPedido && !matchCliente) {
           return false;
         }
       }
