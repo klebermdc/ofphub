@@ -115,7 +115,7 @@ export function CRMTab({ salespeople = [], salespersonFilter, isReadOnly = false
       uniqueMonths: Array.from(months),
       uniqueSalespeople: (salespeople.length > 0 ? salespeople : Array.from(spNames))
         .map((name) => name?.trim())
-        .filter(Boolean)
+        .filter((name): name is string => Boolean(name))
         .sort((a, b) => a.localeCompare(b, 'pt-BR')),
     };
   }, [leads, salespeople]);
