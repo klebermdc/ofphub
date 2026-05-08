@@ -39,11 +39,14 @@ export function DiscountManagementDialog({
     [salespeople]
   );
 
+  const commissionImpact = (entry: Discount) =>
+    (Number(entry.amount) || 0) * ((Number(entry.commission_percentage) || 0) / 100);
+
   const discountTotalsBySalesperson = useMemo(() => {
     return entries.reduce<Record<string, number>>((acc, entry) => {
       const name = entry.salesperson_name?.trim();
       if (!name || entry.amount <= 0) return acc;
-      acc[name] = (acc[name] || 0) + entry.amount;
+      acc[name] = (acc[name] || 0) + commissionImpact(entry);
       return acc;
     }, {});
   }, [entries]);
