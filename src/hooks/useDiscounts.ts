@@ -76,8 +76,12 @@ export function useDiscounts(month: number, year: number) {
               period_month: m,
               period_year: y,
               amount: e.amount,
-              description: e.description || null
-            }))
+              description: e.description || null,
+              order_date: e.order_date || null,
+              order_number: e.order_number || null,
+              commission_amount: e.commission_amount || 0,
+              commission_percentage: e.commission_percentage || 0,
+            })) as any
           );
 
         if (error) throw error;
