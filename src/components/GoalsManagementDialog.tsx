@@ -53,14 +53,28 @@ export function GoalsManagementDialog({ userId, month, year, salesReps, onGoalsS
         periods.push({ m, y });
       }
 
-      const { data: orders, error } = await supabase
-        .from('orders')
-        .select('vendedor, venda, data')
-        .limit(50000);
-      if (error) throw error;
+      // Build "DD/MM/YYYY" patterns for each target period to filter server-side
+      const patterns = periods.map(p => `__/${String(p.m).padStart(2, '0')}/${p.y}`);
+
+      // Paginate to bypass 1000-row limit
+      const PAGE = 1000;
+      let from = 0;
+      const allOrders: any[] = [];
+      while (true) {
+        const { data, error } = await supabase
+          .from('orders')
+          .select('vendedor, venda, data')
+          .or(patterns.map(p => `data.like.${p}`).join(','))
+          .range(from, from + PAGE - 1);
+        if (error) throw error;
+        if (!data || data.length === 0) break;
+        allOrders.push(...data);
+        if (data.length < PAGE) break;
+        from += PAGE;
+      }
 
       const totalsByRep = new Map<string, { sum: number; months: Set<string> }>();
-      (orders || []).forEach((o: any) => {
+      allOrders.forEach((o: any) => {
         const parsed = parseOrderDate(o.data);
         if (!parsed) return;
         const match = periods.some(p => p.m === parsed.month && p.y === parsed.year);
@@ -95,7 +109,7 @@ export function GoalsManagementDialog({ userId, month, year, salesReps, onGoalsS
       setTotalGoal(newTotal);
       // Suggest result as 12% margin (heuristic)
       setResultGoal(roundToNearest(newTotal * 0.12, 1000));
-      setSuggestionInfo(`Sugestão baseada na média dos últimos 3 meses + 10% de crescimento.`);
+      setSuggestionInfo(`Média dos últimos 3 meses (apenas meses com vendas) + 10% de crescimento. ${allOrders.length} pedidos analisados.`);
       toast({ title: 'Sugestões geradas!', description: 'Revise e ajuste antes de salvar.' });
     } catch (err) {
       console.error('Error suggesting goals:', err);
