@@ -115,8 +115,11 @@ export function useDiscounts(month: number, year: number) {
     });
   }, [discounts]);
 
+  const commissionImpactOf = (d: Discount) =>
+    (Number(d.amount) || 0) * ((Number(d.commission_percentage) || 0) / 100);
+
   const getDiscount = useCallback((salespersonName: string): number => {
-    return findDiscounts(salespersonName).reduce((s, d) => s + (d.amount || 0), 0);
+    return findDiscounts(salespersonName).reduce((s, d) => s + commissionImpactOf(d), 0);
   }, [findDiscounts]);
 
   const getDiscountDescription = useCallback((salespersonName: string): string => {
@@ -125,17 +128,17 @@ export function useDiscounts(month: number, year: number) {
 
   const getDiscountItems = useCallback((salespersonName: string): Array<{ amount: number; description: string; order_date?: string; order_number?: string; commission_amount?: number; commission_percentage?: number }> => {
     return findDiscounts(salespersonName).map(d => ({
-      amount: d.amount || 0,
+      amount: commissionImpactOf(d),
       description: d.description || '',
       order_date: d.order_date || '',
       order_number: d.order_number || '',
-      commission_amount: d.commission_amount || 0,
+      commission_amount: d.amount || 0,
       commission_percentage: d.commission_percentage || 0,
     }));
   }, [findDiscounts]);
 
   const getTotalDiscounts = useCallback((): number => {
-    return discounts.reduce((sum, d) => sum + d.amount, 0);
+    return discounts.reduce((sum, d) => sum + commissionImpactOf(d), 0);
   }, [discounts]);
 
   useEffect(() => {
