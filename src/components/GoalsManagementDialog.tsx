@@ -250,6 +250,23 @@ export function GoalsManagementDialog({ userId, month, year, salesReps, onGoalsS
 
         <ScrollArea className="max-h-[60vh] pr-4">
           <div className="space-y-6 mt-4">
+            <div className="flex flex-col gap-2 p-3 border rounded-lg bg-primary/5">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={suggestGoals}
+                disabled={isSuggesting}
+                className="gap-2"
+              >
+                {isSuggesting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                {isSuggesting ? 'Calculando...' : 'Sugerir metas com base no histórico'}
+              </Button>
+              {suggestionInfo && (
+                <p className="text-xs text-muted-foreground">{suggestionInfo}</p>
+              )}
+            </div>
+
             {/* Meta Total */}
             <div className="space-y-4 p-4 border rounded-lg">
               <div className="space-y-2">
