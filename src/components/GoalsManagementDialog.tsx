@@ -36,6 +36,73 @@ export function GoalsManagementDialog({ userId, month, year, salesReps, onGoalsS
   const [resultGoal, setResultGoal] = useState<number>(0);
   const [salespersonGoals, setSalespersonGoals] = useState<SalespersonGoal[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSuggesting, setIsSuggesting] = useState(false);
+  const [suggestionInfo, setSuggestionInfo] = useState<string>('');
+
+  const roundToNearest = (value: number, step = 5000) => Math.round(value / step) * step;
+
+  const suggestGoals = async () => {
+    setIsSuggesting(true);
+    try {
+      // Pull last 3 completed months prior to selected period
+      const periods: { m: number; y: number }[] = [];
+      for (let i = 1; i <= 3; i++) {
+        let m = month - i;
+        let y = year;
+        while (m <= 0) { m += 12; y -= 1; }
+        periods.push({ m, y });
+      }
+
+      const { data: orders, error } = await supabase
+        .from('orders')
+        .select('vendedor, venda, data')
+        .limit(50000);
+      if (error) throw error;
+
+      const totalsByRep = new Map<string, { sum: number; months: Set<string> }>();
+      (orders || []).forEach((o: any) => {
+        const parsed = parseOrderDate(o.data);
+        if (!parsed) return;
+        const match = periods.some(p => p.m === parsed.month && p.y === parsed.year);
+        if (!match) return;
+        const name = (o.vendedor || '').trim();
+        if (!name) return;
+        const venda = Number(o.venda) || 0;
+        if (!totalsByRep.has(name)) totalsByRep.set(name, { sum: 0, months: new Set() });
+        const e = totalsByRep.get(name)!;
+        e.sum += venda;
+        e.months.add(`${parsed.year}-${parsed.month}`);
+      });
+
+      const GROWTH = 1.1;
+      const updated = salespersonGoals.map(g => {
+        // Try exact then first-name match
+        let entry = totalsByRep.get(g.name);
+        if (!entry) {
+          const first = g.name.split(' ')[0].toLowerCase();
+          for (const [k, v] of totalsByRep.entries()) {
+            if (k.toLowerCase().startsWith(first)) { entry = v; break; }
+          }
+        }
+        if (!entry || entry.months.size === 0) return g;
+        const avg = entry.sum / entry.months.size;
+        const suggested = roundToNearest(avg * GROWTH);
+        return { ...g, goal: suggested };
+      });
+
+      const newTotal = updated.reduce((s, g) => s + g.goal, 0);
+      setSalespersonGoals(updated);
+      setTotalGoal(newTotal);
+      // Suggest result as 12% margin (heuristic)
+      setResultGoal(roundToNearest(newTotal * 0.12, 1000));
+      setSuggestionInfo(`Sugestão baseada na média dos últimos 3 meses + 10% de crescimento.`);
+      toast({ title: 'Sugestões geradas!', description: 'Revise e ajuste antes de salvar.' });
+    } catch (err) {
+      console.error('Error suggesting goals:', err);
+      toast({ title: 'Erro', description: 'Não foi possível gerar sugestões.', variant: 'destructive' });
+    }
+    setIsSuggesting(false);
+  };
 
   useEffect(() => {
     if (open) {
