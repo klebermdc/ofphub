@@ -143,7 +143,7 @@ export function DiscountManagementDialog({
           Gerenciar Descontos
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Descontos dos Vendedores</DialogTitle>
           <DialogDescription>
