@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Target, Save } from 'lucide-react';
+import { Target, Save, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { SalesRep } from '@/types/sales';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { parseOrderDate } from '@/utils/dateUtils';
 
 interface GoalsManagementDialogProps {
   userId: string;
@@ -35,6 +36,73 @@ export function GoalsManagementDialog({ userId, month, year, salesReps, onGoalsS
   const [resultGoal, setResultGoal] = useState<number>(0);
   const [salespersonGoals, setSalespersonGoals] = useState<SalespersonGoal[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSuggesting, setIsSuggesting] = useState(false);
+  const [suggestionInfo, setSuggestionInfo] = useState<string>('');
+
+  const roundToNearest = (value: number, step = 5000) => Math.round(value / step) * step;
+
+  const suggestGoals = async () => {
+    setIsSuggesting(true);
+    try {
+      // Pull last 3 completed months prior to selected period
+      const periods: { m: number; y: number }[] = [];
+      for (let i = 1; i <= 3; i++) {
+        let m = month - i;
+        let y = year;
+        while (m <= 0) { m += 12; y -= 1; }
+        periods.push({ m, y });
+      }
+
+      const { data: orders, error } = await supabase
+        .from('orders')
+        .select('vendedor, venda, data')
+        .limit(50000);
+      if (error) throw error;
+
+      const totalsByRep = new Map<string, { sum: number; months: Set<string> }>();
+      (orders || []).forEach((o: any) => {
+        const parsed = parseOrderDate(o.data);
+        if (!parsed) return;
+        const match = periods.some(p => p.m === parsed.month && p.y === parsed.year);
+        if (!match) return;
+        const name = (o.vendedor || '').trim();
+        if (!name) return;
+        const venda = Number(o.venda) || 0;
+        if (!totalsByRep.has(name)) totalsByRep.set(name, { sum: 0, months: new Set() });
+        const e = totalsByRep.get(name)!;
+        e.sum += venda;
+        e.months.add(`${parsed.year}-${parsed.month}`);
+      });
+
+      const GROWTH = 1.1;
+      const updated = salespersonGoals.map(g => {
+        // Try exact then first-name match
+        let entry = totalsByRep.get(g.name);
+        if (!entry) {
+          const first = g.name.split(' ')[0].toLowerCase();
+          for (const [k, v] of totalsByRep.entries()) {
+            if (k.toLowerCase().startsWith(first)) { entry = v; break; }
+          }
+        }
+        if (!entry || entry.months.size === 0) return g;
+        const avg = entry.sum / entry.months.size;
+        const suggested = roundToNearest(avg * GROWTH);
+        return { ...g, goal: suggested };
+      });
+
+      const newTotal = updated.reduce((s, g) => s + g.goal, 0);
+      setSalespersonGoals(updated);
+      setTotalGoal(newTotal);
+      // Suggest result as 12% margin (heuristic)
+      setResultGoal(roundToNearest(newTotal * 0.12, 1000));
+      setSuggestionInfo(`Sugestão baseada na média dos últimos 3 meses + 10% de crescimento.`);
+      toast({ title: 'Sugestões geradas!', description: 'Revise e ajuste antes de salvar.' });
+    } catch (err) {
+      console.error('Error suggesting goals:', err);
+      toast({ title: 'Erro', description: 'Não foi possível gerar sugestões.', variant: 'destructive' });
+    }
+    setIsSuggesting(false);
+  };
 
   useEffect(() => {
     if (open) {
@@ -182,6 +250,23 @@ export function GoalsManagementDialog({ userId, month, year, salesReps, onGoalsS
 
         <ScrollArea className="max-h-[60vh] pr-4">
           <div className="space-y-6 mt-4">
+            <div className="flex flex-col gap-2 p-3 border rounded-lg bg-primary/5">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={suggestGoals}
+                disabled={isSuggesting}
+                className="gap-2"
+              >
+                {isSuggesting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                {isSuggesting ? 'Calculando...' : 'Sugerir metas com base no histórico'}
+              </Button>
+              {suggestionInfo && (
+                <p className="text-xs text-muted-foreground">{suggestionInfo}</p>
+              )}
+            </div>
+
             {/* Meta Total */}
             <div className="space-y-4 p-4 border rounded-lg">
               <div className="space-y-2">
