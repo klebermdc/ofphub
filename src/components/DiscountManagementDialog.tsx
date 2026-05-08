@@ -215,7 +215,7 @@ export function DiscountManagementDialog({
                     </Select>
                   </div>
                   <div className="w-36 space-y-1">
-                    <Label htmlFor={`amount-${index}`} className="text-xs">Valor (R$)</Label>
+                    <Label htmlFor={`amount-${index}`} className="text-xs">Desconto (R$)</Label>
                     <Input
                       id={`amount-${index}`}
                       type="number"
