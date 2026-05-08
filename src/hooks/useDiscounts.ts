@@ -34,11 +34,15 @@ export function useDiscounts(month: number, year: number) {
 
       if (error) throw error;
       
-      setDiscounts((data || []).map(d => ({
+      setDiscounts((data || []).map((d: any) => ({
         id: d.id,
         salesperson_name: d.salesperson_name,
         amount: Number(d.amount),
-        description: d.description || ''
+        description: d.description || '',
+        order_date: d.order_date || '',
+        order_number: d.order_number || '',
+        commission_amount: Number(d.commission_amount || 0),
+        commission_percentage: Number(d.commission_percentage || 0),
       })));
     } catch (error) {
       console.error('Error fetching discounts:', error);
