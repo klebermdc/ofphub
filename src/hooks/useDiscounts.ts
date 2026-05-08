@@ -9,6 +9,10 @@ export interface Discount {
   salesperson_name: string;
   amount: number;
   description?: string;
+  order_date?: string;
+  order_number?: string;
+  commission_amount?: number;
+  commission_percentage?: number;
 }
 
 export function useDiscounts(month: number, year: number) {
@@ -30,11 +34,15 @@ export function useDiscounts(month: number, year: number) {
 
       if (error) throw error;
       
-      setDiscounts((data || []).map(d => ({
+      setDiscounts((data || []).map((d: any) => ({
         id: d.id,
         salesperson_name: d.salesperson_name,
         amount: Number(d.amount),
-        description: d.description || ''
+        description: d.description || '',
+        order_date: d.order_date || '',
+        order_number: d.order_number || '',
+        commission_amount: Number(d.commission_amount || 0),
+        commission_percentage: Number(d.commission_percentage || 0),
       })));
     } catch (error) {
       console.error('Error fetching discounts:', error);
@@ -68,8 +76,12 @@ export function useDiscounts(month: number, year: number) {
               period_month: m,
               period_year: y,
               amount: e.amount,
-              description: e.description || null
-            }))
+              description: e.description || null,
+              order_date: e.order_date || null,
+              order_number: e.order_number || null,
+              commission_amount: e.commission_amount || 0,
+              commission_percentage: e.commission_percentage || 0,
+            })) as any
           );
 
         if (error) throw error;
@@ -111,8 +123,15 @@ export function useDiscounts(month: number, year: number) {
     return findDiscounts(salespersonName).map(d => d.description).filter(Boolean).join(' | ');
   }, [findDiscounts]);
 
-  const getDiscountItems = useCallback((salespersonName: string): Array<{ amount: number; description: string }> => {
-    return findDiscounts(salespersonName).map(d => ({ amount: d.amount || 0, description: d.description || '' }));
+  const getDiscountItems = useCallback((salespersonName: string): Array<{ amount: number; description: string; order_date?: string; order_number?: string; commission_amount?: number; commission_percentage?: number }> => {
+    return findDiscounts(salespersonName).map(d => ({
+      amount: d.amount || 0,
+      description: d.description || '',
+      order_date: d.order_date || '',
+      order_number: d.order_number || '',
+      commission_amount: d.commission_amount || 0,
+      commission_percentage: d.commission_percentage || 0,
+    }));
   }, [findDiscounts]);
 
   const getTotalDiscounts = useCallback((): number => {

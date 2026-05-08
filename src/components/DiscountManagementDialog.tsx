@@ -71,7 +71,15 @@ export function DiscountManagementDialog({
       toast.error('Nenhum vendedor disponível');
       return;
     }
-    setEntries([...entries, { salesperson_name: first, amount: 0, description: '' }]);
+    setEntries([...entries, {
+      salesperson_name: first,
+      amount: 0,
+      description: '',
+      order_date: '',
+      order_number: '',
+      commission_amount: 0,
+      commission_percentage: 0,
+    }]);
   };
 
   const handleRemoveEntry = (index: number) => {
@@ -80,12 +88,14 @@ export function DiscountManagementDialog({
 
   const handleUpdateEntry = (index: number, field: keyof Discount, value: string | number) => {
     const updated = [...entries];
-    if (field === 'amount') {
+    if (field === 'amount' || field === 'commission_amount' || field === 'commission_percentage') {
       const strVal = String(value);
-      setAmountInputs(prev => ({ ...prev, [index]: strVal }));
-      updated[index][field] = strVal === '' ? 0 : Number(strVal) || 0;
+      if (field === 'amount') {
+        setAmountInputs(prev => ({ ...prev, [index]: strVal }));
+      }
+      (updated[index] as any)[field] = strVal === '' ? 0 : Number(strVal) || 0;
     } else {
-      updated[index][field] = value as string;
+      (updated[index] as any)[field] = value as string;
     }
     setEntries(updated);
   };
@@ -133,7 +143,7 @@ export function DiscountManagementDialog({
           Gerenciar Descontos
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Descontos dos Vendedores</DialogTitle>
           <DialogDescription>
@@ -236,6 +246,48 @@ export function DiscountManagementDialog({
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label htmlFor={`order-date-${index}`} className="text-xs">Data do pedido</Label>
+                    <Input
+                      id={`order-date-${index}`}
+                      type="date"
+                      value={entry.order_date || ''}
+                      onChange={(e) => handleUpdateEntry(index, 'order_date', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor={`order-num-${index}`} className="text-xs">Pedido</Label>
+                    <Input
+                      id={`order-num-${index}`}
+                      value={entry.order_number || ''}
+                      onChange={(e) => handleUpdateEntry(index, 'order_number', e.target.value)}
+                      placeholder="Ex: 12345"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor={`comm-amt-${index}`} className="text-xs">Comissão (R$)</Label>
+                    <Input
+                      id={`comm-amt-${index}`}
+                      type="number"
+                      inputMode="decimal"
+                      value={entry.commission_amount ? String(entry.commission_amount) : ''}
+                      onChange={(e) => handleUpdateEntry(index, 'commission_amount', e.target.value)}
+                      placeholder="0,00"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor={`comm-pct-${index}`} className="text-xs">Porcentagem (%)</Label>
+                    <Input
+                      id={`comm-pct-${index}`}
+                      type="number"
+                      inputMode="decimal"
+                      value={entry.commission_percentage ? String(entry.commission_percentage) : ''}
+                      onChange={(e) => handleUpdateEntry(index, 'commission_percentage', e.target.value)}
+                      placeholder="0"
+                    />
+                  </div>
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor={`desc-${index}`} className="text-xs">Descrição do desconto</Label>
