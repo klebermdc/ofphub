@@ -411,10 +411,16 @@ export const generateSalesRepPDF = async (
     dy += 5;
     doc.setFontSize(7);
     doc.setFont("helvetica", "normal");
-    discountItems.forEach((item, i) => {
+    discountItems.forEach((item: any, i: number) => {
       doc.setTextColor(COLORS.gray.r, COLORS.gray.g, COLORS.gray.b);
       const desc = item.description ? item.description : '(sem descrição)';
-      doc.text(`${i + 1}. ${desc}`, margin + 14, dy);
+      const parts: string[] = [];
+      if (item.order_date) parts.push(item.order_date);
+      if (item.order_number) parts.push(`Pedido ${item.order_number}`);
+      if (item.commission_amount) parts.push(`Comissão ${formatCurrency(item.commission_amount)}`);
+      if (item.commission_percentage) parts.push(`${item.commission_percentage}%`);
+      const meta = parts.length ? ` (${parts.join(' • ')})` : '';
+      doc.text(`${i + 1}. ${desc}${meta}`, margin + 14, dy);
       doc.setTextColor(200, 50, 50);
       doc.setFont("helvetica", "bold");
       doc.text(`- ${formatCurrency(item.amount)}`, pageWidth - margin - 12, dy, { align: 'right' });
