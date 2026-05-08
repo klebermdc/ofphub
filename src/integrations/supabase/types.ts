@@ -960,9 +960,13 @@ export type Database = {
       salesperson_discounts: {
         Row: {
           amount: number
+          commission_amount: number
+          commission_percentage: number
           created_at: string
           description: string | null
           id: string
+          order_date: string | null
+          order_number: string | null
           period_month: number
           period_year: number
           salesperson_name: string
@@ -971,9 +975,13 @@ export type Database = {
         }
         Insert: {
           amount?: number
+          commission_amount?: number
+          commission_percentage?: number
           created_at?: string
           description?: string | null
           id?: string
+          order_date?: string | null
+          order_number?: string | null
           period_month: number
           period_year: number
           salesperson_name: string
@@ -982,9 +990,13 @@ export type Database = {
         }
         Update: {
           amount?: number
+          commission_amount?: number
+          commission_percentage?: number
           created_at?: string
           description?: string | null
           id?: string
+          order_date?: string | null
+          order_number?: string | null
           period_month?: number
           period_year?: number
           salesperson_name?: string
