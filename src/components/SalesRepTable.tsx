@@ -409,7 +409,21 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
                           <div className="text-xs space-y-1">
                             <p>Comissão: R$ {rep.commission.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                             <p>Salário: R$ {salary.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-                            {discount > 0 && <p className="text-destructive">Desconto: - R$ {discount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>}
+                            {discount > 0 && (
+                              <>
+                                <p className="text-destructive font-semibold">Desconto: - R$ {discount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                                {discountItems.length > 0 && (
+                                  <div className="mt-1 space-y-0.5 border-t border-border pt-1">
+                                    {discountItems.map((item, i) => (
+                                      <p key={i} className="text-[10px] text-muted-foreground">
+                                        • {item.order_date || ''} {item.order_number ? `Pedido ${item.order_number}` : ''} {item.description ? `- ${item.description}` : ''} 
+                                        <span className="text-destructive">- R$ {item.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                                      </p>
+                                    ))}
+                                  </div>
+                                )}
+                              </>
+                            )}
                           </div>
                         </TooltipContent>
                       </Tooltip>
