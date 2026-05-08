@@ -39,11 +39,14 @@ export function DiscountManagementDialog({
     [salespeople]
   );
 
+  const commissionImpact = (entry: Discount) =>
+    (Number(entry.amount) || 0) * ((Number(entry.commission_percentage) || 0) / 100);
+
   const discountTotalsBySalesperson = useMemo(() => {
     return entries.reduce<Record<string, number>>((acc, entry) => {
       const name = entry.salesperson_name?.trim();
       if (!name || entry.amount <= 0) return acc;
-      acc[name] = (acc[name] || 0) + entry.amount;
+      acc[name] = (acc[name] || 0) + commissionImpact(entry);
       return acc;
     }, {});
   }, [entries]);
@@ -302,7 +305,7 @@ export function DiscountManagementDialog({
 
           <div className="border-t pt-4 mt-4">
             <p className="text-sm text-muted-foreground mb-2">
-              Total de descontos: <span className="font-mono text-destructive">{formatCurrency(entries.reduce((sum, e) => sum + e.amount, 0))}</span>
+              Total de descontos (comissão): <span className="font-mono text-destructive">{formatCurrency(entries.reduce((sum, e) => sum + commissionImpact(e), 0))}</span>
             </p>
             {Object.keys(discountTotalsBySalesperson).length > 0 && (
               <div className="mb-3 space-y-1 rounded-md border p-3 text-sm">
