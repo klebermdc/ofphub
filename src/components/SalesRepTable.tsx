@@ -377,6 +377,7 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
               {allPeopleForPayment.map((rep, index) => {
                 const salary = getSalary(rep.name);
                 const discount = getDiscount ? getDiscount(rep.name) : 0;
+                const discountItems = getDiscountItems ? getDiscountItems(rep.name) : [];
                 const totalToReceive = rep.commission + salary - discount;
                 const receiptUrl = getReceiptUrl(rep.name);
 
