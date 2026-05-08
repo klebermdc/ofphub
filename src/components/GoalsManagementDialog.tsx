@@ -109,7 +109,7 @@ export function GoalsManagementDialog({ userId, month, year, salesReps, onGoalsS
       setTotalGoal(newTotal);
       // Suggest result as 12% margin (heuristic)
       setResultGoal(roundToNearest(newTotal * 0.12, 1000));
-      setSuggestionInfo(`Sugestão baseada na média dos últimos 3 meses + 10% de crescimento.`);
+      setSuggestionInfo(`Média dos últimos 3 meses (apenas meses com vendas) + 10% de crescimento. ${allOrders.length} pedidos analisados.`);
       toast({ title: 'Sugestões geradas!', description: 'Revise e ajuste antes de salvar.' });
     } catch (err) {
       console.error('Error suggesting goals:', err);
