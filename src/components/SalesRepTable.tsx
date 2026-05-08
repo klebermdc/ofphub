@@ -1,4 +1,4 @@
-import { FileDown, User, Check, Circle, Image, Eye, Archive } from "lucide-react";
+import { FileDown, User, Check, Circle, Image, Eye, Archive, Percent } from "lucide-react";
 import { Button } from "./ui/button";
 import { SalesRep } from "@/types/sales";
 import { useCommissionPayments } from "@/hooks/useCommissionPayments";
@@ -24,7 +24,7 @@ interface SalesRepTableProps {
   getSalary: (name: string) => number;
   getDiscount?: (name: string) => number;
   getDiscountDescription?: (name: string) => string;
-  getDiscountItems?: (name: string) => Array<{ amount: number; description: string }>;
+  getDiscountItems?: (name: string) => Array<{ amount: number; description: string; order_date?: string; order_number?: string; commission_amount?: number; commission_percentage?: number }>;
 }
 
 export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selectedYear, getSalary, getDiscount, getDiscountDescription, getDiscountItems }: SalesRepTableProps) {
@@ -156,6 +156,7 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
   const previewSalary = previewRep ? getSalary(previewRep.name) : 0;
   const previewDiscount = previewRep && getDiscount ? getDiscount(previewRep.name) : 0;
   const previewDiscountDesc = previewRep && getDiscountDescription ? getDiscountDescription(previewRep.name) : '';
+  const previewDiscountItems = previewRep && getDiscountItems ? getDiscountItems(previewRep.name) : [];
   const previewTotal = previewRep ? previewRep.commission + previewSalary - previewDiscount : 0;
 
   return (
@@ -224,6 +225,55 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
                   </tbody>
                 </table>
               </div>
+
+              {previewDiscountItems.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold text-destructive flex items-center gap-2">
+                    <Percent className="h-4 w-4" />
+                    Descontos Detalhados
+                  </h4>
+                  <div className="overflow-x-auto border rounded-lg border-destructive/20">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="border-b bg-destructive/5">
+                          <th className="text-left p-2 font-medium">Data</th>
+                          <th className="text-left p-2 font-medium">Pedido</th>
+                          <th className="text-left p-2 font-medium">Descrição</th>
+                          <th className="text-right p-2 font-medium">Comissão</th>
+                          <th className="text-right p-2 font-medium">%</th>
+                          <th className="text-right p-2 font-medium">Desconto</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {previewDiscountItems.map((item, i) => (
+                          <tr key={i} className="border-b border-border/30 hover:bg-destructive/5">
+                            <td className="p-2">{item.order_date || '-'}</td>
+                            <td className="p-2">{item.order_number || '-'}</td>
+                            <td className="p-2 max-w-[200px] truncate">{item.description || '(sem descrição)'}</td>
+                            <td className="p-2 text-right font-mono">
+                              {item.commission_amount ? `R$ ${item.commission_amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '-'}
+                            </td>
+                            <td className="p-2 text-right font-mono">
+                              {item.commission_percentage ? `${item.commission_percentage}%` : '-'}
+                            </td>
+                            <td className="p-2 text-right font-mono text-destructive">
+                              - R$ {item.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot>
+                        <tr className="bg-destructive/10 font-semibold">
+                          <td className="p-2 text-right" colSpan={5}>Total de descontos</td>
+                          <td className="p-2 text-right font-mono text-destructive">
+                            - R$ {previewDiscountItems.reduce((s, d) => s + d.amount, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </div>
+              )}
 
               <div className="flex justify-end">
                 <Button onClick={() => { onGeneratePDF(previewRep); setPreviewRep(null); }} className="gap-2">
@@ -327,6 +377,7 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
               {allPeopleForPayment.map((rep, index) => {
                 const salary = getSalary(rep.name);
                 const discount = getDiscount ? getDiscount(rep.name) : 0;
+                const discountItems = getDiscountItems ? getDiscountItems(rep.name) : [];
                 const totalToReceive = rep.commission + salary - discount;
                 const receiptUrl = getReceiptUrl(rep.name);
 
@@ -358,7 +409,21 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
                           <div className="text-xs space-y-1">
                             <p>Comissão: R$ {rep.commission.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                             <p>Salário: R$ {salary.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-                            {discount > 0 && <p className="text-destructive">Desconto: - R$ {discount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>}
+                            {discount > 0 && (
+                              <>
+                                <p className="text-destructive font-semibold">Desconto: - R$ {discount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                                {discountItems.length > 0 && (
+                                  <div className="mt-1 space-y-0.5 border-t border-border pt-1">
+                                    {discountItems.map((item, i) => (
+                                      <p key={i} className="text-[10px] text-muted-foreground">
+                                        • {item.order_date || ''} {item.order_number ? `Pedido ${item.order_number}` : ''} {item.description ? `- ${item.description}` : ''} 
+                                        <span className="text-destructive">- R$ {item.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                                      </p>
+                                    ))}
+                                  </div>
+                                )}
+                              </>
+                            )}
                           </div>
                         </TooltipContent>
                       </Tooltip>
