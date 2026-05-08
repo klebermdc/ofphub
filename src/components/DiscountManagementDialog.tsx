@@ -71,7 +71,15 @@ export function DiscountManagementDialog({
       toast.error('Nenhum vendedor disponível');
       return;
     }
-    setEntries([...entries, { salesperson_name: first, amount: 0, description: '' }]);
+    setEntries([...entries, {
+      salesperson_name: first,
+      amount: 0,
+      description: '',
+      order_date: '',
+      order_number: '',
+      commission_amount: 0,
+      commission_percentage: 0,
+    }]);
   };
 
   const handleRemoveEntry = (index: number) => {
@@ -80,12 +88,14 @@ export function DiscountManagementDialog({
 
   const handleUpdateEntry = (index: number, field: keyof Discount, value: string | number) => {
     const updated = [...entries];
-    if (field === 'amount') {
+    if (field === 'amount' || field === 'commission_amount' || field === 'commission_percentage') {
       const strVal = String(value);
-      setAmountInputs(prev => ({ ...prev, [index]: strVal }));
-      updated[index][field] = strVal === '' ? 0 : Number(strVal) || 0;
+      if (field === 'amount') {
+        setAmountInputs(prev => ({ ...prev, [index]: strVal }));
+      }
+      (updated[index] as any)[field] = strVal === '' ? 0 : Number(strVal) || 0;
     } else {
-      updated[index][field] = value as string;
+      (updated[index] as any)[field] = value as string;
     }
     setEntries(updated);
   };
