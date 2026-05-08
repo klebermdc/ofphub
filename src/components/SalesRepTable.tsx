@@ -24,7 +24,7 @@ interface SalesRepTableProps {
   getSalary: (name: string) => number;
   getDiscount?: (name: string) => number;
   getDiscountDescription?: (name: string) => string;
-  getDiscountItems?: (name: string) => Array<{ amount: number; description: string }>;
+  getDiscountItems?: (name: string) => Array<{ amount: number; description: string; order_date?: string; order_number?: string; commission_amount?: number; commission_percentage?: number }>;
 }
 
 export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selectedYear, getSalary, getDiscount, getDiscountDescription, getDiscountItems }: SalesRepTableProps) {
