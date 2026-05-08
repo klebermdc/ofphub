@@ -9,6 +9,10 @@ export interface Discount {
   salesperson_name: string;
   amount: number;
   description?: string;
+  order_date?: string;
+  order_number?: string;
+  commission_amount?: number;
+  commission_percentage?: number;
 }
 
 export function useDiscounts(month: number, year: number) {
