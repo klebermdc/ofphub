@@ -215,7 +215,7 @@ export function DiscountManagementDialog({
                     </Select>
                   </div>
                   <div className="w-36 space-y-1">
-                    <Label htmlFor={`amount-${index}`} className="text-xs">Valor (R$)</Label>
+                    <Label htmlFor={`amount-${index}`} className="text-xs">Desconto (R$)</Label>
                     <Input
                       id={`amount-${index}`}
                       type="number"
@@ -264,17 +264,6 @@ export function DiscountManagementDialog({
                       value={entry.order_number || ''}
                       onChange={(e) => handleUpdateEntry(index, 'order_number', e.target.value)}
                       placeholder="Ex: 12345"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label htmlFor={`comm-amt-${index}`} className="text-xs">Comissão (R$)</Label>
-                    <Input
-                      id={`comm-amt-${index}`}
-                      type="number"
-                      inputMode="decimal"
-                      value={entry.commission_amount ? String(entry.commission_amount) : ''}
-                      onChange={(e) => handleUpdateEntry(index, 'commission_amount', e.target.value)}
-                      placeholder="0,00"
                     />
                   </div>
                   <div className="space-y-1">
