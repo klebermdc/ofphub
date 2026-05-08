@@ -1,4 +1,4 @@
-import { FileDown, User, Check, Circle, Image, Eye, Archive } from "lucide-react";
+import { FileDown, User, Check, Circle, Image, Eye, Archive, Percent } from "lucide-react";
 import { Button } from "./ui/button";
 import { SalesRep } from "@/types/sales";
 import { useCommissionPayments } from "@/hooks/useCommissionPayments";
