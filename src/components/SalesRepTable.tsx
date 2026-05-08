@@ -226,6 +226,55 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
                 </table>
               </div>
 
+              {previewDiscountItems.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold text-destructive flex items-center gap-2">
+                    <Percent className="h-4 w-4" />
+                    Descontos Detalhados
+                  </h4>
+                  <div className="overflow-x-auto border rounded-lg border-destructive/20">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="border-b bg-destructive/5">
+                          <th className="text-left p-2 font-medium">Data</th>
+                          <th className="text-left p-2 font-medium">Pedido</th>
+                          <th className="text-left p-2 font-medium">Descrição</th>
+                          <th className="text-right p-2 font-medium">Comissão</th>
+                          <th className="text-right p-2 font-medium">%</th>
+                          <th className="text-right p-2 font-medium">Desconto</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {previewDiscountItems.map((item, i) => (
+                          <tr key={i} className="border-b border-border/30 hover:bg-destructive/5">
+                            <td className="p-2">{item.order_date || '-'}</td>
+                            <td className="p-2">{item.order_number || '-'}</td>
+                            <td className="p-2 max-w-[200px] truncate">{item.description || '(sem descrição)'}</td>
+                            <td className="p-2 text-right font-mono">
+                              {item.commission_amount ? `R$ ${item.commission_amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '-'}
+                            </td>
+                            <td className="p-2 text-right font-mono">
+                              {item.commission_percentage ? `${item.commission_percentage}%` : '-'}
+                            </td>
+                            <td className="p-2 text-right font-mono text-destructive">
+                              - R$ {item.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot>
+                        <tr className="bg-destructive/10 font-semibold">
+                          <td className="p-2 text-right" colSpan={5}>Total de descontos</td>
+                          <td className="p-2 text-right font-mono text-destructive">
+                            - R$ {previewDiscountItems.reduce((s, d) => s + d.amount, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </div>
+              )}
+
               <div className="flex justify-end">
                 <Button onClick={() => { onGeneratePDF(previewRep); setPreviewRep(null); }} className="gap-2">
                   <FileDown className="h-4 w-4" />
