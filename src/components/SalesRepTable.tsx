@@ -400,6 +400,29 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
                       R$ {rep.sales.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </td>
                     <td className="p-3 sm:p-4 text-right">
+                      {discount > 0 ? (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="font-mono text-destructive text-xs sm:text-sm cursor-help">
+                              - R$ {discount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <div className="text-xs space-y-0.5">
+                              {discountItems.map((item, i) => (
+                                <p key={i}>
+                                  • {item.order_date || ''} {item.order_number ? `Pedido ${item.order_number}` : ''} {item.description ? `- ${item.description}` : ''}
+                                  <span className="text-destructive ml-1">- R$ {item.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                                </p>
+                              ))}
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      ) : (
+                        <span className="font-mono text-muted-foreground text-xs sm:text-sm">—</span>
+                      )}
+                    </td>
+                    <td className="p-3 sm:p-4 text-right">
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <span className="font-mono text-success text-xs sm:text-sm cursor-help">
