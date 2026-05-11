@@ -217,6 +217,9 @@ export function OrderFormDialog({
   const availableGuias = ['Rafael', 'Kleber'];
 
   useEffect(() => {
+    // Only sync from props when the dialog OPENS — avoids overwriting user input
+    // when the parent re-renders and passes a new `order` object reference.
+    if (!open) return;
     if (order) {
       setFormData({
         cliente: order.cliente,
@@ -240,7 +243,8 @@ export function OrderFormDialog({
     } else {
       setFormData({ ...emptyOrder, items: [{ ...emptyItem }] });
     }
-  }, [order, open]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const handleHeaderChange = (field: keyof Omit<OrderFormData, 'items'>, value: string) => {
     setFormData(prev => {
