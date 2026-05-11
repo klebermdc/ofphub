@@ -749,8 +749,8 @@ const Index = () => {
                           <SalaryManagementDialog salaries={salaries} onSave={saveSalaries} />
                           <DiscountManagementDialog
                             salespeople={availableSalespeople}
-                            month={currentGoalMonth}
-                            year={currentGoalYear}
+                            month={reportMonth}
+                            year={reportYear}
                           />
                           <GoalsManagementDialog
                             userId={user.id}
