@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { FileSpreadsheet, Users, Megaphone, Receipt, Kanban, Calendar, ClipboardList, TrendingUp, DollarSign } from "lucide-react";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { resolveSalespersonName } from "@/config/salaries";
+import { resolveSalespersonName, isExcludedName } from "@/config/salaries";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
