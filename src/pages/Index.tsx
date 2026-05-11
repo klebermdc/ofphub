@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { FileSpreadsheet, Users, Megaphone, Receipt, Kanban, Calendar, ClipboardList, TrendingUp, DollarSign } from "lucide-react";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { resolveSalespersonName } from "@/config/salaries";
+import { resolveSalespersonName, isExcludedName } from "@/config/salaries";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -115,8 +115,17 @@ const Index = () => {
   const availableFornecedores = [...new Set(salesReps.flatMap(r => r.orders?.map(o => o.fornecedor).filter(Boolean) || []))].sort();
   const availableProdutos = [...new Set(salesReps.flatMap(r => r.orders?.map(o => o.produto).filter(Boolean) || []))].sort();
   const availableSalespeople = useMemo(
-    () => Array.from(new Set(salesReps.map(r => r.name?.trim()).filter((name): name is string => Boolean(name))))
-      .sort((a, b) => a.localeCompare(b, 'pt-BR')),
+    () => {
+      const map = new Map<string, string>();
+      salesReps.forEach(r => {
+        const name = resolveSalespersonName(r.name || '').trim();
+        if (!name) return;
+        if (isExcludedName(name)) return;
+        const key = name.toLowerCase();
+        if (!map.has(key)) map.set(key, name);
+      });
+      return Array.from(map.values()).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+    },
     [salesReps]
   );
   const hasDashboardDateRange = !!(dashboardDateRange.from || dashboardDateRange.to);
