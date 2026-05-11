@@ -140,8 +140,14 @@ const Index = () => {
   const { data: goalsData, refetch: refetchGoals } = useSalesGoals(user?.id, currentGoalMonth, currentGoalYear);
   const monthlyGoal = goalsData?.goal_vendas || 0;
 
-  // Discounts
-  const { discounts, saveDiscounts, getDiscount, getDiscountDescription, getDiscountItems, getTotalDiscounts } = useDiscounts(currentGoalMonth, currentGoalYear);
+  // Discounts — anchored to the commission report period (selectedMonth)
+  const reportMonth = selectedMonth !== 'all'
+    ? parseInt(selectedMonth.split('/')[0])
+    : new Date().getMonth() + 1;
+  const reportYear = selectedMonth !== 'all'
+    ? parseInt(selectedMonth.split('/')[1])
+    : new Date().getFullYear();
+  const { discounts, saveDiscounts, getDiscount, getDiscountDescription, getDiscountItems, getTotalDiscounts } = useDiscounts(reportMonth, reportYear);
   const { getAccountingIntegration } = useApiIntegrations(user?.id);
 
   // Costs
