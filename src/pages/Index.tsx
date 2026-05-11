@@ -116,17 +116,13 @@ const Index = () => {
   const availableProdutos = [...new Set(salesReps.flatMap(r => r.orders?.map(o => o.produto).filter(Boolean) || []))].sort();
   const availableSalespeople = useMemo(
     () => {
-      const map = new Map<string, string>();
-      salesReps.forEach(r => {
-        const name = resolveSalespersonName(r.name || '').trim();
-        if (!name) return;
-        if (isExcludedName(name)) return;
-        const key = name.toLowerCase();
-        if (!map.has(key)) map.set(key, name);
-      });
-      return Array.from(map.values()).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+      const ALLOWED = [
+        'Kleber', 'Renata', 'Carolina', 'Gabriela', 'Maria Gabriela',
+        'Suelen', 'Marcella', 'Pedro', 'Barbara', 'Site',
+      ];
+      return ALLOWED.slice().sort((a, b) => a.localeCompare(b, 'pt-BR'));
     },
-    [salesReps]
+    []
   );
   const hasDashboardDateRange = !!(dashboardDateRange.from || dashboardDateRange.to);
 
