@@ -365,6 +365,7 @@ export function SalesRepTable({ salesReps, onGeneratePDF, selectedMonth, selecte
               <tr className="border-b border-border bg-secondary/30">
                 <th className="text-left p-3 sm:p-4 text-xs sm:text-sm font-medium text-muted-foreground">Vendedor</th>
                 <th className="text-right p-3 sm:p-4 text-xs sm:text-sm font-medium text-muted-foreground">Vendas</th>
+                <th className="text-right p-3 sm:p-4 text-xs sm:text-sm font-medium text-muted-foreground">Desconto</th>
                 <th className="text-right p-3 sm:p-4 text-xs sm:text-sm font-medium text-muted-foreground">Total a Receber</th>
                 <th className="text-right p-3 sm:p-4 text-xs sm:text-sm font-medium text-muted-foreground">Comissão %</th>
                 <th className="text-right p-3 sm:p-4 text-xs sm:text-sm font-medium text-muted-foreground hidden sm:table-cell">Negócios</th>
