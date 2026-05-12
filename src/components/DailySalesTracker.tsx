@@ -66,28 +66,47 @@ export function DailySalesTracker({
   const today = now.getDate();
   const todayFormatted = `${today.toString().padStart(2, '0')}/${m.toString().padStart(2, '0')}/${y}`;
   
-  // Fetch real daily ad spend from marketing_daily_stats
+  // Fetch real daily ad spend (today) and full-month ad spend from marketing_daily_stats
   const [todayAdSpend, setTodayAdSpend] = useState(0);
   const [todayLeads, setTodayLeads] = useState(0);
+  const [monthAdSpend, setMonthAdSpend] = useState(0);
   const [historicalDailyResults, setHistoricalDailyResults] = useState<number[]>([]);
-  
+
   useEffect(() => {
     const todayDate = `${y}-${String(m).padStart(2, '0')}-${String(today).padStart(2, '0')}`;
+    const monthStart = `${y}-${String(m).padStart(2, '0')}-01`;
+    const lastDay = new Date(y, m, 0).getDate();
+    const monthEnd = `${y}-${String(m).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+
     supabase
       .from('marketing_daily_stats')
-      .select('meta_spend, google_spend, leads_total')
-      .eq('date', todayDate)
-      .maybeSingle()
+      .select('date, meta_spend, google_spend, leads_total')
+      .gte('date', monthStart)
+      .lte('date', monthEnd)
       .then(({ data }) => {
         if (data) {
-          setTodayAdSpend(Number(data.meta_spend || 0) + Number(data.google_spend || 0));
-          setTodayLeads(Number(data.leads_total || 0));
+          let monthSum = 0;
+          let todaySum = 0;
+          let todayLeadsSum = 0;
+          data.forEach((d: any) => {
+            const ads = Number(d.meta_spend || 0) + Number(d.google_spend || 0);
+            monthSum += ads;
+            if (d.date === todayDate) {
+              todaySum = ads;
+              todayLeadsSum = Number(d.leads_total || 0);
+            }
+          });
+          setMonthAdSpend(monthSum);
+          setTodayAdSpend(todaySum);
+          setTodayLeads(todayLeadsSum);
         } else {
+          setMonthAdSpend(0);
           setTodayAdSpend(0);
           setTodayLeads(0);
         }
       });
   }, [m, y, today]);
+
 
   const totalBusinessDays = getBusinessDaysInMonth(m, y);
   const businessDaysElapsed = getBusinessDaysElapsed(m, y);
@@ -123,12 +142,15 @@ export function DailySalesTracker({
   // Ganho do Dia = Comissão Total - Comissão Vendedores
   const ganhoDia = todayComissaoTotal - todayComissaoVendedor;
   
-   // Custo diário: salários + operacional + marketing fixo proporcionais + gasto real de ads do dia + imposto 12%
+   // Custo diário: salários + operacional + marketing NÃO-ads (proporcionais) + gasto real de ads do dia + imposto 12%
+   // Subtrai do marketingCosts o gasto real de Ads do mês para evitar duplicidade com todayAdSpend
    const daysInMonth = new Date(y, m, 0).getDate();
    const impostoEstimadoDia = todayComissaoTotal * 0.12;
-   const fixedMonthlyCosts = totalSalaries + operationalCosts + marketingCosts;
+   const marketingNonAds = Math.max(0, marketingCosts - monthAdSpend);
+   const fixedMonthlyCosts = totalSalaries + operationalCosts + marketingNonAds;
    const dailyFixedCost = daysInMonth > 0 ? fixedMonthlyCosts / daysInMonth : 0;
    const dailyCostWithTax = dailyFixedCost + todayAdSpend + impostoEstimadoDia;
+
   
   // Resultado do Dia = Ganho do Dia - Custo diário proporcional
   const resultadoDia = ganhoDia - dailyCostWithTax;
@@ -254,7 +276,7 @@ export function DailySalesTracker({
                 <span className="font-medium">{formatCurrency(ganhoDia)}</span>
               </div>
               <div className="flex justify-between gap-4 pt-1">
-                <span className="text-muted-foreground">(-) Custo fixo/dia (sal+op+mkt ÷ {daysInMonth})</span>
+                <span className="text-muted-foreground">(-) Custo fixo/dia (sal+op+mkt s/ ads ÷ {daysInMonth})</span>
                 <span className="font-medium">-{formatCurrency(dailyFixedCost)}</span>
               </div>
               <div className="flex justify-between gap-4">
