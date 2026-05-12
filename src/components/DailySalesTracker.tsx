@@ -276,7 +276,7 @@ export function DailySalesTracker({
                 <span className="font-medium">{formatCurrency(ganhoDia)}</span>
               </div>
               <div className="flex justify-between gap-4 pt-1">
-                <span className="text-muted-foreground">(-) Custo fixo/dia (sal+op+mkt ÷ {daysInMonth})</span>
+                <span className="text-muted-foreground">(-) Custo fixo/dia (sal+op+mkt s/ ads ÷ {daysInMonth})</span>
                 <span className="font-medium">-{formatCurrency(dailyFixedCost)}</span>
               </div>
               <div className="flex justify-between gap-4">
