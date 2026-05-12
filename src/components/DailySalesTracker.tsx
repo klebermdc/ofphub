@@ -261,38 +261,91 @@ export function DailySalesTracker({
                 </p>
               </div>
             </TooltipTrigger>
-            <TooltipContent side="bottom" className="max-w-sm p-3 space-y-1.5 text-xs">
-              <p className="font-semibold text-sm mb-2">Como é calculado</p>
-              <div className="flex justify-between gap-4">
-                <span className="text-muted-foreground">Comissão Total (dia)</span>
-                <span className="font-medium">{formatCurrency(todayComissaoTotal)}</span>
+            <TooltipContent side="bottom" className="max-w-md p-4 space-y-2 text-xs">
+              <p className="font-semibold text-sm mb-1">Como é calculado o Resultado do Dia</p>
+              <p className="text-[10px] text-muted-foreground -mt-1 mb-2">
+                Hoje: {today.toString().padStart(2,'0')}/{m.toString().padStart(2,'0')}/{y} • {daysInMonth} dias no mês
+              </p>
+
+              {/* RECEITAS */}
+              <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-md p-2 space-y-1">
+                <p className="font-semibold text-emerald-600 dark:text-emerald-400 text-[11px] uppercase tracking-wide">1. Receita do dia</p>
+                <div className="flex justify-between gap-4">
+                  <span className="text-muted-foreground">Vendas brutas (faturamento)</span>
+                  <span className="font-medium">{formatCurrency(todaySales)}</span>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <span className="text-muted-foreground">Comissão total da empresa (margem bruta)</span>
+                  <span className="font-medium">{formatCurrency(todayComissaoTotal)}</span>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <span className="text-muted-foreground">(-) Comissão paga aos vendedores</span>
+                  <span className="font-medium text-warning">-{formatCurrency(todayComissaoVendedor)}</span>
+                </div>
+                <div className="flex justify-between gap-4 border-t border-emerald-500/20 pt-1 font-semibold">
+                  <span>= Ganho do Dia (margem líquida)</span>
+                  <span className={ganhoDia >= 0 ? "text-emerald-500" : "text-red-500"}>{formatCurrency(ganhoDia)}</span>
+                </div>
               </div>
-              <div className="flex justify-between gap-4">
-                <span className="text-muted-foreground">(-) Comissão Vendedores</span>
-                <span className="font-medium">-{formatCurrency(todayComissaoVendedor)}</span>
+
+              {/* CUSTOS FIXOS RATEADOS */}
+              <div className="bg-amber-500/5 border border-amber-500/20 rounded-md p-2 space-y-1">
+                <p className="font-semibold text-amber-600 dark:text-amber-400 text-[11px] uppercase tracking-wide">
+                  2. Custos fixos do mês (rateio diário ÷ {daysInMonth})
+                </p>
+                <div className="flex justify-between gap-4">
+                  <span className="text-muted-foreground">Salários da equipe (mês)</span>
+                  <span className="font-medium">{formatCurrency(totalSalaries)}</span>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <span className="text-muted-foreground">Custos operacionais (mês)</span>
+                  <span className="font-medium">{formatCurrency(operationalCosts)}</span>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <span className="text-muted-foreground">Marketing s/ ads (ferramentas, agência)</span>
+                  <span className="font-medium">{formatCurrency(marketingNonAds)}</span>
+                </div>
+                <div className="flex justify-between gap-4 border-t border-amber-500/20 pt-1">
+                  <span className="text-muted-foreground">Total fixo do mês</span>
+                  <span className="font-medium">{formatCurrency(fixedMonthlyCosts)}</span>
+                </div>
+                <div className="flex justify-between gap-4 font-semibold">
+                  <span>÷ {daysInMonth} dias = custo fixo/dia</span>
+                  <span className="text-red-500">-{formatCurrency(dailyFixedCost)}</span>
+                </div>
               </div>
-              <div className="flex justify-between gap-4 border-t pt-1">
-                <span className="text-muted-foreground">= Ganho do Dia</span>
-                <span className="font-medium">{formatCurrency(ganhoDia)}</span>
+
+              {/* CUSTOS VARIÁVEIS DO DIA */}
+              <div className="bg-red-500/5 border border-red-500/20 rounded-md p-2 space-y-1">
+                <p className="font-semibold text-red-600 dark:text-red-400 text-[11px] uppercase tracking-wide">3. Custos variáveis (reais do dia)</p>
+                <div className="flex justify-between gap-4">
+                  <span className="text-muted-foreground">Meta + Google Ads de hoje</span>
+                  <span className="font-medium text-red-500">-{formatCurrency(todayAdSpend)}</span>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <span className="text-muted-foreground">Imposto estimado (12% s/ comissão total)</span>
+                  <span className="font-medium text-red-500">-{formatCurrency(impostoEstimadoDia)}</span>
+                </div>
               </div>
-              <div className="flex justify-between gap-4 pt-1">
-                <span className="text-muted-foreground">(-) Custo fixo/dia (sal+op+mkt s/ ads ÷ {daysInMonth})</span>
-                <span className="font-medium">-{formatCurrency(dailyFixedCost)}</span>
+
+              {/* RESULTADO FINAL */}
+              <div className="border-t-2 pt-2 space-y-1">
+                <div className="flex justify-between gap-4 text-xs">
+                  <span className="text-muted-foreground">Ganho do Dia</span>
+                  <span>{formatCurrency(ganhoDia)}</span>
+                </div>
+                <div className="flex justify-between gap-4 text-xs">
+                  <span className="text-muted-foreground">(-) Custo fixo/dia + Ads + Imposto</span>
+                  <span className="text-red-500">-{formatCurrency(dailyCostWithTax)}</span>
+                </div>
+                <div className="flex justify-between gap-4 font-bold text-sm border-t pt-1.5">
+                  <span>= Resultado do Dia</span>
+                  <span className={resultadoDia >= 0 ? "text-emerald-500" : "text-red-500"}>{formatCurrency(resultadoDia)}</span>
+                </div>
               </div>
-              <div className="flex justify-between gap-4">
-                <span className="text-muted-foreground">(-) Gasto real Ads (Meta+Google) hoje</span>
-                <span className="font-medium">-{formatCurrency(todayAdSpend)}</span>
-              </div>
-              <div className="flex justify-between gap-4">
-                <span className="text-muted-foreground">(-) Imposto 12% s/ comissão total</span>
-                <span className="font-medium">-{formatCurrency(impostoEstimadoDia)}</span>
-              </div>
-              <div className="flex justify-between gap-4 border-t pt-1.5 font-semibold">
-                <span>= Resultado do Dia</span>
-                <span className={resultadoDia >= 0 ? "text-emerald-500" : "text-red-500"}>{formatCurrency(resultadoDia)}</span>
-              </div>
-              <p className="text-[10px] text-muted-foreground pt-1 border-t mt-2">
-                Custos fixos do mês: {formatCurrency(fixedMonthlyCosts)} • Ads vem de marketing_daily_stats
+
+              <p className="text-[10px] text-muted-foreground pt-1 border-t mt-2 leading-relaxed">
+                💡 Ads (Meta+Google) vêm em tempo real de <code>marketing_daily_stats</code>. Os custos fixos do mês ({formatCurrency(fixedMonthlyCosts)}) excluem ads para evitar duplicidade — total já gasto em ads no mês: {formatCurrency(monthAdSpend)}.
               </p>
             </TooltipContent>
           </Tooltip>
