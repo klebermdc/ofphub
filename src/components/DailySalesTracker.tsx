@@ -3,7 +3,7 @@ import { DollarSign, TrendingUp, Zap, Wallet, UserPlus, Target, Info } from "luc
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { Progress } from "@/components/ui/progress";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface DailySalesTrackerProps {
   salesReps: { orders?: { data?: string; venda: number; comissao?: number; comissaoVendedor?: number }[] }[];
@@ -242,9 +242,8 @@ export function DailySalesTracker({
         </div>
 
         {/* Resultado do Dia */}
-        <TooltipProvider delayDuration={100}>
-          <Tooltip>
-            <TooltipTrigger asChild>
+        <Popover>
+            <PopoverTrigger asChild>
               <div className={cn(
                 "bg-gradient-to-br rounded-xl p-3 sm:p-5 flex flex-col gap-1 sm:gap-2 border col-span-2 sm:col-span-1 cursor-help",
                 resultadoDia >= 0
@@ -260,8 +259,8 @@ export function DailySalesTracker({
                   {formatCurrency(resultadoDia)}
                 </p>
               </div>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" align="end" sideOffset={8} collisionPadding={16} avoidCollisions className="w-[min(28rem,calc(100vw-2rem))] max-h-[80vh] overflow-y-auto p-4 space-y-2 text-xs">
+            </PopoverTrigger>
+            <PopoverContent side="bottom" align="end" sideOffset={8} collisionPadding={16} className="w-[min(28rem,calc(100vw-2rem))] max-h-[80vh] overflow-y-auto p-4 space-y-2 text-xs">
               <p className="font-semibold text-sm mb-1">Como é calculado o Resultado do Dia</p>
               <p className="text-[10px] text-muted-foreground -mt-1 mb-2">
                 Hoje: {today.toString().padStart(2,'0')}/{m.toString().padStart(2,'0')}/{y} • {daysInMonth} dias no mês
@@ -347,9 +346,8 @@ export function DailySalesTracker({
               <p className="text-[10px] text-muted-foreground pt-1 border-t mt-2 leading-relaxed">
                 💡 Ads (Meta+Google) vêm em tempo real de <code>marketing_daily_stats</code>. Os custos fixos do mês ({formatCurrency(fixedMonthlyCosts)}) excluem ads para evitar duplicidade — total já gasto em ads no mês: {formatCurrency(monthAdSpend)}.
               </p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+            </PopoverContent>
+        </Popover>
 
         {/* Leads do Dia */}
         <div className="bg-gradient-to-br from-violet-500/10 to-violet-500/5 border border-violet-500/20 rounded-xl p-3 sm:p-5 flex flex-col gap-1 sm:gap-2">
