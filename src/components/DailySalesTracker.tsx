@@ -220,20 +220,61 @@ export function DailySalesTracker({
         </div>
 
         {/* Resultado do Dia */}
-        <div className={cn(
-          "bg-gradient-to-br rounded-xl p-3 sm:p-5 flex flex-col gap-1 sm:gap-2 border col-span-2 sm:col-span-1",
-          resultadoDia >= 0 
-            ? "from-emerald-500/10 to-emerald-500/5 border-emerald-500/20" 
-            : "from-red-500/10 to-red-500/5 border-red-500/20"
-        )}>
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <TrendingUp className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", resultadoDia >= 0 ? "text-emerald-500" : "text-red-500")} />
-            <span className="text-[10px] sm:text-xs font-medium text-muted-foreground">Resultado do Dia</span>
-          </div>
-          <p className={cn("text-lg sm:text-2xl font-bold", resultadoDia >= 0 ? "text-emerald-500" : "text-red-500")}>
-            {formatCurrency(resultadoDia)}
-          </p>
-        </div>
+        <TooltipProvider delayDuration={100}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className={cn(
+                "bg-gradient-to-br rounded-xl p-3 sm:p-5 flex flex-col gap-1 sm:gap-2 border col-span-2 sm:col-span-1 cursor-help",
+                resultadoDia >= 0
+                  ? "from-emerald-500/10 to-emerald-500/5 border-emerald-500/20"
+                  : "from-red-500/10 to-red-500/5 border-red-500/20"
+              )}>
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <TrendingUp className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", resultadoDia >= 0 ? "text-emerald-500" : "text-red-500")} />
+                  <span className="text-[10px] sm:text-xs font-medium text-muted-foreground">Resultado do Dia</span>
+                  <Info className="h-3 w-3 text-muted-foreground/60 ml-auto" />
+                </div>
+                <p className={cn("text-lg sm:text-2xl font-bold", resultadoDia >= 0 ? "text-emerald-500" : "text-red-500")}>
+                  {formatCurrency(resultadoDia)}
+                </p>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-sm p-3 space-y-1.5 text-xs">
+              <p className="font-semibold text-sm mb-2">Como é calculado</p>
+              <div className="flex justify-between gap-4">
+                <span className="text-muted-foreground">Comissão Total (dia)</span>
+                <span className="font-medium">{formatCurrency(todayComissaoTotal)}</span>
+              </div>
+              <div className="flex justify-between gap-4">
+                <span className="text-muted-foreground">(-) Comissão Vendedores</span>
+                <span className="font-medium">-{formatCurrency(todayComissaoVendedor)}</span>
+              </div>
+              <div className="flex justify-between gap-4 border-t pt-1">
+                <span className="text-muted-foreground">= Ganho do Dia</span>
+                <span className="font-medium">{formatCurrency(ganhoDia)}</span>
+              </div>
+              <div className="flex justify-between gap-4 pt-1">
+                <span className="text-muted-foreground">(-) Custo fixo/dia (sal+op+mkt ÷ {daysInMonth})</span>
+                <span className="font-medium">-{formatCurrency(dailyFixedCost)}</span>
+              </div>
+              <div className="flex justify-between gap-4">
+                <span className="text-muted-foreground">(-) Gasto real Ads (Meta+Google) hoje</span>
+                <span className="font-medium">-{formatCurrency(todayAdSpend)}</span>
+              </div>
+              <div className="flex justify-between gap-4">
+                <span className="text-muted-foreground">(-) Imposto 12% s/ comissão total</span>
+                <span className="font-medium">-{formatCurrency(impostoEstimadoDia)}</span>
+              </div>
+              <div className="flex justify-between gap-4 border-t pt-1.5 font-semibold">
+                <span>= Resultado do Dia</span>
+                <span className={resultadoDia >= 0 ? "text-emerald-500" : "text-red-500"}>{formatCurrency(resultadoDia)}</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground pt-1 border-t mt-2">
+                Custos fixos do mês: {formatCurrency(fixedMonthlyCosts)} • Ads vem de marketing_daily_stats
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
 
         {/* Leads do Dia */}
         <div className="bg-gradient-to-br from-violet-500/10 to-violet-500/5 border border-violet-500/20 rounded-xl p-3 sm:p-5 flex flex-col gap-1 sm:gap-2">
