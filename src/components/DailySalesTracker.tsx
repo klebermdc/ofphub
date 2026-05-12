@@ -261,7 +261,7 @@ export function DailySalesTracker({
                 </p>
               </div>
             </TooltipTrigger>
-            <TooltipContent side="bottom" className="max-w-md p-4 space-y-2 text-xs">
+            <TooltipContent side="bottom" align="end" sideOffset={8} collisionPadding={16} avoidCollisions className="w-[min(28rem,calc(100vw-2rem))] max-h-[80vh] overflow-y-auto p-4 space-y-2 text-xs">
               <p className="font-semibold text-sm mb-1">Como é calculado o Resultado do Dia</p>
               <p className="text-[10px] text-muted-foreground -mt-1 mb-2">
                 Hoje: {today.toString().padStart(2,'0')}/{m.toString().padStart(2,'0')}/{y} • {daysInMonth} dias no mês
