@@ -346,9 +346,8 @@ export function DailySalesTracker({
               <p className="text-[10px] text-muted-foreground pt-1 border-t mt-2 leading-relaxed">
                 💡 Ads (Meta+Google) vêm em tempo real de <code>marketing_daily_stats</code>. Os custos fixos do mês ({formatCurrency(fixedMonthlyCosts)}) excluem ads para evitar duplicidade — total já gasto em ads no mês: {formatCurrency(monthAdSpend)}.
               </p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+            </PopoverContent>
+        </Popover>
 
         {/* Leads do Dia */}
         <div className="bg-gradient-to-br from-violet-500/10 to-violet-500/5 border border-violet-500/20 rounded-xl p-3 sm:p-5 flex flex-col gap-1 sm:gap-2">
