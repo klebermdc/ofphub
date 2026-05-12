@@ -3,7 +3,7 @@ import { DollarSign, TrendingUp, Zap, Wallet, UserPlus, Target, Info } from "luc
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { Progress } from "@/components/ui/progress";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface DailySalesTrackerProps {
   salesReps: { orders?: { data?: string; venda: number; comissao?: number; comissaoVendedor?: number }[] }[];
