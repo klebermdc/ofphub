@@ -242,9 +242,9 @@ export function DailySalesTracker({
         </div>
 
         {/* Resultado do Dia */}
-        <TooltipProvider delayDuration={100}>
-          <Tooltip>
-            <TooltipTrigger asChild>
+        <Popover>
+          <>
+            <PopoverTrigger asChild>
               <div className={cn(
                 "bg-gradient-to-br rounded-xl p-3 sm:p-5 flex flex-col gap-1 sm:gap-2 border col-span-2 sm:col-span-1 cursor-help",
                 resultadoDia >= 0
