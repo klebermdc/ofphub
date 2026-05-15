@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { Progress } from "@/components/ui/progress";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { parseOrderDate } from "@/utils/dateUtils";
 
 interface DailySalesTrackerProps {
   salesReps: { orders?: { data?: string; venda: number; comissao?: number; comissaoVendedor?: number }[] }[];
@@ -114,33 +115,28 @@ export function DailySalesTracker({
   let todaySales = 0;
   let todayComissaoTotal = 0;
   let todayComissaoVendedor = 0;
-  
-  // Calculate today's metrics
+  let todayComissaoGuia = 0;
+
+  // Calculate today's metrics (timezone-safe via parseOrderDate, supports ISO and DD/MM/YYYY)
   salesReps.forEach(rep => {
     rep.orders?.forEach((order: any) => {
-      if (!order.data) return;
-      const parts = order.data.split('/');
-      if (parts.length >= 3) {
-        const orderDay = parts[0].padStart(2, '0');
-        const orderMonth = parts[1].padStart(2, '0');
-        let orderYear = parts[2];
-        if (orderYear.length === 2) orderYear = `20${orderYear}`;
-        
-        const orderDate = `${orderDay}/${orderMonth}/${orderYear}`;
-        
-        if (orderDate === todayFormatted) {
-          todaySales += order.venda || 0;
-          // Comissão Total = comissão da empresa (campo comissaoTotal da planilha)
-          todayComissaoTotal += order.comissaoTotal || order.comissao || 0;
-          // Comissão Vendedor = comissão paga ao vendedor
-          todayComissaoVendedor += order.comissaoVendedor || 0;
-        }
+      const parsed = parseOrderDate(order.data);
+      if (!parsed) return;
+
+      if (parsed.day === today && parsed.month === m && parsed.year === y) {
+        todaySales += Number(order.venda) || 0;
+        // Comissão Total = comissão da empresa
+        todayComissaoTotal += Number(order.comissaoTotal ?? order.comissao) || 0;
+        // Comissão Vendedor = paga ao vendedor
+        todayComissaoVendedor += Number(order.comissaoVendedor) || 0;
+        // Comissão Guia (deve ser descontada do ganho)
+        todayComissaoGuia += Number(order.comissaoGuia) || 0;
       }
     });
   });
-  
-  // Ganho do Dia = Comissão Total - Comissão Vendedores
-  const ganhoDia = todayComissaoTotal - todayComissaoVendedor;
+
+  // Ganho do Dia = Comissão Total - Comissão Vendedores - Comissão Guia
+  const ganhoDia = todayComissaoTotal - todayComissaoVendedor - todayComissaoGuia;
   
    // Custo diário: salários + operacional + marketing NÃO-ads (proporcionais) + gasto real de ads do dia + imposto 12%
    // Subtrai do marketingCosts o gasto real de Ads do mês para evitar duplicidade com todayAdSpend
@@ -280,6 +276,10 @@ export function DailySalesTracker({
                 <div className="flex justify-between gap-4">
                   <span className="text-muted-foreground">(-) Comissão paga aos vendedores</span>
                   <span className="font-medium text-warning">-{formatCurrency(todayComissaoVendedor)}</span>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <span className="text-muted-foreground">(-) Comissão paga aos guias</span>
+                  <span className="font-medium text-warning">-{formatCurrency(todayComissaoGuia)}</span>
                 </div>
                 <div className="flex justify-between gap-4 border-t border-emerald-500/20 pt-1 font-semibold">
                   <span>= Ganho do Dia (margem líquida)</span>
