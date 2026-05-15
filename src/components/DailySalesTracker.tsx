@@ -301,9 +301,25 @@ export function DailySalesTracker({
                   <span className="font-medium text-warning">-{formatCurrency(todayComissaoVendedor)}</span>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <span className="text-muted-foreground">(-) Comissão paga aos guias</span>
+                  <span className="text-muted-foreground">(-) Comissão paga aos guias (já com regra)</span>
                   <span className="font-medium text-warning">-{formatCurrency(todayComissaoGuia)}</span>
                 </div>
+                {(guiaRafaelRaw > 0 || guiaOutrosRaw > 0) && (
+                  <div className="ml-3 pl-2 border-l border-warning/30 space-y-0.5">
+                    {guiaOutrosRaw > 0 && (
+                      <div className="flex justify-between gap-4 text-[10px]">
+                        <span className="text-muted-foreground">↳ Kleber/outros (100%)</span>
+                        <span>{formatCurrency(guiaOutrosRaw)} → {formatCurrency(guiaOutrosRaw)}</span>
+                      </div>
+                    )}
+                    {guiaRafaelRaw > 0 && (
+                      <div className="flex justify-between gap-4 text-[10px]">
+                        <span className="text-muted-foreground">↳ Rafael (50%)</span>
+                        <span>{formatCurrency(guiaRafaelRaw)} → {formatCurrency(guiaRafaelRaw * 0.5)}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div className="flex justify-between gap-4 border-t border-emerald-500/20 pt-1 font-semibold">
                   <span>= Ganho do Dia (margem líquida)</span>
                   <span className={ganhoDia >= 0 ? "text-emerald-500" : "text-red-500"}>{formatCurrency(ganhoDia)}</span>
