@@ -116,6 +116,13 @@ export function DailySalesTracker({
   let todayComissaoTotal = 0;
   let todayComissaoVendedor = 0;
   let todayComissaoGuia = 0;
+  let guiaRafaelRaw = 0;
+  let guiaOutrosRaw = 0;
+  const todayOrdersDetail: Array<{
+    cliente: string; pedido: string; venda: number; comissaoTotal: number;
+    comissaoVendedor: number; vendedor: string; guia: string;
+    comissaoGuiaRaw: number; comissaoGuiaApplied: number; guiaFactor: number;
+  }> = [];
 
   // Calculate today's metrics (timezone-safe via parseOrderDate, supports ISO and DD/MM/YYYY)
   salesReps.forEach(rep => {
@@ -124,21 +131,34 @@ export function DailySalesTracker({
       if (!parsed) return;
 
       if (parsed.day === today && parsed.month === m && parsed.year === y) {
-        todaySales += Number(order.venda) || 0;
-        // Comissão Total = comissão da empresa
-        todayComissaoTotal += Number(order.comissaoTotal ?? order.comissao) || 0;
-        // Comissão Vendedor = paga ao vendedor
-        todayComissaoVendedor += Number(order.comissaoVendedor) || 0;
-        // Comissão Guia: Kleber 100%, Rafael 50%, demais 100% por padrão
-        const guiaName = (order.guia || '').trim().toLowerCase();
+        const venda = Number(order.venda) || 0;
+        const cTotal = Number(order.comissaoTotal ?? order.comissao) || 0;
+        const cVend = Number(order.comissaoVendedor) || 0;
+        const guiaName = (order.guia || '').trim();
+        const guiaLower = guiaName.toLowerCase();
         const comissaoGuiaRaw = Number(order.comissaoGuia) || 0;
-        const guiaFactor = guiaName.includes('rafael') ? 0.5 : 1;
-        todayComissaoGuia += comissaoGuiaRaw * guiaFactor;
+        const guiaFactor = guiaLower.includes('rafael') ? 0.5 : 1;
+        const comissaoGuiaApplied = comissaoGuiaRaw * guiaFactor;
+
+        todaySales += venda;
+        todayComissaoTotal += cTotal;
+        todayComissaoVendedor += cVend;
+        todayComissaoGuia += comissaoGuiaApplied;
+        if (guiaLower.includes('rafael')) guiaRafaelRaw += comissaoGuiaRaw;
+        else if (comissaoGuiaRaw > 0) guiaOutrosRaw += comissaoGuiaRaw;
+
+        todayOrdersDetail.push({
+          cliente: order.cliente || '-',
+          pedido: order.pedido || '-',
+          venda, comissaoTotal: cTotal, comissaoVendedor: cVend,
+          vendedor: (order as any).vendedor || (order as any).salesperson_name || '-',
+          guia: guiaName, comissaoGuiaRaw, comissaoGuiaApplied, guiaFactor,
+        });
       }
     });
   });
 
-  // Ganho do Dia = Comissão Total - Comissão Vendedores - Comissão Guia
+  // Ganho do Dia = Comissão Total - Comissão Vendedores - Comissão Guia (já com fator)
   const ganhoDia = todayComissaoTotal - todayComissaoVendedor - todayComissaoGuia;
   
    // Custo diário: salários + operacional + marketing NÃO-ads (proporcionais) + gasto real de ads do dia + imposto 12%
