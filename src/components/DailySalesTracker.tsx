@@ -127,6 +127,9 @@ export function DailySalesTracker({
   // Calculate today's metrics (timezone-safe via parseOrderDate, supports ISO and DD/MM/YYYY)
   salesReps.forEach(rep => {
     rep.orders?.forEach((order: any) => {
+      // Evita duplicidade: pedidos com guia diferente do vendedor são espelhados
+      // como uma 2ª "ordem" no rep do guia (isGuideEntry=true). Ignoramos aqui.
+      if (order.isGuideEntry) return;
       const parsed = parseOrderDate(order.data);
       if (!parsed) return;
 
