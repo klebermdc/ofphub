@@ -382,8 +382,51 @@ export function DailySalesTracker({
                 </div>
               </div>
 
+              {/* DETALHE: Pedidos do dia */}
+              {todayOrdersDetail.length > 0 && (
+                <div className="bg-muted/30 border rounded-md p-2 space-y-1.5 mt-1">
+                  <p className="font-semibold text-[11px] uppercase tracking-wide">
+                    4. Pedidos lançados hoje ({todayOrdersDetail.length})
+                  </p>
+                  <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                    {todayOrdersDetail.map((o, i) => {
+                      const ganho = o.comissaoTotal - o.comissaoVendedor - o.comissaoGuiaApplied;
+                      return (
+                        <div key={i} className="bg-background border rounded p-1.5 text-[10px] space-y-0.5">
+                          <div className="flex justify-between gap-2 font-medium">
+                            <span className="truncate">#{o.pedido} • {o.cliente}</span>
+                            <span>{formatCurrency(o.venda)}</span>
+                          </div>
+                          <div className="flex justify-between gap-2 text-muted-foreground">
+                            <span>Vend: {o.vendedor}</span>
+                            <span>Com. total: {formatCurrency(o.comissaoTotal)}</span>
+                          </div>
+                          <div className="flex justify-between gap-2 text-warning">
+                            <span>(-) Vendedor</span>
+                            <span>-{formatCurrency(o.comissaoVendedor)}</span>
+                          </div>
+                          {o.comissaoGuiaRaw > 0 && (
+                            <div className="flex justify-between gap-2 text-warning">
+                              <span>
+                                (-) Guia {o.guia} ({Math.round(o.guiaFactor * 100)}%)
+                                {o.guiaFactor < 1 && ` • bruto ${formatCurrency(o.comissaoGuiaRaw)}`}
+                              </span>
+                              <span>-{formatCurrency(o.comissaoGuiaApplied)}</span>
+                            </div>
+                          )}
+                          <div className={cn("flex justify-between gap-2 font-semibold border-t pt-0.5", ganho >= 0 ? "text-emerald-500" : "text-red-500")}>
+                            <span>= Ganho</span>
+                            <span>{formatCurrency(ganho)}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               <p className="text-[10px] text-muted-foreground pt-1 border-t mt-2 leading-relaxed">
-                💡 Ads (Meta+Google) vêm em tempo real de <code>marketing_daily_stats</code>. Os custos fixos do mês ({formatCurrency(fixedMonthlyCosts)}) excluem ads para evitar duplicidade — total já gasto em ads no mês: {formatCurrency(monthAdSpend)}.
+                💡 Ads (Meta+Google) vêm em tempo real de <code>marketing_daily_stats</code>. Os custos fixos do mês ({formatCurrency(fixedMonthlyCosts)}) excluem ads para evitar duplicidade — total já gasto em ads no mês: {formatCurrency(monthAdSpend)}. Regra de guia: Kleber 100%, Rafael 50%.
               </p>
             </PopoverContent>
         </Popover>
