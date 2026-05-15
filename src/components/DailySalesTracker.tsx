@@ -129,8 +129,11 @@ export function DailySalesTracker({
         todayComissaoTotal += Number(order.comissaoTotal ?? order.comissao) || 0;
         // Comissão Vendedor = paga ao vendedor
         todayComissaoVendedor += Number(order.comissaoVendedor) || 0;
-        // Comissão Guia (deve ser descontada do ganho)
-        todayComissaoGuia += Number(order.comissaoGuia) || 0;
+        // Comissão Guia: Kleber 100%, Rafael 50%, demais 100% por padrão
+        const guiaName = (order.guia || '').trim().toLowerCase();
+        const comissaoGuiaRaw = Number(order.comissaoGuia) || 0;
+        const guiaFactor = guiaName.includes('rafael') ? 0.5 : 1;
+        todayComissaoGuia += comissaoGuiaRaw * guiaFactor;
       }
     });
   });
