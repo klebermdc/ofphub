@@ -277,6 +277,10 @@ export function DailySalesTracker({
                   <span className="text-muted-foreground">(-) Comissão paga aos vendedores</span>
                   <span className="font-medium text-warning">-{formatCurrency(todayComissaoVendedor)}</span>
                 </div>
+                <div className="flex justify-between gap-4">
+                  <span className="text-muted-foreground">(-) Comissão paga aos guias</span>
+                  <span className="font-medium text-warning">-{formatCurrency(todayComissaoGuia)}</span>
+                </div>
                 <div className="flex justify-between gap-4 border-t border-emerald-500/20 pt-1 font-semibold">
                   <span>= Ganho do Dia (margem líquida)</span>
                   <span className={ganhoDia >= 0 ? "text-emerald-500" : "text-red-500"}>{formatCurrency(ganhoDia)}</span>
