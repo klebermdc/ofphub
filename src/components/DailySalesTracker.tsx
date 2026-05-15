@@ -116,6 +116,13 @@ export function DailySalesTracker({
   let todayComissaoTotal = 0;
   let todayComissaoVendedor = 0;
   let todayComissaoGuia = 0;
+  let guiaRafaelRaw = 0;
+  let guiaOutrosRaw = 0;
+  const todayOrdersDetail: Array<{
+    cliente: string; pedido: string; venda: number; comissaoTotal: number;
+    comissaoVendedor: number; vendedor: string; guia: string;
+    comissaoGuiaRaw: number; comissaoGuiaApplied: number; guiaFactor: number;
+  }> = [];
 
   // Calculate today's metrics (timezone-safe via parseOrderDate, supports ISO and DD/MM/YYYY)
   salesReps.forEach(rep => {
@@ -124,21 +131,34 @@ export function DailySalesTracker({
       if (!parsed) return;
 
       if (parsed.day === today && parsed.month === m && parsed.year === y) {
-        todaySales += Number(order.venda) || 0;
-        // Comissão Total = comissão da empresa
-        todayComissaoTotal += Number(order.comissaoTotal ?? order.comissao) || 0;
-        // Comissão Vendedor = paga ao vendedor
-        todayComissaoVendedor += Number(order.comissaoVendedor) || 0;
-        // Comissão Guia: Kleber 100%, Rafael 50%, demais 100% por padrão
-        const guiaName = (order.guia || '').trim().toLowerCase();
+        const venda = Number(order.venda) || 0;
+        const cTotal = Number(order.comissaoTotal ?? order.comissao) || 0;
+        const cVend = Number(order.comissaoVendedor) || 0;
+        const guiaName = (order.guia || '').trim();
+        const guiaLower = guiaName.toLowerCase();
         const comissaoGuiaRaw = Number(order.comissaoGuia) || 0;
-        const guiaFactor = guiaName.includes('rafael') ? 0.5 : 1;
-        todayComissaoGuia += comissaoGuiaRaw * guiaFactor;
+        const guiaFactor = guiaLower.includes('rafael') ? 0.5 : 1;
+        const comissaoGuiaApplied = comissaoGuiaRaw * guiaFactor;
+
+        todaySales += venda;
+        todayComissaoTotal += cTotal;
+        todayComissaoVendedor += cVend;
+        todayComissaoGuia += comissaoGuiaApplied;
+        if (guiaLower.includes('rafael')) guiaRafaelRaw += comissaoGuiaRaw;
+        else if (comissaoGuiaRaw > 0) guiaOutrosRaw += comissaoGuiaRaw;
+
+        todayOrdersDetail.push({
+          cliente: order.cliente || '-',
+          pedido: order.pedido || '-',
+          venda, comissaoTotal: cTotal, comissaoVendedor: cVend,
+          vendedor: (order as any).vendedor || (order as any).salesperson_name || '-',
+          guia: guiaName, comissaoGuiaRaw, comissaoGuiaApplied, guiaFactor,
+        });
       }
     });
   });
 
-  // Ganho do Dia = Comissão Total - Comissão Vendedores - Comissão Guia
+  // Ganho do Dia = Comissão Total - Comissão Vendedores - Comissão Guia (já com fator)
   const ganhoDia = todayComissaoTotal - todayComissaoVendedor - todayComissaoGuia;
   
    // Custo diário: salários + operacional + marketing NÃO-ads (proporcionais) + gasto real de ads do dia + imposto 12%
@@ -281,9 +301,25 @@ export function DailySalesTracker({
                   <span className="font-medium text-warning">-{formatCurrency(todayComissaoVendedor)}</span>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <span className="text-muted-foreground">(-) Comissão paga aos guias</span>
+                  <span className="text-muted-foreground">(-) Comissão paga aos guias (já com regra)</span>
                   <span className="font-medium text-warning">-{formatCurrency(todayComissaoGuia)}</span>
                 </div>
+                {(guiaRafaelRaw > 0 || guiaOutrosRaw > 0) && (
+                  <div className="ml-3 pl-2 border-l border-warning/30 space-y-0.5">
+                    {guiaOutrosRaw > 0 && (
+                      <div className="flex justify-between gap-4 text-[10px]">
+                        <span className="text-muted-foreground">↳ Kleber/outros (100%)</span>
+                        <span>{formatCurrency(guiaOutrosRaw)} → {formatCurrency(guiaOutrosRaw)}</span>
+                      </div>
+                    )}
+                    {guiaRafaelRaw > 0 && (
+                      <div className="flex justify-between gap-4 text-[10px]">
+                        <span className="text-muted-foreground">↳ Rafael (50%)</span>
+                        <span>{formatCurrency(guiaRafaelRaw)} → {formatCurrency(guiaRafaelRaw * 0.5)}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div className="flex justify-between gap-4 border-t border-emerald-500/20 pt-1 font-semibold">
                   <span>= Ganho do Dia (margem líquida)</span>
                   <span className={ganhoDia >= 0 ? "text-emerald-500" : "text-red-500"}>{formatCurrency(ganhoDia)}</span>
@@ -346,8 +382,51 @@ export function DailySalesTracker({
                 </div>
               </div>
 
+              {/* DETALHE: Pedidos do dia */}
+              {todayOrdersDetail.length > 0 && (
+                <div className="bg-muted/30 border rounded-md p-2 space-y-1.5 mt-1">
+                  <p className="font-semibold text-[11px] uppercase tracking-wide">
+                    4. Pedidos lançados hoje ({todayOrdersDetail.length})
+                  </p>
+                  <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                    {todayOrdersDetail.map((o, i) => {
+                      const ganho = o.comissaoTotal - o.comissaoVendedor - o.comissaoGuiaApplied;
+                      return (
+                        <div key={i} className="bg-background border rounded p-1.5 text-[10px] space-y-0.5">
+                          <div className="flex justify-between gap-2 font-medium">
+                            <span className="truncate">#{o.pedido} • {o.cliente}</span>
+                            <span>{formatCurrency(o.venda)}</span>
+                          </div>
+                          <div className="flex justify-between gap-2 text-muted-foreground">
+                            <span>Vend: {o.vendedor}</span>
+                            <span>Com. total: {formatCurrency(o.comissaoTotal)}</span>
+                          </div>
+                          <div className="flex justify-between gap-2 text-warning">
+                            <span>(-) Vendedor</span>
+                            <span>-{formatCurrency(o.comissaoVendedor)}</span>
+                          </div>
+                          {o.comissaoGuiaRaw > 0 && (
+                            <div className="flex justify-between gap-2 text-warning">
+                              <span>
+                                (-) Guia {o.guia} ({Math.round(o.guiaFactor * 100)}%)
+                                {o.guiaFactor < 1 && ` • bruto ${formatCurrency(o.comissaoGuiaRaw)}`}
+                              </span>
+                              <span>-{formatCurrency(o.comissaoGuiaApplied)}</span>
+                            </div>
+                          )}
+                          <div className={cn("flex justify-between gap-2 font-semibold border-t pt-0.5", ganho >= 0 ? "text-emerald-500" : "text-red-500")}>
+                            <span>= Ganho</span>
+                            <span>{formatCurrency(ganho)}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               <p className="text-[10px] text-muted-foreground pt-1 border-t mt-2 leading-relaxed">
-                💡 Ads (Meta+Google) vêm em tempo real de <code>marketing_daily_stats</code>. Os custos fixos do mês ({formatCurrency(fixedMonthlyCosts)}) excluem ads para evitar duplicidade — total já gasto em ads no mês: {formatCurrency(monthAdSpend)}.
+                💡 Ads (Meta+Google) vêm em tempo real de <code>marketing_daily_stats</code>. Os custos fixos do mês ({formatCurrency(fixedMonthlyCosts)}) excluem ads para evitar duplicidade — total já gasto em ads no mês: {formatCurrency(monthAdSpend)}. Regra de guia: Kleber 100%, Rafael 50%.
               </p>
             </PopoverContent>
         </Popover>
