@@ -140,7 +140,9 @@ export function DailySalesTracker({
         const guiaName = (order.guia || '').trim();
         const guiaLower = guiaName.toLowerCase();
         const comissaoGuiaRaw = Number(order.comissaoGuia) || 0;
-        const guiaFactor = guiaLower.includes('rafael') ? 0.5 : 1;
+        // Novas regras: o valor de comissaoGuia salvo no pedido já reflete o
+        // valor real pago ao guia (Rafael: 50% do líquido; Kleber: 0).
+        const guiaFactor = 1;
         const comissaoGuiaApplied = comissaoGuiaRaw * guiaFactor;
 
         todaySales += venda;
