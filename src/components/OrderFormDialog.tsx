@@ -288,21 +288,11 @@ export function OrderFormDialog({
           newItems[index].porcentagemVendedor = preset.porcentagemVendedor;
         }
       }
-      // Recalculate when relevant fields change
+      // Recalculate when relevant fields change — sempre aplica a regra automática.
+      // Edição manual de comissaoVendedor/comissaoGuia usa field próprio e não cai aqui.
       if (['venda', 'comissao', 'porcentagemVendedor', 'guia', 'produto'].includes(field)) {
-        const previousGuia = newItems[index].comissaoGuia;
-        const previousVendedor = newItems[index].comissaoVendedor;
         newItems[index] = calcItem(newItems[index], prev.vendedor);
-        // Preservar comissaoVendedor manual EXCETO quando o usuário alterar a % do vendedor
-        if (field !== 'porcentagemVendedor') {
-          newItems[index].comissaoVendedor = previousVendedor;
-        }
-        // comissaoGuia: só auto-preencher quando guia/produto mudar
-        if (!['guia', 'produto'].includes(field)) {
-          newItems[index].comissaoGuia = previousGuia;
-        }
       }
-      // If user manually edits comissaoGuia or comissaoVendedor, don't recalculate
       return { ...prev, items: newItems };
     });
   };
