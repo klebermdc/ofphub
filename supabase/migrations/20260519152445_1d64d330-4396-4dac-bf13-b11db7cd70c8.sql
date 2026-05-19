@@ -1,0 +1,1 @@
+UPDATE public.orders SET comissao_guia = ROUND(((venda - comissao_vendedor) * 0.5)::numeric, 2) WHERE id = '83c58163-93e0-4739-bea5-c07dd58b8274';
