@@ -165,33 +165,44 @@ function calcItem(item: ProductLineItem, vendedor: string): ProductLineItem {
   }
 
   if (isGuiamento && item.guia) {
-    const guiaIsVendedor = vendedor.trim().toLowerCase() === item.guia.trim().toLowerCase();
-    // Vendedor (que não é o guia) recebe 5% fixo sobre a venda
+    const guiaLower = item.guia.trim().toLowerCase();
+    const vendLower = vendedor.trim().toLowerCase();
+    const guiaIsVendedor = vendLower === guiaLower;
     const VENDEDOR_GUIAMENTO_PCT = 0.05;
-    const isKleber = item.guia.trim().toLowerCase() === 'kleber';
+    const isKleber = guiaLower === 'kleber';
+    const isRafael = guiaLower === 'rafael';
 
+    // REGRA 3 — Guia = Kleber (qualquer vendedor): vendedor 5%, OFP fica com o restante, Kleber 0
     if (isKleber) {
-      // Regra Kleber: leva tudo (sem OFP)
       if (guiaIsVendedor) {
-        return { ...item, comissaoTotal, comissaoVendedor: 0, comissaoGuia: item.venda };
-      } else {
-        const comissaoVendedor = item.venda * VENDEDOR_GUIAMENTO_PCT;
-        const comissaoGuia = item.venda - comissaoVendedor;
-        return { ...item, comissaoTotal, comissaoVendedor, comissaoGuia };
+        // Kleber também é o vendedor: sem comissão de vendedor, OFP fica com tudo
+        return { ...item, comissaoTotal, comissaoVendedor: 0, comissaoGuia: 0 };
       }
-    } else {
-      // Regra padrão para todos os outros guias (Rafael, Daiane, etc.): 50/50 com OFP
-      if (guiaIsVendedor) {
-        // Guia é o vendedor: 50% guia / 50% OFP
-        const comissaoGuia = item.venda * 0.5;
-        return { ...item, comissaoTotal, comissaoVendedor: 0, comissaoGuia };
-      } else {
-        // Vendedor leva 5%, restante (95%) dividido 50% guia / 50% OFP
-        const comissaoVendedor = item.venda * VENDEDOR_GUIAMENTO_PCT;
-        const comissaoGuia = (item.venda - comissaoVendedor) * 0.5;
-        return { ...item, comissaoTotal, comissaoVendedor, comissaoGuia };
-      }
+      const comissaoVendedor = item.venda * VENDEDOR_GUIAMENTO_PCT;
+      return { ...item, comissaoTotal, comissaoVendedor, comissaoGuia: 0 };
     }
+
+    // REGRA 2 — Guia = Rafael E vendedor = Rafael: sem comissão de vendedor, 50/50 sobre o BRUTO
+    if (isRafael && guiaIsVendedor) {
+      const comissaoGuia = item.venda * 0.5;
+      return { ...item, comissaoTotal, comissaoVendedor: 0, comissaoGuia };
+    }
+
+    // REGRA 1 — Guia = Rafael (vendedor ≠ Rafael): vendedor 5%, líquido 50/50
+    if (isRafael) {
+      const comissaoVendedor = item.venda * VENDEDOR_GUIAMENTO_PCT;
+      const comissaoGuia = (item.venda - comissaoVendedor) * 0.5;
+      return { ...item, comissaoTotal, comissaoVendedor, comissaoGuia };
+    }
+
+    // Fallback (outros guias): mesmo padrão Rafael (50/50)
+    if (guiaIsVendedor) {
+      const comissaoGuia = item.venda * 0.5;
+      return { ...item, comissaoTotal, comissaoVendedor: 0, comissaoGuia };
+    }
+    const comissaoVendedor = item.venda * VENDEDOR_GUIAMENTO_PCT;
+    const comissaoGuia = (item.venda - comissaoVendedor) * 0.5;
+    return { ...item, comissaoTotal, comissaoVendedor, comissaoGuia };
   }
   
   const comissaoVendedor = comissaoTotal * (item.porcentagemVendedor / 100);
