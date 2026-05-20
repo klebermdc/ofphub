@@ -329,6 +329,8 @@ export function OrderFormDialog({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
+      const insertedOrderIds: string[] = [];
+
       if (mode === 'add') {
         // Insert one row per product
         const rows = formData.items.map(item => ({
@@ -349,8 +351,9 @@ export function OrderFormDialog({
           guia: item.guia || null,
           comissao_guia: item.comissaoGuia,
         }));
-        const { error } = await supabase.from('orders').insert(rows);
+        const { data: inserted, error } = await supabase.from('orders').insert(rows).select('id');
         if (error) throw error;
+        inserted?.forEach(r => insertedOrderIds.push(r.id));
       } else {
         // Edit mode: update original item + insert any new items
         const firstItem = formData.items[0];
@@ -392,18 +395,26 @@ export function OrderFormDialog({
             const { error } = await supabase.from('orders').update(orderData).eq('id', existing.id);
             if (error) throw error;
           } else {
-            const { error } = await supabase.from('orders').insert(orderData);
+            const { data: insertedOne, error } = await supabase.from('orders').insert(orderData).select('id').maybeSingle();
             if (error) throw error;
+            if (insertedOne?.id) insertedOrderIds.push(insertedOne.id);
           }
         }
 
         // Insert additional new products in the same order
         if (additionalItems.length > 0) {
           const newRows = additionalItems.map(item => buildRow(item));
-          const { error } = await supabase.from('orders').insert(newRows);
+          const { data: insertedExtras, error } = await supabase.from('orders').insert(newRows).select('id');
           if (error) throw error;
+          insertedExtras?.forEach(r => insertedOrderIds.push(r.id));
         }
       }
+
+      // Fire Meta Conversions API events for each newly inserted order (fire-and-forget)
+      insertedOrderIds.forEach(oid => {
+        supabase.functions.invoke('meta-capi-purchase', { body: { order_id: oid } })
+          .catch(err => console.warn('Meta CAPI dispatch failed for', oid, err));
+      });
 
       toast({
         title: mode === 'add' ? "Pedido adicionado!" : "Pedido salvo!",
