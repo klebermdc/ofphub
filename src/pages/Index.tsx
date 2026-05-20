@@ -546,21 +546,46 @@ const Index = () => {
                       onOrderSuccess={refreshOrders}
                     />
 
-                    <DashboardMonthlyMetrics
-                      totalVendas={metrics.totalVendas}
-                      totalComissaoTotal={metrics.totalComissaoTotal}
-                      totalComissao={metrics.totalComissao}
-                      ganhoBruto={metrics.ganhoBruto}
-                      custoEquipeComercial={costCalc.custoEquipeComercial}
-                      marketingCost={marketingCost}
-                      operationalCost={operationalCost}
-                      impostoEstimado={costCalc.impostoEstimado}
-                      totalCost={costCalc.totalCost}
-                      ticketMedio={metrics.ticketMedio}
-                      resultadoParcial={costCalc.resultadoParcial}
-                      resultado={costCalc.resultado}
-                      taxaMedia={metrics.taxaMedia}
-                    />
+                    {(() => {
+                      let _daysInMonth = 0;
+                      let _daysElapsed = 0;
+                      let _periodoLabel: string | undefined;
+                      if (dashboardMonth !== 'all') {
+                        const [m, y] = dashboardMonth.split('/').map(Number);
+                        const now = new Date();
+                        const isCurrent = now.getMonth() + 1 === m && now.getFullYear() === y;
+                        _daysInMonth = new Date(y, m, 0).getDate();
+                        _daysElapsed = isCurrent ? now.getDate() : _daysInMonth;
+                        _periodoLabel = `${String(m).padStart(2, '0')}/${y}`;
+                      }
+                      return (
+                        <DashboardMonthlyMetrics
+                          totalVendas={metrics.totalVendas}
+                          totalComissaoTotal={metrics.totalComissaoTotal}
+                          totalComissao={metrics.totalComissao}
+                          ganhoBruto={metrics.ganhoBruto}
+                          custoEquipeComercial={costCalc.custoEquipeComercial}
+                          marketingCost={marketingCost}
+                          operationalCost={operationalCost}
+                          impostoEstimado={costCalc.impostoEstimado}
+                          totalCost={costCalc.totalCost}
+                          ticketMedio={metrics.ticketMedio}
+                          resultadoParcial={costCalc.resultadoParcial}
+                          resultado={costCalc.resultado}
+                          taxaMedia={metrics.taxaMedia}
+                          numPedidos={metrics.totalNegocios}
+                          vendedoresAtivos={metrics.vendedoresAtivos}
+                          totalSalaries={costCalc.totalSalaries}
+                          totalDiscounts={costCalc.totalDiscounts}
+                          realAdSpendToDate={costCalc.realAdSpendToDate}
+                          custosFixosProporcional={costCalc.custosFixosProporcional}
+                          proporcao={costCalc.proporcao}
+                          daysInMonth={_daysInMonth}
+                          daysElapsed={_daysElapsed}
+                          periodoLabel={_periodoLabel}
+                        />
+                      );
+                    })()}
 
                     {dashboardMonth !== 'all' && (() => {
                       const [m, y] = dashboardMonth.split('/').map(Number);

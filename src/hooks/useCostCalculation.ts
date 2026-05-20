@@ -11,6 +11,10 @@ interface CostCalculationResult {
   resultado: number;
   custoProporcional: number;
   resultadoParcial: number;
+  custosFixosProporcional: number;
+  proporcao: number;
+  realAdSpendToDate: number;
+  totalDiscounts: number;
 }
 
 interface CostCalculationParams {
@@ -81,6 +85,10 @@ export function useCostCalculation({
       resultado,
       custoProporcional,
       resultadoParcial,
+      custosFixosProporcional,
+      proporcao,
+      realAdSpendToDate,
+      totalDiscounts,
     };
   }, [
     filteredSalesReps,
