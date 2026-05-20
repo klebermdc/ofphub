@@ -458,9 +458,13 @@ export type Database = {
       }
       crm_leads: {
         Row: {
+          client_ip: string | null
+          client_user_agent: string | null
           created_at: string
           email: string | null
           estimated_value: number | null
+          fbc: string | null
+          fbp: string | null
           follow_up_date: string | null
           id: string
           name: string
@@ -475,9 +479,13 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          client_ip?: string | null
+          client_user_agent?: string | null
           created_at?: string
           email?: string | null
           estimated_value?: number | null
+          fbc?: string | null
+          fbp?: string | null
           follow_up_date?: string | null
           id?: string
           name: string
@@ -492,9 +500,13 @@ export type Database = {
           user_id: string
         }
         Update: {
+          client_ip?: string | null
+          client_user_agent?: string | null
           created_at?: string
           email?: string | null
           estimated_value?: number | null
+          fbc?: string | null
+          fbp?: string | null
           follow_up_date?: string | null
           id?: string
           name?: string
@@ -759,6 +771,54 @@ export type Database = {
         }
         Relationships: []
       }
+      meta_capi_events: {
+        Row: {
+          attempt: number
+          created_at: string
+          error: string | null
+          event_id: string
+          event_name: string
+          event_time: string
+          http_status: number | null
+          id: string
+          order_id: string | null
+          request_payload: Json | null
+          response_payload: Json | null
+          status: string
+          test_mode: boolean
+        }
+        Insert: {
+          attempt?: number
+          created_at?: string
+          error?: string | null
+          event_id: string
+          event_name?: string
+          event_time?: string
+          http_status?: number | null
+          id?: string
+          order_id?: string | null
+          request_payload?: Json | null
+          response_payload?: Json | null
+          status?: string
+          test_mode?: boolean
+        }
+        Update: {
+          attempt?: number
+          created_at?: string
+          error?: string | null
+          event_id?: string
+          event_name?: string
+          event_time?: string
+          http_status?: number | null
+          id?: string
+          order_id?: string | null
+          request_payload?: Json | null
+          response_payload?: Json | null
+          status?: string
+          test_mode?: boolean
+        }
+        Relationships: []
+      }
       nfse_history: {
         Row: {
           aliquota: number
@@ -824,6 +884,8 @@ export type Database = {
       }
       orders: {
         Row: {
+          client_ip: string | null
+          client_user_agent: string | null
           cliente: string | null
           comissao: number
           comissao_guia: number
@@ -833,20 +895,28 @@ export type Database = {
           data: string
           email_cliente: string | null
           enviado: boolean
+          fbc: string | null
+          fbp: string | null
           fornecedor: string | null
           guia: string | null
           id: string
+          meta_event_error: string | null
+          meta_event_sent_at: string | null
+          meta_event_status: string | null
           pedido: string | null
           porcentagem_vendedor: number
           produto: string | null
           sheet_row_index: number | null
           status: string | null
+          telefone_cliente: string | null
           updated_at: string
           user_id: string
           venda: number
           vendedor: string
         }
         Insert: {
+          client_ip?: string | null
+          client_user_agent?: string | null
           cliente?: string | null
           comissao?: number
           comissao_guia?: number
@@ -856,20 +926,28 @@ export type Database = {
           data: string
           email_cliente?: string | null
           enviado?: boolean
+          fbc?: string | null
+          fbp?: string | null
           fornecedor?: string | null
           guia?: string | null
           id?: string
+          meta_event_error?: string | null
+          meta_event_sent_at?: string | null
+          meta_event_status?: string | null
           pedido?: string | null
           porcentagem_vendedor?: number
           produto?: string | null
           sheet_row_index?: number | null
           status?: string | null
+          telefone_cliente?: string | null
           updated_at?: string
           user_id: string
           venda?: number
           vendedor: string
         }
         Update: {
+          client_ip?: string | null
+          client_user_agent?: string | null
           cliente?: string | null
           comissao?: number
           comissao_guia?: number
@@ -879,14 +957,20 @@ export type Database = {
           data?: string
           email_cliente?: string | null
           enviado?: boolean
+          fbc?: string | null
+          fbp?: string | null
           fornecedor?: string | null
           guia?: string | null
           id?: string
+          meta_event_error?: string | null
+          meta_event_sent_at?: string | null
+          meta_event_status?: string | null
           pedido?: string | null
           porcentagem_vendedor?: number
           produto?: string | null
           sheet_row_index?: number | null
           status?: string | null
+          telefone_cliente?: string | null
           updated_at?: string
           user_id?: string
           venda?: number
