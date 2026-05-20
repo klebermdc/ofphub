@@ -85,6 +85,10 @@ export function useCostCalculation({
       resultado,
       custoProporcional,
       resultadoParcial,
+      custosFixosProporcional,
+      proporcao,
+      realAdSpendToDate,
+      totalDiscounts,
     };
   }, [
     filteredSalesReps,
