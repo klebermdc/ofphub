@@ -1,6 +1,8 @@
 import { cn } from "@/lib/utils";
 import { LucideIcon, Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import type { ReactNode } from "react";
 
 interface MetricCardProps {
   title: string;
@@ -11,6 +13,8 @@ interface MetricCardProps {
   delay?: number;
   variant?: "default" | "success" | "danger" | "warning" | "info";
   formula?: string;
+  /** Rich breakdown shown in a popover on click. Takes precedence over `formula`. */
+  breakdown?: ReactNode;
 }
 
 const variantStyles = {
@@ -54,9 +58,11 @@ export function MetricCard({
   icon: Icon,
   delay = 0,
   variant = "default",
-  formula
+  formula,
+  breakdown,
 }: MetricCardProps) {
   const styles = variantStyles[variant] ?? variantStyles.default;
+  const isInteractive = !!breakdown || !!formula;
 
   const cardContent = (
     <div 
@@ -65,14 +71,14 @@ export function MetricCard({
         "bg-gradient-to-br border",
         styles.gradient,
         styles.border,
-        formula && "cursor-help"
+        isInteractive && (breakdown ? "cursor-pointer" : "cursor-help"),
       )}
       style={{ animationDelay: `${delay}ms` }}
     >
       <div className="flex items-center gap-2 mb-3">
         <Icon className={cn("h-4 w-4 sm:h-5 sm:w-5 shrink-0", styles.iconColor)} />
         <p className="text-xs sm:text-sm text-muted-foreground flex-1 truncate">{title}</p>
-        {formula && (
+        {isInteractive && (
           <Info className="h-3 w-3 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors shrink-0" />
         )}
       </div>
@@ -90,13 +96,28 @@ export function MetricCard({
     </div>
   );
 
+  if (breakdown) {
+    return (
+      <Popover>
+        <PopoverTrigger asChild>{cardContent}</PopoverTrigger>
+        <PopoverContent
+          side="bottom"
+          align="start"
+          sideOffset={8}
+          collisionPadding={16}
+          className="w-[min(28rem,calc(100vw-2rem))] max-h-[80vh] overflow-y-auto p-4"
+        >
+          {breakdown}
+        </PopoverContent>
+      </Popover>
+    );
+  }
+
   if (!formula) return cardContent;
 
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
-        {cardContent}
-      </TooltipTrigger>
+      <TooltipTrigger asChild>{cardContent}</TooltipTrigger>
       <TooltipContent side="bottom" className="max-w-[280px] text-xs leading-relaxed">
         <p className="font-semibold mb-1">📐 Cálculo:</p>
         <p className="whitespace-pre-line">{formula}</p>
