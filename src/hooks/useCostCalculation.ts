@@ -11,6 +11,10 @@ interface CostCalculationResult {
   resultado: number;
   custoProporcional: number;
   resultadoParcial: number;
+  custosFixosProporcional: number;
+  proporcao: number;
+  realAdSpendToDate: number;
+  totalDiscounts: number;
 }
 
 interface CostCalculationParams {
