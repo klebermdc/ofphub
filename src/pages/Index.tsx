@@ -58,6 +58,7 @@ const SalesHealthIndicators = lazy(() => import("@/components/SalesHealthIndicat
 const AccountingTab = lazy(() => import("@/components/AccountingTab").then(m => ({ default: m.AccountingTab })));
 const MarketingTab = lazy(() => import("@/components/MarketingTab").then(m => ({ default: m.MarketingTab })));
 const CRMTab = lazy(() => import("@/components/crm/CRMTab").then(m => ({ default: m.CRMTab })));
+const ExportClientsCSVDialog = lazy(() => import("@/components/ExportClientsCSVDialog").then(m => ({ default: m.ExportClientsCSVDialog })));
 
 const DashboardMonthlyMetrics = lazy(() => import("@/components/dashboard/DashboardMonthlyMetrics").then(m => ({ default: m.DashboardMonthlyMetrics })));
 const DashboardFortnightMetrics = lazy(() => import("@/components/dashboard/DashboardFortnightMetrics").then(m => ({ default: m.DashboardFortnightMetrics })));
