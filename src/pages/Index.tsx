@@ -786,6 +786,9 @@ const Index = () => {
                             onGoalsSaved={() => refetchGoals()}
                           />
                         </Suspense>
+                        <Suspense fallback={null}>
+                          <ExportClientsCSVDialog />
+                        </Suspense>
                         <Button 
                           variant="outline" 
                           size="sm" 
