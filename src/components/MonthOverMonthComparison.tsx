@@ -116,16 +116,40 @@ export function MonthOverMonthComparison() {
 
   const today = useMemo(() => new Date(), [tick]);
   const todayDay = today.getDate();
-  const curMonth = today.getMonth() + 1;
-  const curYear = today.getFullYear();
-  const prev = useMemo(() => {
-    const d = new Date(curYear, curMonth - 2, 1);
-    return { month: d.getMonth() + 1, year: d.getFullYear() };
-  }, [curMonth, curYear]);
+
+  // User-selectable comparison periods (both capped at today's day-of-month)
+  const defaultB = { month: today.getMonth() + 1, year: today.getFullYear() };
+  const _prev = new Date(defaultB.year, defaultB.month - 2, 1);
+  const defaultA = { month: _prev.getMonth() + 1, year: _prev.getFullYear() };
+  const [periodA, setPeriodA] = useState(`${defaultA.year}-${pad(defaultA.month)}`);
+  const [periodB, setPeriodB] = useState(`${defaultB.year}-${pad(defaultB.month)}`);
+
+  const [ay, am] = periodA.split("-").map(Number);
+  const [by, bm] = periodB.split("-").map(Number);
+  const prev = { month: am, year: ay };
+  const curMonth = bm;
+  const curYear = by;
 
   const prevMonthLastDay = new Date(prev.year, prev.month, 0).getDate();
   const prevCompareDay = Math.min(todayDay, prevMonthLastDay);
   const curMonthLastDay = new Date(curYear, curMonth, 0).getDate();
+  const curCompareDay = Math.min(todayDay, curMonthLastDay);
+
+  // Month options: last 24 months
+  const monthOptions = useMemo(() => {
+    const opts: { value: string; label: string }[] = [];
+    for (let i = 0; i < 24; i++) {
+      const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      const y = d.getFullYear();
+      const m = d.getMonth() + 1;
+      opts.push({
+        value: `${y}-${pad(m)}`,
+        label: `${MONTH_NAMES[m - 1]} / ${y}`,
+      });
+    }
+    return opts;
+  }, [today]);
+
 
   useEffect(() => {
     let cancelled = false;
