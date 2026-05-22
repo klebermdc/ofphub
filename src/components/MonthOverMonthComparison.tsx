@@ -116,24 +116,52 @@ export function MonthOverMonthComparison() {
 
   const today = useMemo(() => new Date(), [tick]);
   const todayDay = today.getDate();
-  const curMonth = today.getMonth() + 1;
-  const curYear = today.getFullYear();
-  const prev = useMemo(() => {
-    const d = new Date(curYear, curMonth - 2, 1);
-    return { month: d.getMonth() + 1, year: d.getFullYear() };
-  }, [curMonth, curYear]);
+
+  // User-selectable comparison periods (both capped at today's day-of-month)
+  const defaultB = { month: today.getMonth() + 1, year: today.getFullYear() };
+  const _prev = new Date(defaultB.year, defaultB.month - 2, 1);
+  const defaultA = { month: _prev.getMonth() + 1, year: _prev.getFullYear() };
+  const [periodA, setPeriodA] = useState(`${defaultA.year}-${pad(defaultA.month)}`);
+  const [periodB, setPeriodB] = useState(`${defaultB.year}-${pad(defaultB.month)}`);
+
+  const [ay, am] = periodA.split("-").map(Number);
+  const [by, bm] = periodB.split("-").map(Number);
+  const prev = { month: am, year: ay };
+  const curMonth = bm;
+  const curYear = by;
 
   const prevMonthLastDay = new Date(prev.year, prev.month, 0).getDate();
   const prevCompareDay = Math.min(todayDay, prevMonthLastDay);
   const curMonthLastDay = new Date(curYear, curMonth, 0).getDate();
+  const curCompareDay = Math.min(todayDay, curMonthLastDay);
+
+  // Month options: last 24 months
+  const monthOptions = useMemo(() => {
+    const opts: { value: string; label: string }[] = [];
+    for (let i = 0; i < 24; i++) {
+      const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      const y = d.getFullYear();
+      const m = d.getMonth() + 1;
+      opts.push({
+        value: `${y}-${pad(m)}`,
+        label: `${MONTH_NAMES[m - 1]} / ${y}`,
+      });
+    }
+    return opts;
+  }, [today]);
+
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
       setLoading(true);
       try {
-        const startPrev = `${prev.year}-${pad(prev.month)}-01`;
-        const endCur = `${curYear}-${pad(curMonth)}-${pad(curMonthLastDay)}`;
+        const dateA1 = `${prev.year}-${pad(prev.month)}-01`;
+        const dateA2 = `${prev.year}-${pad(prev.month)}-${pad(prevMonthLastDay)}`;
+        const dateB1 = `${curYear}-${pad(curMonth)}-01`;
+        const dateB2 = `${curYear}-${pad(curMonth)}-${pad(curMonthLastDay)}`;
+        const startPrev = dateA1 < dateB1 ? dateA1 : dateB1;
+        const endCur = dateA2 > dateB2 ? dateA2 : dateB2;
 
         // Leads from marketing_daily_stats
         const { data: statsData } = await supabase
@@ -217,11 +245,11 @@ export function MonthOverMonthComparison() {
 
   // Build series from filtered orders
   const { currentSeries, previousSeries } = useMemo(() => {
-    const cur = buildEmptySeries(todayDay);
+    const cur = buildEmptySeries(curCompareDay);
     const prv = buildEmptySeries(prevCompareDay);
 
     filteredOrders.forEach((o) => {
-      if (o.month === curMonth && o.year === curYear && o.day <= todayDay) {
+      if (o.month === curMonth && o.year === curYear && o.day <= curCompareDay) {
         cur[o.day - 1].pedidos += 1;
         cur[o.day - 1].vendas += o.venda;
       } else if (o.month === prev.month && o.year === prev.year && o.day <= prevCompareDay) {
@@ -233,7 +261,7 @@ export function MonthOverMonthComparison() {
     // Leads — global (not filterable by vendor/produto)
     Object.entries(leadsByDate).forEach(([date, leads]) => {
       const [y, m, d] = date.split("-").map(Number);
-      if (m === curMonth && y === curYear && d <= todayDay) {
+      if (m === curMonth && y === curYear && d <= curCompareDay) {
         cur[d - 1].leads += leads;
       } else if (m === prev.month && y === prev.year && d <= prevCompareDay) {
         prv[d - 1].leads += leads;
@@ -241,7 +269,7 @@ export function MonthOverMonthComparison() {
     });
 
     return { currentSeries: cur, previousSeries: prv };
-  }, [filteredOrders, leadsByDate, curMonth, curYear, prev.month, prev.year, todayDay, prevCompareDay]);
+  }, [filteredOrders, leadsByDate, curMonth, curYear, prev.month, prev.year, curCompareDay, prevCompareDay]);
 
   const curTotals = useMemo(() => ({
     leads: currentSeries.reduce((s, d) => s + d.leads, 0),
@@ -264,7 +292,7 @@ export function MonthOverMonthComparison() {
     const vplCur = curTotals.leads > 0 ? curTotals.vendas / curTotals.leads : 0;
     const vplPrv = prvTotals.leads > 0 ? prvTotals.vendas / prvTotals.leads : 0;
 
-    const avgDayCur = todayDay > 0 ? curTotals.vendas / todayDay : 0;
+    const avgDayCur = curCompareDay > 0 ? curTotals.vendas / curCompareDay : 0;
     const avgDayPrv = prevCompareDay > 0 ? prvTotals.vendas / prevCompareDay : 0;
 
     // Projection for current month: avg daily * total days in month
@@ -287,11 +315,11 @@ export function MonthOverMonthComparison() {
       bestDayCur, bestDayPrv,
       daysWithSalesCur, daysWithSalesPrv,
     };
-  }, [curTotals, prvTotals, todayDay, prevCompareDay, curMonthLastDay, currentSeries, previousSeries]);
+  }, [curTotals, prvTotals, curCompareDay, prevCompareDay, curMonthLastDay, currentSeries, previousSeries]);
 
   // Chart data — supports daily or cumulative
   const chartData = useMemo(() => {
-    const maxDay = Math.max(todayDay, prevCompareDay);
+    const maxDay = Math.max(curCompareDay, prevCompareDay);
     let cumCur = 0;
     let cumPrv = 0;
     return Array.from({ length: maxDay }, (_, i) => {
@@ -303,16 +331,16 @@ export function MonthOverMonthComparison() {
         if (bRaw != null) cumPrv += bRaw;
         return {
           day,
-          atual: i < todayDay ? cumCur : null,
+          atual: i < curCompareDay ? cumCur : null,
           anterior: i < prevCompareDay ? cumPrv : null,
         };
       }
       return { day, atual: aRaw, anterior: bRaw };
     });
-  }, [currentSeries, previousSeries, metric, viewMode, todayDay, prevCompareDay]);
+  }, [currentSeries, previousSeries, metric, viewMode, curCompareDay, prevCompareDay]);
 
   const tableRows = useMemo(() => {
-    const maxDay = Math.max(todayDay, prevCompareDay);
+    const maxDay = Math.max(curCompareDay, prevCompareDay);
     return Array.from({ length: maxDay }, (_, i) => {
       const day = i + 1;
       const a = currentSeries[i]?.[metric] ?? 0;
@@ -321,7 +349,7 @@ export function MonthOverMonthComparison() {
       const pct = b === 0 ? (a > 0 ? 100 : 0) : (diff / b) * 100;
       return { day, anterior: b, atual: a, diff, pct };
     });
-  }, [currentSeries, previousSeries, metric, todayDay, prevCompareDay]);
+  }, [currentSeries, previousSeries, metric, curCompareDay, prevCompareDay]);
 
   function formatValue(value: number, m: Metric = metric) {
     if (m === "vendas") return formatBRL(value);
@@ -401,7 +429,7 @@ export function MonthOverMonthComparison() {
             <div>
               <h3 className="font-semibold">Comparativo mês a mês (até hoje)</h3>
               <p className="text-xs text-muted-foreground">
-                Até dia {prevCompareDay} de {MONTH_NAMES[prev.month - 1]} vs. até dia {todayDay} de {MONTH_NAMES[curMonth - 1]}
+                Até dia {prevCompareDay} de {MONTH_NAMES[prev.month - 1]} vs. até dia {curCompareDay} de {MONTH_NAMES[curMonth - 1]}
                 <span className="ml-2 inline-flex items-center gap-1">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   atualizado às {refreshLabel}
@@ -410,6 +438,41 @@ export function MonthOverMonthComparison() {
             </div>
           </div>
         </div>
+
+        {/* Period selectors */}
+        <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] items-center gap-2">
+          <div className="space-y-1">
+            <label className="text-[11px] text-muted-foreground uppercase tracking-wide">Mês A (referência)</label>
+            <Select value={periodA} onValueChange={setPeriodA}>
+              <SelectTrigger className="h-9 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="max-h-72">
+                {monthOptions.map((o) => (
+                  <SelectItem key={o.value} value={o.value} className="capitalize">{o.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="text-center text-xs font-semibold text-muted-foreground pt-5">VS</div>
+          <div className="space-y-1">
+            <label className="text-[11px] text-muted-foreground uppercase tracking-wide">Mês B (comparar)</label>
+            <Select value={periodB} onValueChange={setPeriodB}>
+              <SelectTrigger className="h-9 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="max-h-72">
+                {monthOptions.map((o) => (
+                  <SelectItem key={o.value} value={o.value} className="capitalize">{o.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <p className="text-[11px] text-muted-foreground">
+          Ambos os meses são comparados até o dia <strong>{todayDay}</strong> (dia de hoje) ou o último dia do mês, o que vier primeiro.
+        </p>
+
 
         {/* Filters bar */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
@@ -489,7 +552,7 @@ export function MonthOverMonthComparison() {
         <div className="glass rounded-xl border border-primary/30 p-4 space-y-3 bg-primary/5">
           <div className="flex items-center justify-between">
             <h4 className="font-medium capitalize">{MONTH_NAMES[curMonth - 1]} / {curYear}</h4>
-            <span className="text-xs text-muted-foreground">até dia {todayDay}</span>
+            <span className="text-xs text-muted-foreground">até dia {curCompareDay}</span>
           </div>
           <div className="grid grid-cols-3 gap-2">
             <KPICard icon={Users} label="Leads" value={curTotals.leads} previous={prvTotals.leads} accent="primary" />
