@@ -51,8 +51,27 @@ export function MonthOverMonthComparison() {
   const [metric, setMetric] = useState<Metric>("vendas");
   const [currentSeries, setCurrentSeries] = useState<DailyPoint[]>([]);
   const [previousSeries, setPreviousSeries] = useState<DailyPoint[]>([]);
+  const [tick, setTick] = useState(0);
 
-  const today = useMemo(() => new Date(), []);
+  // Auto-refresh: re-evaluate "today" and refetch data every 5 minutes,
+  // at midnight (day rollover), and when the tab regains focus.
+  useEffect(() => {
+    const interval = setInterval(() => setTick((t) => t + 1), 5 * 60 * 1000);
+    const now = new Date();
+    const nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 5);
+    const midnightTimeout = setTimeout(() => setTick((t) => t + 1), nextMidnight.getTime() - now.getTime());
+    const onVisible = () => {
+      if (document.visibilityState === "visible") setTick((t) => t + 1);
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearInterval(interval);
+      clearTimeout(midnightTimeout);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, []);
+
+  const today = useMemo(() => new Date(), [tick]);
   const todayDay = today.getDate();
   const curMonth = today.getMonth() + 1;
   const curYear = today.getFullYear();
