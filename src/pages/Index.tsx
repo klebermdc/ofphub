@@ -451,6 +451,10 @@ const Index = () => {
           <Tabs defaultValue={initialTab} className="space-y-4 sm:space-y-6">
             <TabsList className="w-full grid grid-cols-4 sm:grid-cols-7 gap-1 h-auto p-1">
               <TabsTrigger value="dashboard" className="text-xs sm:text-sm py-2">Dashboard</TabsTrigger>
+              <TabsTrigger value="comparativo" className="gap-1 text-xs sm:text-sm py-2">
+                <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 hidden sm:block" />
+                Comparativo
+              </TabsTrigger>
               <TabsTrigger value="vendedores" className="gap-1 text-xs sm:text-sm py-2">
                 <Users className="h-3 w-3 sm:h-4 sm:w-4 hidden sm:block" />
                 Comercial
