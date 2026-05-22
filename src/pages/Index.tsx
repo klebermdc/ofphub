@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { FileSpreadsheet, Users, Megaphone, Receipt, Kanban, Calendar, ClipboardList, TrendingUp, DollarSign } from "lucide-react";
+import { FileSpreadsheet, Users, Megaphone, Receipt, Kanban, Calendar, ClipboardList, TrendingUp, DollarSign, BarChart3 } from "lucide-react";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { resolveSalespersonName, isExcludedName } from "@/config/salaries";
@@ -449,8 +449,12 @@ const Index = () => {
         
         <main className="container mx-auto px-3 sm:px-6 py-4 sm:py-6 relative">
           <Tabs defaultValue={initialTab} className="space-y-4 sm:space-y-6">
-            <TabsList className="w-full grid grid-cols-3 sm:grid-cols-6 gap-1 h-auto p-1">
+            <TabsList className="w-full grid grid-cols-4 sm:grid-cols-7 gap-1 h-auto p-1">
               <TabsTrigger value="dashboard" className="text-xs sm:text-sm py-2">Dashboard</TabsTrigger>
+              <TabsTrigger value="comparativo" className="gap-1 text-xs sm:text-sm py-2">
+                <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 hidden sm:block" />
+                Comparativo
+              </TabsTrigger>
               <TabsTrigger value="vendedores" className="gap-1 text-xs sm:text-sm py-2">
                 <Users className="h-3 w-3 sm:h-4 sm:w-4 hidden sm:block" />
                 Comercial
@@ -475,7 +479,11 @@ const Index = () => {
 
             {/* Mobile additional tabs */}
             <div className="flex sm:hidden gap-2">
-              <TabsList className="grid grid-cols-3 gap-1 w-full h-auto p-1">
+              <TabsList className="grid grid-cols-4 gap-1 w-full h-auto p-1">
+                <TabsTrigger value="comparativo" className="gap-1 text-xs py-2">
+                  <BarChart3 className="h-3 w-3" />
+                  Comparativo
+                </TabsTrigger>
                 <TabsTrigger value="custos" className="gap-1 text-xs py-2">
                   <DollarSign className="h-3 w-3" />
                   Custos
@@ -538,7 +546,7 @@ const Index = () => {
                       operationalCosts={operationalCost}
                     />
 
-                    <MonthOverMonthComparison />
+                    
 
                     <DailyOrdersList
                       salesReps={hasDashboardDateRange || dashboardFornecedor !== 'all' ? dashboardFilteredSalesReps : salesReps}
@@ -877,6 +885,14 @@ const Index = () => {
               <ErrorBoundary>
                 <Suspense fallback={<TableSkeleton rows={8} columns={5} />}>
                   <AccountingTab userId={user?.id} />
+                </Suspense>
+              </ErrorBoundary>
+            </TabsContent>
+
+            <TabsContent value="comparativo" className="space-y-6">
+              <ErrorBoundary>
+                <Suspense fallback={<ChartSkeleton />}>
+                  <MonthOverMonthComparison />
                 </Suspense>
               </ErrorBoundary>
             </TabsContent>
