@@ -71,6 +71,7 @@ const WhatsAppStatusCard = lazy(() => import("@/components/WhatsAppStatusCard").
 const WeeklyReportModal = lazy(() => import("@/components/WeeklyReportModal").then(m => ({ default: m.WeeklyReportModal })));
 const GrowthDashboard = lazy(() => import("@/components/GrowthDashboard").then(m => ({ default: m.GrowthDashboard })));
 const CostsTab = lazy(() => import("@/components/CostsTab").then(m => ({ default: m.CostsTab })));
+const MonthOverMonthComparison = lazy(() => import("@/components/MonthOverMonthComparison").then(m => ({ default: m.MonthOverMonthComparison })));
 
 // Data source: database-only (no Google Sheets dependency)
 type OrderRow = Database['public']['Tables']['orders']['Row'];
@@ -536,6 +537,8 @@ const Index = () => {
                       marketingCosts={marketingCost}
                       operationalCosts={operationalCost}
                     />
+
+                    <MonthOverMonthComparison />
 
                     <DailyOrdersList
                       salesReps={hasDashboardDateRange || dashboardFornecedor !== 'all' ? dashboardFilteredSalesReps : salesReps}
