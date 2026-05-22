@@ -479,7 +479,11 @@ const Index = () => {
 
             {/* Mobile additional tabs */}
             <div className="flex sm:hidden gap-2">
-              <TabsList className="grid grid-cols-3 gap-1 w-full h-auto p-1">
+              <TabsList className="grid grid-cols-4 gap-1 w-full h-auto p-1">
+                <TabsTrigger value="comparativo" className="gap-1 text-xs py-2">
+                  <BarChart3 className="h-3 w-3" />
+                  Comparativo
+                </TabsTrigger>
                 <TabsTrigger value="custos" className="gap-1 text-xs py-2">
                   <DollarSign className="h-3 w-3" />
                   Custos
