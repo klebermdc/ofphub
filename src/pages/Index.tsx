@@ -546,7 +546,7 @@ const Index = () => {
                       operationalCosts={operationalCost}
                     />
 
-                    <MonthOverMonthComparison />
+                    
 
                     <DailyOrdersList
                       salesReps={hasDashboardDateRange || dashboardFornecedor !== 'all' ? dashboardFilteredSalesReps : salesReps}
