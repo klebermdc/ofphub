@@ -435,6 +435,41 @@ export function MonthOverMonthComparison() {
           </div>
         </div>
 
+        {/* Period selectors */}
+        <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] items-center gap-2">
+          <div className="space-y-1">
+            <label className="text-[11px] text-muted-foreground uppercase tracking-wide">Mês A (referência)</label>
+            <Select value={periodA} onValueChange={setPeriodA}>
+              <SelectTrigger className="h-9 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="max-h-72">
+                {monthOptions.map((o) => (
+                  <SelectItem key={o.value} value={o.value} className="capitalize">{o.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="text-center text-xs font-semibold text-muted-foreground pt-5">VS</div>
+          <div className="space-y-1">
+            <label className="text-[11px] text-muted-foreground uppercase tracking-wide">Mês B (comparar)</label>
+            <Select value={periodB} onValueChange={setPeriodB}>
+              <SelectTrigger className="h-9 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="max-h-72">
+                {monthOptions.map((o) => (
+                  <SelectItem key={o.value} value={o.value} className="capitalize">{o.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <p className="text-[11px] text-muted-foreground">
+          Ambos os meses são comparados até o dia <strong>{todayDay}</strong> (dia de hoje) ou o último dia do mês, o que vier primeiro.
+        </p>
+
+
         {/* Filters bar */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
           <div className="flex items-center gap-2">
