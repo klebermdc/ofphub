@@ -889,6 +889,14 @@ const Index = () => {
               </ErrorBoundary>
             </TabsContent>
 
+            <TabsContent value="comparativo" className="space-y-6">
+              <ErrorBoundary>
+                <Suspense fallback={<ChartSkeleton />}>
+                  <MonthOverMonthComparison />
+                </Suspense>
+              </ErrorBoundary>
+            </TabsContent>
+
           </Tabs>
         </main>
 
