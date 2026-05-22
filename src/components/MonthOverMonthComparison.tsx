@@ -156,8 +156,12 @@ export function MonthOverMonthComparison() {
     async function load() {
       setLoading(true);
       try {
-        const startPrev = `${prev.year}-${pad(prev.month)}-01`;
-        const endCur = `${curYear}-${pad(curMonth)}-${pad(curMonthLastDay)}`;
+        const dateA1 = `${prev.year}-${pad(prev.month)}-01`;
+        const dateA2 = `${prev.year}-${pad(prev.month)}-${pad(prevMonthLastDay)}`;
+        const dateB1 = `${curYear}-${pad(curMonth)}-01`;
+        const dateB2 = `${curYear}-${pad(curMonth)}-${pad(curMonthLastDay)}`;
+        const startPrev = dateA1 < dateB1 ? dateA1 : dateB1;
+        const endCur = dateA2 > dateB2 ? dateA2 : dateB2;
 
         // Leads from marketing_daily_stats
         const { data: statsData } = await supabase
