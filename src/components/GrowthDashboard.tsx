@@ -119,15 +119,21 @@ export function GrowthDashboard() {
     return <div className="flex items-center justify-center py-12"><div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" /></div>;
   }
 
-  // Live revenue ONLY for April/2026. All other months keep manual values.
-  const liveAprilRevenueFromOrders = orders.reduce((sum, o) => {
-    return o.year === LIVE_YEAR && o.month === LIVE_MONTH ? sum + o.venda : sum;
-  }, 0);
-  const liveAprilRevenue = liveAprilRevenueFromDb ?? liveAprilRevenueFromOrders;
+  // Live revenue for ALL months of LIVE_YEAR pulled from orders table.
+  // Falls back to in-memory orders aggregation if the DB fetch is still loading.
+  const liveFromOrdersByMonth: Record<number, number> = {};
+  for (const o of orders) {
+    if (o.year === LIVE_YEAR) {
+      liveFromOrdersByMonth[o.month] = (liveFromOrdersByMonth[o.month] || 0) + o.venda;
+    }
+  }
+  const liveByMonth = liveRevenueByMonth ?? liveFromOrdersByMonth;
 
   const mergedData: GrowthRow[] = [
-    ...data.filter(d => !(d.year === LIVE_YEAR && d.month === LIVE_MONTH)),
-    ...(liveAprilRevenue > 0 ? [{ year: LIVE_YEAR, month: LIVE_MONTH, revenue: liveAprilRevenue }] : []),
+    ...data.filter(d => d.year !== LIVE_YEAR),
+    ...Object.entries(liveByMonth)
+      .filter(([, rev]) => rev > 0)
+      .map(([m, rev]) => ({ year: LIVE_YEAR, month: Number(m), revenue: rev })),
   ];
 
   const byYear = (y: number) => mergedData.filter(d => d.year === y);
