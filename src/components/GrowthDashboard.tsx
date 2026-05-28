@@ -29,8 +29,7 @@ const tooltipStyle = { backgroundColor: 'hsl(var(--background))', border: '1px s
 
 type EditingCell = { month: number; year: number } | null;
 
-const LIVE_MONTH = 4;
-const LIVE_YEAR = 2026;
+const LIVE_YEAR = new Date().getFullYear();
 
 export function GrowthDashboard() {
   const [data, setData] = useState<GrowthRow[]>([]);
