@@ -29,8 +29,7 @@ const tooltipStyle = { backgroundColor: 'hsl(var(--background))', border: '1px s
 
 type EditingCell = { month: number; year: number } | null;
 
-const LIVE_MONTH = 4;
-const LIVE_YEAR = 2026;
+const LIVE_YEAR = new Date().getFullYear();
 
 export function GrowthDashboard() {
   const [data, setData] = useState<GrowthRow[]>([]);
@@ -39,7 +38,7 @@ export function GrowthDashboard() {
   const [editValue, setEditValue] = useState("");
   const [saving, setSaving] = useState(false);
   const [filterYear, setFilterYear] = useState<string>("all");
-  const [liveAprilRevenueFromDb, setLiveAprilRevenueFromDb] = useState<number | null>(null);
+  const [liveRevenueByMonth, setLiveRevenueByMonth] = useState<Record<number, number> | null>(null);
   const { orders, loading: ordersLoading } = useGrowthOrders();
 
   const selectedYear = filterYear === "all" ? null : Number(filterYear);
@@ -57,8 +56,8 @@ export function GrowthDashboard() {
   useEffect(() => { fetchData(); }, []);
 
   useEffect(() => {
-    async function fetchLiveAprilRevenue() {
-      let total = 0;
+    async function fetchLiveYearRevenue() {
+      const totals: Record<number, number> = {};
       let from = 0;
       const PAGE = 1000;
 
@@ -66,13 +65,12 @@ export function GrowthDashboard() {
         const { data: rows, error } = await supabase
           .from("orders")
           .select("data, venda")
-          .or(`data.like.%/04/${LIVE_YEAR},data.like.%/04/${String(LIVE_YEAR).slice(-2)},data.like.${LIVE_YEAR}-04-%`)
           .order("id", { ascending: true })
           .range(from, from + PAGE - 1);
 
         if (error) {
-          console.error("fetchLiveAprilRevenue error:", error);
-          setLiveAprilRevenueFromDb(null);
+          console.error("fetchLiveYearRevenue error:", error);
+          setLiveRevenueByMonth(null);
           return;
         }
 
@@ -80,8 +78,8 @@ export function GrowthDashboard() {
 
         for (const row of rows) {
           const dt = parseOrderDate(row.data);
-          if (dt?.year === LIVE_YEAR && dt.month === LIVE_MONTH) {
-            total += Number(row.venda) || 0;
+          if (dt?.year === LIVE_YEAR) {
+            totals[dt.month] = (totals[dt.month] || 0) + (Number(row.venda) || 0);
           }
         }
 
@@ -89,10 +87,10 @@ export function GrowthDashboard() {
         from += PAGE;
       }
 
-      setLiveAprilRevenueFromDb(total);
+      setLiveRevenueByMonth(totals);
     }
 
-    fetchLiveAprilRevenue();
+    fetchLiveYearRevenue();
   }, []);
 
   const startEdit = (month: number, year: number, currentValue?: number) => {
@@ -121,15 +119,21 @@ export function GrowthDashboard() {
     return <div className="flex items-center justify-center py-12"><div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" /></div>;
   }
 
-  // Live revenue ONLY for April/2026. All other months keep manual values.
-  const liveAprilRevenueFromOrders = orders.reduce((sum, o) => {
-    return o.year === LIVE_YEAR && o.month === LIVE_MONTH ? sum + o.venda : sum;
-  }, 0);
-  const liveAprilRevenue = liveAprilRevenueFromDb ?? liveAprilRevenueFromOrders;
+  // Live revenue for ALL months of LIVE_YEAR pulled from orders table.
+  // Falls back to in-memory orders aggregation if the DB fetch is still loading.
+  const liveFromOrdersByMonth: Record<number, number> = {};
+  for (const o of orders) {
+    if (o.year === LIVE_YEAR) {
+      liveFromOrdersByMonth[o.month] = (liveFromOrdersByMonth[o.month] || 0) + o.venda;
+    }
+  }
+  const liveByMonth = liveRevenueByMonth ?? liveFromOrdersByMonth;
 
   const mergedData: GrowthRow[] = [
-    ...data.filter(d => !(d.year === LIVE_YEAR && d.month === LIVE_MONTH)),
-    ...(liveAprilRevenue > 0 ? [{ year: LIVE_YEAR, month: LIVE_MONTH, revenue: liveAprilRevenue }] : []),
+    ...data.filter(d => d.year !== LIVE_YEAR),
+    ...Object.entries(liveByMonth)
+      .filter(([, rev]) => rev > 0)
+      .map(([m, rev]) => ({ year: LIVE_YEAR, month: Number(m), revenue: rev })),
   ];
 
   const byYear = (y: number) => mergedData.filter(d => d.year === y);
