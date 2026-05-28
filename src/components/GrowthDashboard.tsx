@@ -38,7 +38,7 @@ export function GrowthDashboard() {
   const [editValue, setEditValue] = useState("");
   const [saving, setSaving] = useState(false);
   const [filterYear, setFilterYear] = useState<string>("all");
-  const [liveAprilRevenueFromDb, setLiveAprilRevenueFromDb] = useState<number | null>(null);
+  const [liveRevenueByMonth, setLiveRevenueByMonth] = useState<Record<number, number> | null>(null);
   const { orders, loading: ordersLoading } = useGrowthOrders();
 
   const selectedYear = filterYear === "all" ? null : Number(filterYear);
@@ -56,8 +56,8 @@ export function GrowthDashboard() {
   useEffect(() => { fetchData(); }, []);
 
   useEffect(() => {
-    async function fetchLiveAprilRevenue() {
-      let total = 0;
+    async function fetchLiveYearRevenue() {
+      const totals: Record<number, number> = {};
       let from = 0;
       const PAGE = 1000;
 
@@ -65,13 +65,12 @@ export function GrowthDashboard() {
         const { data: rows, error } = await supabase
           .from("orders")
           .select("data, venda")
-          .or(`data.like.%/04/${LIVE_YEAR},data.like.%/04/${String(LIVE_YEAR).slice(-2)},data.like.${LIVE_YEAR}-04-%`)
           .order("id", { ascending: true })
           .range(from, from + PAGE - 1);
 
         if (error) {
-          console.error("fetchLiveAprilRevenue error:", error);
-          setLiveAprilRevenueFromDb(null);
+          console.error("fetchLiveYearRevenue error:", error);
+          setLiveRevenueByMonth(null);
           return;
         }
 
@@ -79,8 +78,8 @@ export function GrowthDashboard() {
 
         for (const row of rows) {
           const dt = parseOrderDate(row.data);
-          if (dt?.year === LIVE_YEAR && dt.month === LIVE_MONTH) {
-            total += Number(row.venda) || 0;
+          if (dt?.year === LIVE_YEAR) {
+            totals[dt.month] = (totals[dt.month] || 0) + (Number(row.venda) || 0);
           }
         }
 
@@ -88,10 +87,10 @@ export function GrowthDashboard() {
         from += PAGE;
       }
 
-      setLiveAprilRevenueFromDb(total);
+      setLiveRevenueByMonth(totals);
     }
 
-    fetchLiveAprilRevenue();
+    fetchLiveYearRevenue();
   }, []);
 
   const startEdit = (month: number, year: number, currentValue?: number) => {
