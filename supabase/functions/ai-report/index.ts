@@ -49,13 +49,38 @@ function extractMonthYear(dateStr: string): { month: number; year: number } | nu
 
 function mapOrder(o: any) {
   return {
-    pedido: o.pedido, cliente: o.cliente, vendedor: o.vendedor,
-    venda: Number(o.venda), comissao: Number(o.comissao),
-    comissao_total: Number(o.comissao_total), comissao_vendedor: Number(o.comissao_vendedor),
-    fornecedor: o.fornecedor, produto: o.produto, data: o.data,
-    status: o.status, enviado: o.enviado,
+    id: o.id,
+    user_id: o.user_id,
+    pedido: o.pedido,
+    cliente: o.cliente,
+    email_cliente: o.email_cliente,
+    telefone_cliente: o.telefone_cliente,
+    vendedor: o.vendedor,
+    venda: Number(o.venda),
+    comissao: Number(o.comissao),
+    comissao_total: Number(o.comissao_total),
+    porcentagem_vendedor: Number(o.porcentagem_vendedor),
+    comissao_vendedor: Number(o.comissao_vendedor),
+    fornecedor: o.fornecedor,
+    produto: o.produto,
+    data: o.data,
+    status: o.status,
+    enviado: o.enviado,
+    guia: o.guia,
+    comissao_guia: o.comissao_guia != null ? Number(o.comissao_guia) : null,
+    sheet_row_index: o.sheet_row_index,
+    fbc: o.fbc,
+    fbp: o.fbp,
+    client_ip: o.client_ip,
+    client_user_agent: o.client_user_agent,
+    meta_event_status: o.meta_event_status,
+    meta_event_sent_at: o.meta_event_sent_at,
+    meta_event_error: o.meta_event_error,
+    created_at: o.created_at,
+    updated_at: o.updated_at,
   };
 }
+
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
