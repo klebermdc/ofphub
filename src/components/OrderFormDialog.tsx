@@ -36,6 +36,7 @@ interface ProductLineItem {
 interface OrderFormData {
   cliente: string;
   emailCliente: string;
+  telefoneCliente: string;
   data: string;
   pedido: string;
   vendedor: string;
@@ -47,7 +48,9 @@ interface OrderFormData {
 interface OrderFormDataLegacy {
   cliente: string;
   emailCliente: string;
+  telefoneCliente?: string;
   data: string;
+
   pedido: string;
   venda: number;
   fornecedor: string;
@@ -88,7 +91,9 @@ const emptyItem: ProductLineItem = {
 const emptyOrder: OrderFormData = {
   cliente: '',
   emailCliente: '',
+  telefoneCliente: '',
   data: new Date().toLocaleDateString('pt-BR'),
+
   pedido: '',
   vendedor: '',
   status: 'Pendente',
@@ -235,7 +240,9 @@ export function OrderFormDialog({
       setFormData({
         cliente: order.cliente,
         emailCliente: order.emailCliente,
+        telefoneCliente: (order as any).telefoneCliente || (order as any).telefone_cliente || '',
         data: order.data,
+
         pedido: order.pedido,
         vendedor: order.vendedor,
         status: order.status,
@@ -337,6 +344,7 @@ export function OrderFormDialog({
           user_id: user.id,
           cliente: formData.cliente,
           email_cliente: formData.emailCliente,
+          telefone_cliente: formData.telefoneCliente || null,
           data: formData.data,
           pedido: formData.pedido,
           vendedor: formData.vendedor,
@@ -363,6 +371,7 @@ export function OrderFormDialog({
           user_id: user.id,
           cliente: formData.cliente,
           email_cliente: formData.emailCliente,
+          telefone_cliente: formData.telefoneCliente || null,
           data: formData.data,
           pedido: formData.pedido,
           vendedor: formData.vendedor,
@@ -502,8 +511,8 @@ export function OrderFormDialog({
             </div>
           </div>
 
-          {/* Cliente e Email */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Cliente, Email e Telefone */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>Cliente</Label>
               <Input placeholder="Nome do cliente" value={formData.cliente} onChange={(e) => handleHeaderChange('cliente', e.target.value)} />
@@ -512,7 +521,12 @@ export function OrderFormDialog({
               <Label>Email do Cliente</Label>
               <Input type="email" placeholder="email@exemplo.com" value={formData.emailCliente} onChange={(e) => handleHeaderChange('emailCliente', e.target.value)} />
             </div>
+            <div className="space-y-2">
+              <Label>Telefone do Cliente</Label>
+              <Input type="tel" placeholder="(11) 99999-9999" value={formData.telefoneCliente} onChange={(e) => handleHeaderChange('telefoneCliente', e.target.value)} />
+            </div>
           </div>
+
 
           {/* Status */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -715,6 +729,7 @@ export function OrderFormDialog({
                       user_id: user.id,
                       cliente: formData.cliente,
                       email_cliente: formData.emailCliente,
+          telefone_cliente: formData.telefoneCliente || null,
                       data: format(new Date(), 'dd/MM/yyyy'),
                       pedido: formData.pedido ? `${formData.pedido} (DEV)` : '(DEV)',
                       vendedor: formData.vendedor,
