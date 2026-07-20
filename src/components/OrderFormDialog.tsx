@@ -36,6 +36,7 @@ interface ProductLineItem {
 interface OrderFormData {
   cliente: string;
   emailCliente: string;
+  telefoneCliente: string;
   data: string;
   pedido: string;
   vendedor: string;
@@ -47,7 +48,9 @@ interface OrderFormData {
 interface OrderFormDataLegacy {
   cliente: string;
   emailCliente: string;
+  telefoneCliente?: string;
   data: string;
+
   pedido: string;
   venda: number;
   fornecedor: string;
