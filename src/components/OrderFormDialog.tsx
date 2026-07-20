@@ -509,8 +509,8 @@ export function OrderFormDialog({
             </div>
           </div>
 
-          {/* Cliente e Email */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Cliente, Email e Telefone */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>Cliente</Label>
               <Input placeholder="Nome do cliente" value={formData.cliente} onChange={(e) => handleHeaderChange('cliente', e.target.value)} />
@@ -519,7 +519,12 @@ export function OrderFormDialog({
               <Label>Email do Cliente</Label>
               <Input type="email" placeholder="email@exemplo.com" value={formData.emailCliente} onChange={(e) => handleHeaderChange('emailCliente', e.target.value)} />
             </div>
+            <div className="space-y-2">
+              <Label>Telefone do Cliente</Label>
+              <Input type="tel" placeholder="(11) 99999-9999" value={formData.telefoneCliente} onChange={(e) => handleHeaderChange('telefoneCliente', e.target.value)} />
+            </div>
           </div>
+
 
           {/* Status */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
