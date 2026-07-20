@@ -91,7 +91,9 @@ const emptyItem: ProductLineItem = {
 const emptyOrder: OrderFormData = {
   cliente: '',
   emailCliente: '',
+  telefoneCliente: '',
   data: new Date().toLocaleDateString('pt-BR'),
+
   pedido: '',
   vendedor: '',
   status: 'Pendente',
