@@ -240,7 +240,9 @@ export function OrderFormDialog({
       setFormData({
         cliente: order.cliente,
         emailCliente: order.emailCliente,
+        telefoneCliente: (order as any).telefoneCliente || (order as any).telefone_cliente || '',
         data: order.data,
+
         pedido: order.pedido,
         vendedor: order.vendedor,
         status: order.status,
