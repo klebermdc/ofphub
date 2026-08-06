@@ -99,14 +99,14 @@ const SalespersonDashboard = () => {
       
       setAllOrders(fetchedOrders);
 
-      // Fetch orders where guia = name BUT vendedor != name (to avoid double-counting)
+      // Fetch orders where guia = name (inclusive quando ele mesmo é o vendedor)
       const fetchedGuiaOrders: OrderDetail[] = [];
       for (let offset = 0; ; offset += pageSize) {
         let query = supabase
           .from('orders')
           .select('*')
           .eq('guia', displaySalespersonName)
-          .neq('vendedor', displaySalespersonName)
+          .gt('comissao_guia', 0)
           .order('created_at', { ascending: false })
           .range(offset, offset + pageSize - 1);
 
