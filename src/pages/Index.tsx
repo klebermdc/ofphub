@@ -286,10 +286,10 @@ const Index = () => {
           });
         }
 
-        // Add guia commission entry to guia's rep when guia != vendedor
+        // Add guia commission entry to guia's rep (inclusive quando guia == vendedor)
         const guiaName = row.guia ? resolveSalespersonName(row.guia) : null;
         const comissaoGuia = Number(row.comissao_guia) || 0;
-        if (guiaName && guiaName !== name && comissaoGuia > 0) {
+        if (guiaName && comissaoGuia > 0) {
           const guiaOrder = {
             id: `${row.id}-guia`,
             cliente: row.cliente || '',

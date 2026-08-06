@@ -58,10 +58,10 @@ function groupOrdersIntoReps(rows: any[]): SalesRep[] {
       });
     }
 
-    // If this order has a guia different from the vendedor, add guia commission to the guia's rep
+    // Guia commission is credited to the guia even when guia == vendedor
     const guiaName = row.guia ? resolveSalespersonName(row.guia) : null;
     const comissaoGuia = Number(row.comissao_guia) || 0;
-    if (guiaName && guiaName !== name && comissaoGuia > 0) {
+    if (guiaName && comissaoGuia > 0) {
       const guiaOrder: OrderDetail = {
         id: `${row.id}-guia`,
         cliente: row.cliente || '',
