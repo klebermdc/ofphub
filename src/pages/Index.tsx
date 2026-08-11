@@ -149,7 +149,7 @@ const Index = () => {
   const reportYear = selectedMonth !== 'all'
     ? parseInt(selectedMonth.split('/')[1])
     : new Date().getFullYear();
-  const { discounts, saveDiscounts, getDiscount, getDiscountDescription, getDiscountItems, getTotalDiscounts } = useDiscounts(reportMonth, reportYear);
+  const { discounts, saveDiscounts, getDiscount, getDiscountDescription, getDiscountItems, getTotalDiscounts, refetch: refetchDiscounts } = useDiscounts(reportMonth, reportYear);
   const { getAccountingIntegration } = useApiIntegrations(user?.id);
 
   // Costs
@@ -788,6 +788,7 @@ const Index = () => {
                             salespeople={availableSalespeople}
                             month={reportMonth}
                             year={reportYear}
+                            onSaved={() => refetchDiscounts()}
                           />
                           <GoalsManagementDialog
                             userId={user.id}
