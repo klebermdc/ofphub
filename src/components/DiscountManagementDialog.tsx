@@ -127,6 +127,7 @@ export function DiscountManagementDialog({
 
     if (success) {
       toast.success('Descontos salvos com sucesso');
+      onSaved?.();
       setOpen(false);
     } else {
       toast.error('Erro ao salvar descontos');
