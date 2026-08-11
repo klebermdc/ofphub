@@ -788,6 +788,7 @@ const Index = () => {
                             salespeople={availableSalespeople}
                             month={reportMonth}
                             year={reportYear}
+                            onSaved={() => refetchDiscounts()}
                           />
                           <GoalsManagementDialog
                             userId={user.id}
