@@ -12,6 +12,7 @@ interface DiscountManagementDialogProps {
   salespeople: string[];
   month: number;
   year: number;
+  onSaved?: () => void;
 }
 
 const monthNames = [
@@ -22,7 +23,8 @@ const monthNames = [
 export function DiscountManagementDialog({ 
   salespeople,
   month,
-  year 
+  year,
+  onSaved
 }: DiscountManagementDialogProps) {
   const [open, setOpen] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(month);
