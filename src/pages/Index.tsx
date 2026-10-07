@@ -120,7 +120,7 @@ const Index = () => {
     () => {
       const ALLOWED = [
         'Kleber', 'Renata', 'Carolina', 'Gabriela', 'Maria Gabriela',
-        'Suelen', 'Marcella', 'Pedro', 'Barbara', 'Site', 'Rafael',
+        'Suelen', 'Marcella', 'Pedro', 'Bárbara', 'Site', 'Rafael',
       ];
       return ALLOWED.slice().sort((a, b) => a.localeCompare(b, 'pt-BR'));
     },
