@@ -1,4 +1,3 @@
-/// <reference types="https://esm.sh/@supabase/functions-js/src/edge-runtime.d.ts" />
 
 // @ts-ignore
 import forge from "https://esm.sh/node-forge@1.3.1?bundle";
